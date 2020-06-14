@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+
+    <Properties>
+        <property name="LOG_DIR">./logs</property>
+        <property name="ARCHIVE_LOG_DIR">${LOG_DIR}/archive</property>
+        <Property name="FILE_NAME">%d{yyyy-MM-dd}-%i.log</Property>
+        <Property name="FULL_PATTERN_LAYOUT">%d{yyyy-MM-dd' 'HH:mm:ss} [%t] %p %m%n</Property>
+        <property name="SHORT_PATTERN_LAYOUT">%d{HH:mm:ss} [%t] %-5level %logger{3} - %msg%n</property>
+    </Properties>
+
+    <Appenders>
+        <RollingFile name="debugLog" fileName="${LOG_DIR}/app-debug.log"
+                     filePattern="${ARCHIVE_LOG_DIR}/debug/app-debug-${FILE_NAME}">
+            <LevelRangeFilter minLevel="DEBUG" maxLevel="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${FULL_PATTERN_LAYOUT}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ARCHIVE_LOG_DIR}" maxDepth="2">
+                    <IfFileName glob="*/app-debug*.log" />
+                    <IfLastModified age="30d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <RollingFile name="infoLog" fileName="${LOG_DIR}/app-info.log"
+                     filePattern="${ARCHIVE_LOG_DIR}/info/app-info-${FILE_NAME}">
+            <LevelRangeFilter minLevel="INFO" maxLevel="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${FULL_PATTERN_LAYOUT}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ARCHIVE_LOG_DIR}" maxDepth="2">
+                    <IfFileName glob="*/app-info*.log" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <RollingFile name="warnLog" fileName="${LOG_DIR}/app-warn.log"
+                     filePattern="${ARCHIVE_LOG_DIR}/warn/app-warn-error-${FILE_NAME}">
+            <LevelRangeFilter minLevel="WARN" maxLevel="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${FULL_PATTERN_LAYOUT}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ARCHIVE_LOG_DIR}" maxDepth="2">
+                    <IfFileName glob="*/app-warn*.log" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <RollingFile name="errorLog" fileName="${LOG_DIR}/app-error.log"
+                     filePattern="${ARCHIVE_LOG_DIR}/error/app-error-${FILE_NAME}">
+            <LevelRangeFilter minLevel="ERROR" maxLevel="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${FULL_PATTERN_LAYOUT}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ARCHIVE_LOG_DIR}" maxDepth="2">
+                    <IfFileName glob="*/app-error*.log" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <RollingFile name="fullLog" fileName="${LOG_DIR}/app-full.log"
+                     filePattern="${ARCHIVE_LOG_DIR}/all/app-full-${FILE_NAME}">
+            <PatternLayout pattern="${FULL_PATTERN_LAYOUT}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="20MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ARCHIVE_LOG_DIR}" maxDepth="2">
+                    <IfFileName glob="*/app-full*.log" />
+                    <IfLastModified age="60d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- Console Appender -->
+        <Console name="Console"
+                 target="SYSTEM_OUT">
+            <PatternLayout pattern="${SHORT_PATTERN_LAYOUT}"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="by.petropavlovskaja.pharmacy" additivity="false" level="debug">
+            <AppenderRef ref="debugLog"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <Logger name="by.petropavlovskaja.pharmacy" additivity="false" level="info">
+            <AppenderRef ref="infoLog"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <Logger name="by.petropavlovskaja.pharmacy" additivity="false" level="warn">
+            <AppenderRef ref="warnErrorLog"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <Logger name="by.petropavlovskaja.pharmacy" additivity="true" level="debug">
+            <AppenderRef ref="debugLog"/>
+            <AppenderRef ref="infoLog"/>
+            <AppenderRef ref="fullLog"/>
+            <AppenderRef ref="warnLog"/>
+            <AppenderRef ref="errorLog"/>
+        </Logger>
+
+        <Root level="debug">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>
