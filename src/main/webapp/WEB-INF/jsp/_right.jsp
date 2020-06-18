@@ -4,6 +4,6 @@
     <p>
         Реклама и не только...<br /><br />
         <a href="http://www.pogoda.by/" title="Погода в Минске"> <img src="${pageContext.request.contextPath}/images/pogoda.jpg" /></a><br /><br />
-        <a href="http://www.fitness-online.by/" title="Фитнес онлайн"> <img src="${pageContext.request.contextPath}/images/fitnes.jpg" /></a><br /><br />
+        <a href="http://minzdrav.gov.by/ru/" title="Минздрав"> <img src="${pageContext.request.contextPath}/images/minzdrav.jpg" /></a><br /><br />
     </p>
 

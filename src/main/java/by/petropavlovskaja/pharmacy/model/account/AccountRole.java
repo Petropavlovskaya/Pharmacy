@@ -1,6 +1,8 @@
 package by.petropavlovskaja.pharmacy.model.account;
 
-public enum AccountRole {
+import java.io.Serializable;
+
+public enum AccountRole implements Serializable {
     CUSTOMER("Клиент", 1),
     DOCTOR("Доктор", 2),
     PHARMACIST("Фармацевт", 3),

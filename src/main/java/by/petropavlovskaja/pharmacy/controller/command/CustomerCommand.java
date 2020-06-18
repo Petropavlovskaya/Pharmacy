@@ -10,7 +10,6 @@ import by.petropavlovskaja.pharmacy.service.RecipeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.Cookie;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +18,6 @@ public class CustomerCommand implements IFrontCommand {
     private static CustomerService customerService = CustomerService.getInstance();
     private static CommonService commonService = CommonService.getInstance();
     private static RecipeService recipeService = RecipeService.getInstance();
-    private Cookie cookie;
 
     private static class CustomerCommandHolder {
         public static final CustomerCommand CUSTOMER_COMMAND = new CustomerCommand();
@@ -54,21 +52,22 @@ public class CustomerCommand implements IFrontCommand {
                     sc.getSession().setAttribute("medicineInCart", customer.getMedicineInCart());
                     break;
                 }
-                case "history":{
+                case "history": {
                     customerService.getAllOrdersWithDetails(customer);
                     sc.getSession().setAttribute("orders", customer.getOrdersWithDetails());
                     break;
                 }
-                case "recipe":{
+                case "recipe": {
                     recipeService.getRecipes(customer);
-//                    customerService.getAllOrdersWithDetails(customer);
                     sc.getSession().setAttribute("recipe", customer.getRecipes());
                     break;
                 }
-                case "profile":{
+                case "profile": {
                     break;
                 }
-
+/*                case "favorite": {
+                    break;
+                }*/
             }
         }
 
@@ -110,43 +109,25 @@ public class CustomerCommand implements IFrontCommand {
                     sc.getSession().setAttribute("recipe", customer.getRecipes());
                     break;
                 }
+                case "buyInCredit":
                 case "buy": {
-                    customerService.deleteMedicineFromCart(customer, reqParameters);
+                    customerService.createOrder(customer);
                     sc.getSession().setAttribute("cart", customer.getCart());
                     sc.getSession().setAttribute("medicineInCart", customer.getMedicineInCart());
                     break;
                 }
-                case "buyInCredit": {
-/*                    customerService.deleteMedicineFromCart(customer, reqParameters);
-                    sc.getSession().setAttribute("cart", customer.getCart());
-                    sc.getSession().setAttribute("medicineInCart", customer.getMedicineInCart());*/
-                    break;
-                }
-
-
 /*                case "medicineInFavorite": {
-                    logger.info(" Command edit Medicine is received.");
-                    boolean result = pharmacistService.changeMedicineInDB(reqParameters, executeResult);
-                    if (result) {
-                        executeResult.setJsp(fullUri);
-                        List<Medicine> medicineList = commonService.getAllMedicine();
-                        sc.getSession().setAttribute("medicineList", medicineList);
-                    }
                     break;
                 }*/
 /*                case "medicineOutOfFavorite": {
                     break;
                 }*/
-
                 default: {
-//                    logger.error("Command " + command + " is not defined.");
-//                    executeResult.setResponseAttributes("message", "Command is not defined.");
+                    logger.error("Command " + command + " is not defined.");
                 }
             }
             executeResult.setJsp(fullUri);
         }
-
-
         return executeResult;
     }
 
@@ -158,6 +139,4 @@ public class CustomerCommand implements IFrontCommand {
         }
         return customer;
     }
-
-
 }

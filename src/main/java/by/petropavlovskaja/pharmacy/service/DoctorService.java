@@ -1,14 +1,10 @@
 package by.petropavlovskaja.pharmacy.service;
 
-import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.dao.AccountDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
-import by.petropavlovskaja.pharmacy.dao.OrderDAO;
-import by.petropavlovskaja.pharmacy.dao.RecipeDAO;
 import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.model.Recipe;
 import by.petropavlovskaja.pharmacy.model.account.Account;
-import by.petropavlovskaja.pharmacy.model.account.Customer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +19,7 @@ public class DoctorService {
     private static Logger logger = LoggerFactory.getLogger(DoctorService.class);
     private RecipeService recipeService = RecipeService.getInstance();
     private AccountDAO accountDAO = AccountDAO.getInstance();
-    private CommonService commonService = CommonService.getInstance();
     private MedicineDAO medicineDAO = MedicineDAO.getInstance();
-    private OrderDAO orderDAO = OrderDAO.getInstance();
 
     private DoctorService() {
     }
@@ -39,8 +33,7 @@ public class DoctorService {
     }
 
     public Set<Recipe> getOrderedRecipe() {
-        Set<Recipe> recipes = recipeService.getAllOrdered();
-        return recipes;
+        return recipeService.getAllOrdered();
     }
 
     public void deleteRecipe(Map<String, Object> reqParameters) {
@@ -52,18 +45,17 @@ public class DoctorService {
         Set<Account> accountSet = accountDAO.getActiveCustomers();
         Map<Integer, String> customerMap = new TreeMap<>();
         for (Account account : accountSet) {
-            customerMap.put(account.getId(), (account.getSurname()+" "+account.getName()+" "+ account.getPatronymic()+" "+
+            customerMap.put(account.getId(), (account.getSurname() + " " + account.getName() + " " + account.getPatronymic() + " " +
                     account.getPhoneNumber()));
         }
         return customerMap;
     }
 
     public Set<Medicine> getAvailableMedicine() {
-        Set<Medicine> medicineSet = medicineDAO.getAllForDoctor();
-        return medicineSet;
+        return medicineDAO.getAllForDoctor();
     }
 
-    public void createRecipe(int accountId, Map<String, Object> reqParameters){
+    public void createRecipe(int accountId, Map<String, Object> reqParameters) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String requestDate = (String) reqParameters.get("exp_date");
         Date exp_date = null;
@@ -86,8 +78,4 @@ public class DoctorService {
 
         recipeService.doctorInsertRecipe(medicineName, medicineDosage, accountId, customerId, exp_date);
     }
-
-
-
-
 }

@@ -4,16 +4,10 @@ import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.service.CommonService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSession;
-import java.util.List;
 import java.util.Set;
 
 public class MedicineCommand implements IFrontCommand {
-    private static Logger logger = LoggerFactory.getLogger(MedicineCommand.class);
     private static CommonService service = CommonService.getInstance();
 
 

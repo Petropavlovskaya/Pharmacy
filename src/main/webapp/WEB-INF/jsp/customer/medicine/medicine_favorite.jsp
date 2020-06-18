@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <html>
@@ -6,65 +6,32 @@
     <title>On-line pharmacy. Favourite</title>
     <style>
         <%@include file="/css/style.css" %>
+        body {
+            background: url("${pageContext.request.contextPath}/images/nofound.gif") no-repeat fixed center center;
+            left: 20%;
+            background-size: contain;
+            background-clip: border-box;
+        }
     </style>
-    <link href="images/Pharmacy_small.gif" rel="icon" type="image/gif"/>
+    <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
 <body>
 
-<div id="logo">
-    <c:import url="../../_header.jsp"/>
+<div class="div-left">
+    <br>
+    <br>
+    <p class="p-big-left">Извините, данная страница <br>находится в стадии разработки</p>
+    <br>
+    <br>
+    <c:choose>
+        <c:when test="${empty accountRole}">
+            <a class="link-back" href="${pageContext.request.contextPath}/main">Вернуться на главную</a>
+        </c:when>
+        <c:otherwise>
+            <a class="link-back" href="${pageContext.request.contextPath}/${accountRole}/main">Вернуться на главную</a>
+        </c:otherwise>
+    </c:choose>
 </div>
-<div id="line"></div>
-<div id="menu">
-    <c:import url="../_customer_menu.jsp"/>
-</div>
-<div id="center_customer">
-    <table>
-        <%@include file="_medicine_list_header.jsp"%>
 
-        <c:forEach var="medicine" items="${medicineCartList}">
-            <tr>
-                    <%--            <td><c:out value="${medItem.id}"/></td>--%>
-                <td><c:out value="${medicine.name}"/></td>
-                <td><c:out value="${medicine.indivisible_amount}"/></td>
-                <td><c:out value="${medicine.amount}"/></td>
-                <td><c:out value="${medicine.dosage}"/></td>
-                <td><c:out value="${medicine.exp_date}"/></td>
-                <td>
-                    <c:if test="${medicine.recipe_required == true}"> Да </c:if>
-                    <c:if test="${medicine.recipe_required == false}"> Нет </c:if>
-                </td>
-                <td><c:out value="${medicine.price/100}"/></td>
-                <td><c:out value="${medicine.pharm_form}"/></td>
-                <td><input name="amountForBuy" class="table_field_high" type="text" form="addIntoCart" size="7"
-                           pattern="\d{1,3}" min="1" max="100" title="Количество от 1 до 100"></td>
-                <td>
-                    <form id="addIntoCart" class="button_line"
-                          action="${pageContext.request.contextPath}/pharmacist/medicine/favourite"
-                          method="post">
-                        <input type="submit" value="To cart">
-                        <input type="hidden" name="customerCommand" value="medicineForCart">
-                        <input type="hidden" name="medicine_id" value="${medicine.id}">
-                    </form>
-                    <br>
-                    <form class="button_line" action="${pageContext.request.contextPath}/pharmacist/medicine/favourite"
-                          method="post">
-                        <input type="submit" value="Out of favorite">
-                        <input type="hidden" name="customerCommand" value="medicineOutOfFavorite">
-                        <input type="hidden" name="medicine_id" value="${medicine.id}">
-                    </form>
-                </td>
-                    <%--</div>--%>
-
-            </tr>
-        </c:forEach>
-    </table>
-</div>
-<div id="right_customer">
-    <c:import url="../_right_cart.jsp"/>
-</div>
-<div id="footer">
-    <c:import url="../../_footer.jsp"/>
-</div>
 </body>
 </html>

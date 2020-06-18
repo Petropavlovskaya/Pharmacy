@@ -1,22 +1,14 @@
 package by.petropavlovskaja.pharmacy.service;
 
-import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.dao.AccountDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
-import by.petropavlovskaja.pharmacy.dao.OrderDAO;
-import by.petropavlovskaja.pharmacy.dao.sql.AccountSQL;
 import by.petropavlovskaja.pharmacy.model.Medicine;
-import by.petropavlovskaja.pharmacy.model.Recipe;
 import by.petropavlovskaja.pharmacy.model.account.Account;
 import by.petropavlovskaja.pharmacy.model.account.AccountRole;
 import by.petropavlovskaja.pharmacy.model.account.Customer;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class CommonService {
     MedicineDAO medicineDAO = MedicineDAO.getInstance();
@@ -39,8 +31,7 @@ public class CommonService {
     }
 
     public Account accountAuthentication(String login, String password) {
-        Account account = accountDAO.checkLoginAndPassword(login, password);
-        return account;
+        return accountDAO.checkLoginAndPassword(login, password);
     }
 
     public Account accountRegistration(Map<String, Object> reqParameters, AccountRole accountRole) {
@@ -56,8 +47,7 @@ public class CommonService {
         boolean insertResult = accountDAO.create(account, login, password);
         if (!insertResult) {
             account = new Account(-1);
-        }
-        else {
+        } else {
             account = accountDAO.findCustomerByLogin(login);
         }
         return account;
@@ -88,7 +78,7 @@ public class CommonService {
 
     public Account getAccount(int accountId) {
         Account account = new Account(-1);
-        if (accountId>0) {
+        if (accountId > 0) {
             account = accountDAO.find(accountId);
         }
         return account;
@@ -96,7 +86,7 @@ public class CommonService {
 
     public Customer getCustomer(int accountId) {
         Customer customer = new Customer(-1);
-        if (accountId>0) {
+        if (accountId > 0) {
             customer = accountDAO.findCustomerById(accountId);
         }
         return customer;

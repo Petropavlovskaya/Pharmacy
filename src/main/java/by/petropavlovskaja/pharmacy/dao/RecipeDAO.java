@@ -100,7 +100,7 @@ public class RecipeDAO {
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 Statement statement = conn.createStatement();
-                ResultSet rs = statement.executeQuery(RecipeSQL.GET_ALL_ORDERED_RECIPE.getQuery());
+                ResultSet rs = statement.executeQuery(RecipeSQL.GET_ALL_ORDERED_RECIPE.getQuery())
         ) {
             while (rs.next()) {
                 recipes.add(createRecipeFromDB(rs, true));
@@ -160,7 +160,7 @@ public class RecipeDAO {
     public void setNeedExtensionByID(int recipeId) {
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(RecipeSQL.UPDATE_NEED_EXTENSION_BY_RECIPE_ID.getQuery());
+                PreparedStatement statement = conn.prepareStatement(RecipeSQL.UPDATE_NEED_EXTENSION_BY_RECIPE_ID.getQuery())
         ) {
             statement.setInt(1, recipeId);
             int countUpdateRowsRecipe = statement.executeUpdate();
@@ -177,7 +177,7 @@ public class RecipeDAO {
     public void validateRecipe(int recipeId, Date validFor, int doctorId) {
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(RecipeSQL.VALIDATE_RECIPE.getQuery());
+                PreparedStatement statement = conn.prepareStatement(RecipeSQL.VALIDATE_RECIPE.getQuery())
         ) {
             statement.setDate(1, new java.sql.Date(validFor.getTime()));
             statement.setInt(2, doctorId);
@@ -192,7 +192,6 @@ public class RecipeDAO {
             logger.error("SQL Exception in create medicine: " + e);
         }
     }
-
 
     private Recipe createRecipeFromDB(ResultSet rs, boolean isFioNeed) {
         Recipe recipe = new Recipe(-1);

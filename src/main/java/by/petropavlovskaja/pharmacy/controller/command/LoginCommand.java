@@ -4,20 +4,16 @@ import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.model.account.Account;
-import by.petropavlovskaja.pharmacy.model.account.AccountRole;
 import by.petropavlovskaja.pharmacy.service.CommonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.Cookie;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class LoginCommand implements IFrontCommand {
     private static Logger logger = LoggerFactory.getLogger(LoginCommand.class);
     private static CommonService commonService = CommonService.getInstance();
-    private Cookie cookie;
 
     private static class LoginHolder {
         public static final LoginCommand LOGIN_COMMAND = new LoginCommand();
@@ -54,7 +50,6 @@ public class LoginCommand implements IFrontCommand {
                         executeResult.setResponseAttributes("message", "Login or/and password are incorrect. Please, try again.");
                     } else {
                         logger.info("User " + login + " have passed authentication.");
-                        System.out.println("Class LoginCommand. Account role is: " + account.getAccountRole());
                         executeResult.setJsp("/pharmacy/" + account.getAccountRole().name().toLowerCase() + "/main");
                         String sessionId = sc.getSession().getId();
                         Set<Medicine> medicineList = commonService.getAllMedicine();

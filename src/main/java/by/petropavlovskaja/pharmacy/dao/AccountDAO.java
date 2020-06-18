@@ -18,7 +18,6 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -67,7 +66,7 @@ public final class AccountDAO {
     public boolean isLoginBusy(String login) {
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(AccountSQL.FIND_LOGIN.getQuery());
+                PreparedStatement statement = conn.prepareStatement(AccountSQL.FIND_LOGIN.getQuery())
         ) {
             statement.setString(1, login);
             ResultSet rs = statement.executeQuery();
@@ -80,29 +79,6 @@ public final class AccountDAO {
             e.printStackTrace();
         }
         return false;
-    }
-
-
-/*    private User find(String login, String password) {
-        return findBy(AccountSQL.FIND_ACCOUNT_BY_LOGIN_AND_PASSWORD.getQuery(), login, password);
-    }*/
-
-    public Set<Account> getAll() {
-        Set<Account> accountList = new TreeSet<>();
-        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                Statement statement = conn.createStatement();
-                ResultSet rs = statement.executeQuery(AccountSQL.GET_ALL_ACCOUNTS_LIST.getQuery());
-        ) {
-            while (rs.next()) {
-                accountList.add(createAccountFromDB(rs));
-            }
-        } catch (
-                SQLException e) {
-            System.out.println("Nothing was find ((");
-            e.printStackTrace();
-        }
-        return accountList;
     }
 
     public Set<Account> getActiveCustomers() {
@@ -135,25 +111,21 @@ public final class AccountDAO {
         return accountSet;
     }
 
-
     public boolean create(Account account, String login, String password) {
         boolean resultAccountSet = false;
         int countInsertRowsLogin;
-        int userId = 0;
+        int userId;
         Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
         Savepoint savepoint = null;
-        try {
-            conn.setAutoCommit(false);
-            savepoint = conn.setSavepoint("start");
-            System.out.println("Account autocommit false, savepoint");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
 
         try (
                 PreparedStatement statementLogin = conn.prepareStatement(AccountSQL.INSERT_LOGIN.getQuery(), Statement.RETURN_GENERATED_KEYS);
                 PreparedStatement statementAccount = conn.prepareStatement(AccountSQL.INSERT_ACCOUNT.getQuery())
         ) {
+            conn.setAutoCommit(false);
+            savepoint = conn.setSavepoint("start");
+            System.out.println("Account autocommit false, savepoint");
+
 // Create login & password
             String salt = generateRandomSalt();
             statementLogin.setString(1, login);
@@ -161,42 +133,39 @@ public final class AccountDAO {
             statementLogin.setString(3, salt);
             countInsertRowsLogin = statementLogin.executeUpdate();
             if (countInsertRowsLogin != 1) {
-                conn.rollback();
+                conn.rollback(savepoint);
                 logger.error("Insert into table Login is failed. We insert: " + countInsertRowsLogin + " rows for login: " + login);
             } else {
                 ResultSet resultSet = statementLogin.getGeneratedKeys();
                 if (resultSet.next()) {
                     userId = resultSet.getInt(1);
-                    conn.commit();
                     logger.info("Insert into table Login complete. Login " + login + " is added. UserId is: " + userId);
-                }
 
 // Crete account data
-                statementAccount.setInt(1, userId);
-                statementAccount.setString(2, account.getSurname());
-                statementAccount.setString(3, account.getName());
-                statementAccount.setString(4, account.getPatronymic());
-                statementAccount.setString(5, account.getPhoneNumber());
-                statementAccount.setBoolean(6, account.isActive());
-                statementAccount.setInt(7, account.getAccountRole().getId());
+                    statementAccount.setInt(1, userId);
+                    statementAccount.setString(2, account.getSurname());
+                    statementAccount.setString(3, account.getName());
+                    statementAccount.setString(4, account.getPatronymic());
+                    statementAccount.setString(5, account.getPhoneNumber());
+                    statementAccount.setBoolean(6, account.isActive());
+                    statementAccount.setInt(7, account.getAccountRole().getId());
 
-                int countInsertRowsAccount = statementAccount.executeUpdate();
-                if (countInsertRowsAccount != 1) {
-                    conn.rollback(savepoint);
-                    logger.error("Insert into table Account is failed. We insert: " + countInsertRowsAccount + " rows for login: " + login);
-                } else {
-                    System.out.println("Account commit");
-                    conn.commit();
-                    if (account.getAccountRole().equals(AccountRole.CUSTOMER)) {
-                        OrderDAO.getInstance().createCart(userId);
+                    int countInsertRowsAccount = statementAccount.executeUpdate();
+                    if (countInsertRowsAccount != 1) {
+                        conn.rollback(savepoint);
+                        logger.error("Insert into table Account is failed. We insert: " + countInsertRowsAccount + " rows for login: " + login);
+                    } else {
+                    /*System.out.println("Account commit");
+                    conn.commit();*/
+                        if (account.getAccountRole().equals(AccountRole.CUSTOMER)) {
+                            OrderDAO.getInstance().createCart(userId);
+                        }
                         conn.commit();
                         resultAccountSet = true;
                         logger.info("Login: " + login + "CREATE COMPLETE!");
-                    } else {
-                        conn.rollback(savepoint);
                     }
-
-
+                } else {
+                    conn.rollback(savepoint);
                 }
             }
         } catch (SQLException e) {
@@ -220,29 +189,13 @@ public final class AccountDAO {
         return resultAccountSet;
     }
 
-    public void update(Account account) throws IllegalArgumentException {
-        logger.error("Illegal access in AccountDAO. Method \"public void update(Account account)\" isn't implement.");
-    }
-
-    public void delete(Account account) {
-        logger.error("Illegal access in AccountDAO. Method \"public void delete(Account account)\" isn't implement");
-    }
-
-    public Map<Account, List<Object>> readAllWithDetails() {
-        logger.error("Illegal access in AccountDAO. Method \"public Map<Account, List<Object>> readAllWithDetails()\"" +
-                " isn't implement. Return NULL.");
-        return null;
-    }
-
     private Account findBy(String sql, Object... values) {
         Account foundAccount = new Account(-1);
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = prepareStatement(conn, sql, values);
-                ResultSet rs = statement.executeQuery();
+                ResultSet rs = statement.executeQuery()
         ) {
-            // If findBy search by login&password, we need check MD5
-
             if (rs.next()) {
                 foundAccount = createAccountFromDB(rs);
             }
@@ -260,12 +213,29 @@ public final class AccountDAO {
         return findCustomerBy(AccountSQL.FIND_ACCOUNT_BY_LOGIN.getQuery(), login);
     }
 
+    public int getCustomerBalance(int accountId) {
+        int balance = 0;
+        try (
+                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
+                PreparedStatement statement = conn.prepareStatement(AccountSQL.GET_BALANCE_BY_ID.getQuery())
+        ) {
+            statement.setInt(1, accountId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                balance = resultSet.getInt("balance");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return balance;
+    }
+
     private Customer findCustomerBy(String query, Object parameter) {
         Customer foundCustomer = new Customer(-1);
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = prepareStatement(conn, query, parameter);
-                ResultSet rs = statement.executeQuery();
+                ResultSet rs = statement.executeQuery()
         ) {
             if (rs.next()) {
                 foundCustomer = (Customer) createAccountFromDB(rs);
@@ -310,7 +280,6 @@ public final class AccountDAO {
     public static String getMd5Password(String userPassword, String userSalt) {
         String globalSalt = ApplicationConfiguration.INSTANCE.getGlobalSalt();
         String md5Password;
-        // userSalt == null if we create new account
         if (userSalt == null) {
             String passwordWithSalt = globalSalt + userPassword + generateRandomSalt();
             md5Password = DigestUtils.md5Hex(passwordWithSalt);
@@ -320,7 +289,6 @@ public final class AccountDAO {
         }
         return md5Password;
     }
-
 
     private static String generateRandomSalt() {
         Random r = new Random();
@@ -334,20 +302,20 @@ public final class AccountDAO {
     }
 
     private static Map<String, String> getUserPasswordAndSaltFromDB(String login) {
-        Map<String, String> passwordAndSult = new HashMap<>();
+        Map<String, String> passwordAndSalt = new HashMap<>();
         String password;
         String salt;
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(AccountSQL.GET_PASSWORD_AND_SALT_BY_LOGIN.getQuery());
+                PreparedStatement statement = conn.prepareStatement(AccountSQL.GET_PASSWORD_AND_SALT_BY_LOGIN.getQuery())
         ) {
             statement.setString(1, login);
             ResultSet rs = statement.executeQuery();
             if (rs.next()) {
                 password = rs.getString("password");
                 salt = rs.getString("salt");
-                passwordAndSult.put("password", password);
-                passwordAndSult.put("salt", salt);
+                passwordAndSalt.put("password", password);
+                passwordAndSalt.put("salt", salt);
             }
         } catch (
                 SQLException e) {
@@ -355,10 +323,8 @@ public final class AccountDAO {
             e.printStackTrace();
         }
 
-        return passwordAndSult;
+        return passwordAndSalt;
     }
-
-
 }
 
 

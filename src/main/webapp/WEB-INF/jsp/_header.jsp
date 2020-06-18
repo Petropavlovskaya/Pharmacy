@@ -3,8 +3,8 @@
 
 
 <div align="center">
-    <img src="${pageContext.request.contextPath}/images/pharmacy.gif" align="left" hspace="10px" vspace="10px" alt="Plus" />
+    <img class="img-right" src="${pageContext.request.contextPath}/images/pharmacy.gif" alt="Plus" />
     <img src="${pageContext.request.contextPath}/images/logo.gif" vspace="10px" alt="On-line pharmacy"/>
-    <img src="${pageContext.request.contextPath}/images/doctor.gif" align="right" hspace="10px" vspace="10px" alt="Doctor"/>
+    <img class="img-left" src="${pageContext.request.contextPath}/images/doctor.gif" alt="Doctor"/>
 </div>
 

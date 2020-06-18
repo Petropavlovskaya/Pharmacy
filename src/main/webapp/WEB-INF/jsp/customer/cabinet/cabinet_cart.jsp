@@ -7,7 +7,7 @@
     <style>
         <%@include file="/css/style.css" %>
     </style>
-    <link href="${pageContext.request.contextPath}/images/Pharmacy_small.gif" rel="icon" type="image/gif"/>
+    <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
 <body>
 
@@ -81,42 +81,43 @@
             </tr>
         </c:forEach>
         <tr class="total_row">
-            <td colspan="3" align="right">
-                <c:choose>
-                    <c:when test="${customer.balance >= 0}">
-                <p2>Ваш баланс составляет: ${customer.balanceRub} руб. ${customer.balanceCoin} коп.</p2>
-                    </c:when>
-                    <c:otherwise>
-                <p2>Ваш баланс составляет: - ${customer.balanceRub*-1} руб. ${customer.balanceCoin*-1} коп.</p2>
-                    </c:otherwise>
-                </c:choose>
-            </td>
-            <td colspan="3" align="right">
-                <p2>Общая сумма заказа: ${cart.rub} руб. ${cart.coin} коп.</p2>
-            </td>
-            <td colspan="2" align="center">
-                <c:choose>
-                    <c:when test="${customer.balance >= cart.order_price}">
-                        <input type="submit" value=" Buy ">
-                        <input type="hidden" name="customerCommand" value="buy">
-                    </c:when>
-                    <c:when test="${customer.balance >= 0}">
-                        <input type="submit" value=" Buy in credit ">
-                        <input type="hidden" name="customerCommand" value="buyInCredit">
-                    </c:when>
-                    <c:otherwise>
-                        You have to pay off<br>the dept.
-                    </c:otherwise>
-                </c:choose>
-            </td>
+            <form id="buy" action="${pageContext.request.contextPath}/customer/cabinet/cart" method="post">
+                <td colspan="3" align="right">
+                    <c:choose>
+                        <c:when test="${customer.balance >= 0}">
+                            <p2>Ваш баланс составляет: ${customer.balanceRub} руб. ${customer.balanceCoin} коп.</p2>
+                        </c:when>
+                        <c:otherwise>
+                            <p2>Ваш баланс составляет: - ${customer.balanceRub*(-1)} руб. ${customer.balanceCoin*(-1)}
+                                коп.
+                            </p2>
+                        </c:otherwise>
+                    </c:choose>
+                </td>
+                <td colspan="3" align="right">
+                    <p2>Общая сумма заказа: ${cart.rub} руб. ${cart.coin} коп.</p2>
+                </td>
+                <td colspan="2" align="center">
+                    <c:choose>
+                        <c:when test="${customer.balance >= cart.order_price}">
+                            <input type="submit" value=" Buy ">
+                            <input type="hidden" name="customerCommand" value="buy">
+                        </c:when>
+                        <c:when test="${customer.balance >= 0}">
+                            <input type="submit" value=" Buy in credit ">
+                            <input type="hidden" name="customerCommand" value="buyInCredit">
+                        </c:when>
+                        <c:otherwise>
+                            You have to pay off<br>the dept.
+                        </c:otherwise>
+                    </c:choose>
+                </td>
+            </form>
         </tr>
     </table>
     <br>
-    <form id="buy" action="${pageContext.request.contextPath}/customer/cabinet/cart"
-          method="post">
 
 
-    </form>
 </div>
 
 <div id="footer">

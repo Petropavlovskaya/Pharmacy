@@ -3,7 +3,6 @@ package by.petropavlovskaja.pharmacy.dao;
 import by.petropavlovskaja.pharmacy.dao.sql.MedicineSQL;
 import by.petropavlovskaja.pharmacy.db.impl.ConnectionPool;
 import by.petropavlovskaja.pharmacy.model.Medicine;
-import by.petropavlovskaja.pharmacy.model.Recipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -33,8 +32,24 @@ public final class MedicineDAO {
         return MedicineDAOHolder.MEDICINE_DAO;
     }
 
-    public List<Medicine> find(String name) {
-        return findBy(MedicineSQL.FIND_MEDICINES_BY_NAME.getQuery(), name);
+    public Set<Medicine> getMedicineDataForChangeAmount(int orderId) {
+        Set<Medicine> medicineSet = new HashSet<>();
+        try (
+                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
+                PreparedStatement statement = conn.prepareStatement(MedicineSQL.GET_INFO_FOR_ORDER_BY_ORDER_ID.getQuery())
+        ) {
+            statement.setInt(1, orderId);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                medicineSet.add(new Medicine(rs.getInt("id"), rs.getString("name"),
+                        rs.getString("dosage"), rs.getInt("price"), rs.getInt("amount")));
+            }
+        } catch (
+                SQLException e) {
+            System.out.println("Nothing was find ((");
+            e.printStackTrace();
+        }
+        return medicineSet;
     }
 
     public Medicine findById(Integer medicineId) {
@@ -50,11 +65,10 @@ public final class MedicineDAO {
         Comparator<Medicine> comp = new Medicine.MedicineNameComparator().thenComparing(new Medicine.MedicineDosageComparator())
                 .thenComparing(new Medicine.MedicineDateComparator());
         Set<Medicine> medicineSet = new TreeSet<>(comp);
-
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 Statement statement = conn.createStatement();
-                ResultSet rs = statement.executeQuery(MedicineSQL.GET_ALL_MEDICINES.getQuery());
+                ResultSet rs = statement.executeQuery(MedicineSQL.GET_ALL_MEDICINES.getQuery())
         ) {
             while (rs.next()) {
                 medicineSet.add(createMedicineFromDB(rs));
@@ -70,14 +84,13 @@ public final class MedicineDAO {
     public Set<Medicine> getAllForDoctor() {
         Comparator<Medicine> comp = new Medicine.MedicineNameComparator().thenComparing(new Medicine.MedicineDosageComparator());
         Set<Medicine> medicineSet = new TreeSet<>(comp);
-
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 Statement statement = conn.createStatement();
-                ResultSet rs = statement.executeQuery(MedicineSQL.GET_ALL_MEDICINES.getQuery());
+                ResultSet rs = statement.executeQuery(MedicineSQL.GET_ALL_RECIPE_MEDICINES.getQuery())
         ) {
             while (rs.next()) {
-                    Medicine medicine = new Medicine(rs.getString("name"), rs.getString("dosage"));
+                Medicine medicine = new Medicine(rs.getString("name"), rs.getString("dosage"));
                 medicineSet.add(medicine);
             }
         } catch (
@@ -86,12 +99,6 @@ public final class MedicineDAO {
             e.printStackTrace();
         }
         return medicineSet;
-    }
-
-    public List<Medicine> getByRange(Date firstDate, Date secondDate) {
-        logger.error("Illegal access in AccountDAO. Method \"public List<Medicine> getByRange(Date firstDate, Date secondDate)\"" +
-                " isn't implement. Return NULL.");
-        return null;
     }
 
     public boolean create(Medicine medicine) {
@@ -109,20 +116,17 @@ public final class MedicineDAO {
             }
         } catch (SQLException e) {
             logger.error("SQL Exception in create medicine: " + e);
-        } finally {
-            return result;
         }
+            return result;
     }
 
     public boolean update(Medicine medicine) throws IllegalArgumentException {
-        System.out.println("In UPDATE MedicineDAO+++++++++++////////////++++++++++++++++++++++++/////////////////////////");
         boolean result = false;
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = addUpdatePrepareStatement(conn, MedicineSQL.UPDATE_MEDICINE.getQuery(), medicine)
         ) {
             int countUpdateRowsMedicine = statement.executeUpdate();
-            System.out.println("INT UPDATE = " + countUpdateRowsMedicine);
             if (countUpdateRowsMedicine != 1) {
                 logger.error("Update into table Medicine is failed. We update: " + countUpdateRowsMedicine + " rows for medicine: " + medicine.toString());
             } else {
@@ -131,9 +135,8 @@ public final class MedicineDAO {
             }
         } catch (SQLException e) {
             logger.error("SQL Exception in create medicine: " + e);
-        } finally {
-            return result;
         }
+            return result;
     }
 
     public boolean deleteById(Medicine medicine, String pharmacistLogin) {
@@ -151,12 +154,10 @@ public final class MedicineDAO {
                 result = true;
                 logger.info("Pharmacist login = " + pharmacistLogin + " delete Medicine: " + medicine.toString());
             }
-
         } catch (SQLException e) {
             logger.error("SQL Exception in create medicine: " + e);
-        } finally {
-            return result;
         }
+        return result;
     }
 
 
@@ -165,7 +166,7 @@ public final class MedicineDAO {
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = findPrepareStatement(conn, sql, values);
-                ResultSet rs = statement.executeQuery();
+                ResultSet rs = statement.executeQuery()
         ) {
             while (rs.next()) {
                 medicine.add(createMedicineFromDB(rs));
@@ -177,7 +178,6 @@ public final class MedicineDAO {
     }
 
     private Medicine createMedicineFromDB(ResultSet rs) {
-//        System.out.println("MedicineDao - start create medicine");
         Medicine medicine = null;
         try {
 
@@ -186,8 +186,6 @@ public final class MedicineDAO {
                     rs.getString("dosage"), rs.getDate("exp_date"),
                     rs.getBoolean("recipe_required"), rs.getInt("price"),
                     rs.getInt("added_by"), rs.getString("pharm_form"));
-
-//            System.out.println("MedicineDao - finish create medicine: " + medicine.toString());
         } catch (SQLException e) {
             logger.error("Can't create Medicine entity from DB. " + e);
         }
@@ -222,7 +220,6 @@ public final class MedicineDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return statement;
     }
 }

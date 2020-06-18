@@ -31,6 +31,15 @@ public class Medicine implements Serializable {
         this.dosage = dosage;
     }
 
+    // For create Order (recount available amount)
+    public Medicine(int id, String name, String dosage, int price, int amount) {
+        this.id = id;
+        this.name = name;
+        this.dosage = dosage;
+        this.price = price;
+        this.amount = amount;
+    }
+
     public Medicine(int id, String name, int indivisible_amount, int amount, String dosage, Date exp_date,
                     boolean recipe_required, int price, int added_by, String pharm_form) {
         this.id = id;
@@ -43,8 +52,8 @@ public class Medicine implements Serializable {
         this.price = price;
         this.added_by = added_by;
         this.pharm_form = pharm_form;
-        this.rub = price/100;
-        this.coin = price%100;
+        this.rub = price / 100;
+        this.coin = price % 100;
     }
 
     public boolean isCustomerNeedRecipe() {
@@ -103,6 +112,10 @@ public class Medicine implements Serializable {
         return coin;
     }
 
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+
     @Override
     public String toString() {
         return "Medicine{" +
@@ -140,11 +153,13 @@ public class Medicine implements Serializable {
             return a.getName().compareTo(b.getName());
         }
     }
+
     public static class MedicineDosageComparator implements Comparator<Medicine> {
         public int compare(Medicine a, Medicine b) {
             return a.getDosage().compareTo(b.getDosage());
         }
     }
+
     public static class MedicineDateComparator implements Comparator<Medicine> {
         public int compare(Medicine a, Medicine b) {
             return a.getExp_date().compareTo(b.getExp_date());

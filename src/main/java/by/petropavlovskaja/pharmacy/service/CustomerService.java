@@ -3,19 +3,16 @@ package by.petropavlovskaja.pharmacy.service;
 import by.petropavlovskaja.pharmacy.dao.AccountDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
 import by.petropavlovskaja.pharmacy.dao.OrderDAO;
-import by.petropavlovskaja.pharmacy.dao.RecipeDAO;
 import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.model.MedicineInOrder;
 import by.petropavlovskaja.pharmacy.model.Order;
 import by.petropavlovskaja.pharmacy.model.Recipe;
-import by.petropavlovskaja.pharmacy.model.account.Account;
 import by.petropavlovskaja.pharmacy.model.account.Customer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class CustomerService {
     private static Logger logger = LoggerFactory.getLogger(CustomerService.class);
@@ -98,7 +95,8 @@ public class CustomerService {
         updateTotalPriceInDB(cart.getId(), medicineInCart);
         cart = findCart(customer.getId());
         customer.setCart(cart);
-
+        int accountBalance = accountDAO.getCustomerBalance(customer.getId());
+        customer.setBalance(accountBalance);
     }
 
     private void blockMedicineWithoutRecipe(Customer customer, Set<MedicineInOrder> medicineInCart, int cartId) {
@@ -113,6 +111,7 @@ public class CustomerService {
                     if ((recipeItem.getMedicine().equals(medicineItem.getMedicine()) &&
                             recipeItem.getDosage().equals(medicineItem.getDosage()))) {
                         needUpdateDb = false;
+                        break;
                     }
                 }
             }
@@ -124,12 +123,10 @@ public class CustomerService {
             }
         }
         orderDAO.updateMedicinePriceInCart(cartId, medicineInCart);
-
-
     }
 
     private Set<MedicineInOrder> findActualPriceAndSetToCartInDB(int cartId) {
-        Set<MedicineInOrder> medicineInCartWithActualPrice = orderDAO.findMedicineInCartWithActualPrice(cartId);
+        Set<MedicineInOrder> medicineInCartWithActualPrice = orderDAO.findMedicineInCartWithActualPrice(cartId, true);
         orderDAO.updateMedicinePriceInCart(cartId, medicineInCartWithActualPrice);
         return medicineInCartWithActualPrice;
     }
@@ -139,13 +136,11 @@ public class CustomerService {
         for (MedicineInOrder medicineItem : medicineInCartWithActualPrice) {
             totalCartPrice += medicineItem.getPriceForOne() * medicineItem.getQuantity();
         }
-        orderDAO.updateCart(cartId, totalCartPrice);
+        orderDAO.updateCartPrice(cartId, totalCartPrice);
     }
 
-
     private Order findCart(int customerId) {
-        Order cart = orderDAO.findCart(customerId);
-        return cart;
+        return orderDAO.findCart(customerId);
     }
 
 
@@ -159,26 +154,14 @@ public class CustomerService {
         return medicine;
     }
 
-    public Account findAccount(int id) {
-        return accountDAO.find(id);
-    }
-
     public void getAllOrdersWithDetails(Customer customer) {
         Map<Order, Set<MedicineInOrder>> orders = orderDAO.getAllOrdersWithDetails(customer.getId());
         customer.setOrdersWithDetails(orders);
     }
 
-    public Set<Medicine> getAllMedicine() {
-        return medicineDAO.getAll();
-    }
-
-    private MedicineInOrder getMedicineInOrderFromMedicine(Medicine medicine, int quantity, int orderId) {
-        return new MedicineInOrder(0, medicine.getName(), medicine.getIndivisible_amount(), medicine.getDosage(), medicine.isRecipe_required(), quantity, medicine.getPrice(), orderId);
-    }
-
     public void deleteMedicineFromCart(Customer customer, Map<String, Object> reqParameters) {
         int medicineId = Integer.parseInt((String) reqParameters.get("medicine_id"));
-        orderDAO.deleteMedicine(medicineId);
+        orderDAO.deleteMedicineFromOrder(medicineId);
         updateCartWithDetails(customer);
     }
 
@@ -189,6 +172,7 @@ public class CustomerService {
                 for (Recipe recipeItem : recipes) {
                     if (medItem.getName().equals(recipeItem.getMedicine()) && medItem.getDosage().equals(recipeItem.getDosage())) {
                         medItem.setCustomerNeedRecipe(false);
+                        break;
                     } else {
                         medItem.setCustomerNeedRecipe(true);
                     }
@@ -197,9 +181,15 @@ public class CustomerService {
         }
     }
 
-    public void createOrder(Customer customer){
-
-
+    public void createOrder(Customer customer) {
+        Order cart = orderDAO.findCart(customer.getId());
+        Set<MedicineInOrder> medicineInOrderSet = orderDAO.findMedicineInCartWithActualPrice(cart.getId(), false);
+        boolean resultOrderUpdate = orderDAO.createOrder(customer, cart, medicineInOrderSet);
+        if (resultOrderUpdate) {
+            cart = orderDAO.findCart(customer.getId());
+            medicineInOrderSet = orderDAO.findMedicineInCartWithActualPrice(cart.getId(), false);
+            customer.setCartMedicine(medicineInOrderSet);
+        }
     }
 
 }

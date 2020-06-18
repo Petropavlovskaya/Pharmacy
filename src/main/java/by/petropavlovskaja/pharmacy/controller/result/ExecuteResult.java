@@ -1,6 +1,5 @@
 package by.petropavlovskaja.pharmacy.controller.result;
 
-import by.petropavlovskaja.pharmacy.model.account.AccountRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,10 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 public class ExecuteResult {
@@ -40,42 +37,38 @@ public class ExecuteResult {
             if (!cookieSet.isEmpty()) {
                 Set<String> set = cookieSet.keySet();
                 for (String s : set) {
-                    System.out.println("ExRez complete for uri = " + uri + " set cookie: " + s + " and val: " + cookieSet.get(s));
                     Cookie cookie = new Cookie(s, cookieSet.get(s));
                     cookie.setMaxAge(259200);
                     response.addCookie(cookie);
                 }
-
             }
         }
         try {
 
             if (request.getMethod().equals("GET") || !responseAttributes.isEmpty()) {
                 checkJSP(request);
-                System.out.println("Class ExecuteResult. GET-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*, jsp = " + jsp);
                 RequestDispatcher dispatcher = request.getRequestDispatcher(jsp);
                 dispatcher.forward(request, response);
+                logger.info("Execute result is successful for method GET. Jsp = " + jsp);
             } else {
-                System.out.println("Class ExecuteResult. PUT-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*, jsp = " + jsp);
                 response.sendRedirect(jsp);
+                logger.info("Execute result is successful for method POST. Jsp = " + jsp);
             }
-        } catch (ServletException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ServletException | IOException e) {
             e.printStackTrace();
         }
     }
 
     private void checkJSP(HttpServletRequest request) {
-        String realPath = request.getServletContext().getRealPath("")+jsp;
+        String realPath = request.getServletContext().getRealPath("") + jsp;
         File file = new File(realPath);
-        if (!file.exists()){
-                jsp = "/WEB-INF/jsp/404.jsp";
+        if (!file.exists()) {
+            jsp = "/WEB-INF/jsp/404.jsp";
         }
     }
 
     public void setJsp(String jsp) {
-        this.jsp = jsp;
+        ExecuteResult.jsp = jsp;
     }
 
     public void setJsp(String[] arrayUri) {
@@ -85,7 +78,7 @@ public class ExecuteResult {
         }
         jsp = jsp + arrayUri[arrayUri.length - 2] + "_" + arrayUri[arrayUri.length - 1] + ".jsp";
 
-        this.jsp = jsp;
+        ExecuteResult.jsp = jsp;
     }
 
     public void setResponseAttributes(String key, Object value) {
@@ -102,5 +95,4 @@ public class ExecuteResult {
     public void setUpdateCookie(boolean updateCookie) {
         this.updateCookie = updateCookie;
     }
-
 }

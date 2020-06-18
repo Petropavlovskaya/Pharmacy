@@ -1,31 +1,39 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <html>
 <head>
-    <title>Access denied!</title>
+    <title>On-line pharmacy. Access denied!</title>
     <style>
+        <%@include file="/css/style.css" %>
         body {
-            background: url("../../images/noaccess.gif") no-repeat linen;
+            background: url("${pageContext.request.contextPath}/images/noaccess.gif") no-repeat fixed center center;
+            left: 20%;
             background-size: contain;
+            background-clip: border-box;
         }
     </style>
-    <link href="../images/Pharmacy_small.gif" rel="icon" type="image/gif"/>
+    <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
 <body>
-<img src="${pageContext.request.contextPath}/images/noaccess.gif" />
 
-<%--<p3>You have not access for this page!</p3>--%>
-<c:choose>
-    <c:when test="${empty accountRole}">
-        <a href="${pageContext.request.contextPath}/main"><br>Вернуться на главную<br><br></a>
-    </c:when>
-    <c:otherwise>
-        <a href="${pageContext.request.contextPath}/${accountRole}/main"><br>Вернуться на главную<br><br></a>
-    </c:otherwise>
-</c:choose>
+<div class="div-left">
+    <br>
+    <br>
+    <p class="p-big-left">Доступ запрещен!</p>
+    <br>
+    <br>
+    <c:choose>
+        <c:when test="${empty accountRole}">
+            <a class="link-back" href="${pageContext.request.contextPath}/main">Вернуться на главную</a>
+        </c:when>
+        <c:otherwise>
+            <a class="link-back" href="${pageContext.request.contextPath}/${accountRole}/main">Вернуться на главную</a>
+        </c:otherwise>
+    </c:choose>
+</div>
+
 </body>
 </html>
-
 
 <%--${pageContext.request.contextPath}/--%>

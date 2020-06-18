@@ -8,17 +8,12 @@ import by.petropavlovskaja.pharmacy.service.PharmacistService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.Cookie;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class PharmacistCommand implements IFrontCommand {
     private static Logger logger = LoggerFactory.getLogger(PharmacistCommand.class);
     private static PharmacistService pharmacistService = PharmacistService.getInstance();
-    private static CommonService commonService = CommonService.getInstance();
-    private Cookie cookie;
 
     private static class PharmacistHolder {
         public static final PharmacistCommand PHARMACIST_COMMAND = new PharmacistCommand();
@@ -39,7 +34,6 @@ public class PharmacistCommand implements IFrontCommand {
         Set<Medicine> medicineList = CommonService.getInstance().getAllMedicine();
         sc.getSession().setAttribute("medicineList", medicineList);
 
-        String requestMethod = sc.getRequestMethod();
         executeResult.setJsp(arrayUri);
 
         if (sc.getRequestMethod().equals("POST")) {

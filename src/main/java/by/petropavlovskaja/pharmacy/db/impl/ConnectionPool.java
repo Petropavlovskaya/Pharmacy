@@ -27,7 +27,7 @@ public enum ConnectionPool implements IConnectionPool {
     }
 
     private void addConnections(int size) {
-//        logger.info("It will initialize " + size + " real connections.");
+        logger.info("It will initialize " + size + " real connections.");
         for (int i = 0; i < size; i++) {
             try {
                 Class.forName("org.postgresql.Driver");
@@ -36,7 +36,6 @@ public enum ConnectionPool implements IConnectionPool {
                 availableConnections.add(connection);
             } catch (SQLException e) {
                 logger.error("We can't init connection # " + i + ", because:" + e);
-                System.out.println("Something went wrong");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }

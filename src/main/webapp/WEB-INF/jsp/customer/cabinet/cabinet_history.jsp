@@ -9,7 +9,7 @@
         <%@include file="/css/style.css" %>
         <%@include file="/css/hiddenDiv.css" %>
     </style>
-    <link href="${pageContext.request.contextPath}/images/Pharmacy_small.gif" rel="icon" type="image/gif"/>
+    <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
 
 <body>
@@ -44,7 +44,8 @@
                         Лекарство: <c:out value="${orderItem.medicine}"/> (дозировка: <c:out
                             value="${orderItem.dosage}"/>,
                         в упаковке: <c:out value="${orderItem.indivisible_amount}"/> шт.)<br>
-                        Приобретено: <c:out value="${orderItem.quantity}"/> <br>
+                        Приобретено: <c:out value="${orderItem.quantity}"/> ед.
+                            по цене <c:out value="${orderItem.rubForOne}"/> руб. <c:out value="${orderItem.coinForOne}"/> коп. <br>
                         Стоимость: <c:out value="${orderItem.rubForQuantity}"/> руб.
                         <c:out value="${orderItem.coinForQuantity}"/> коп. <br>
                         <br>

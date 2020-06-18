@@ -1,12 +1,10 @@
 package by.petropavlovskaja.pharmacy.model.account;
 
-import by.petropavlovskaja.pharmacy.model.Medicine;
-
+import java.io.Serializable;
 import java.util.Comparator;
-import java.util.Set;
-import java.util.TreeSet;
 
-public class Account {
+public class Account implements Serializable {
+    private static final long serialVersionUID = 8487635767584478029L;
     private int id;
     private String surname;
     private String name;
@@ -14,16 +12,6 @@ public class Account {
     private String phoneNumber;
     private AccountRole accountRole;
     private boolean status;
-
-
-/*    // for test DELETE IT
-
-    // for test DELETE IT
-    public User(int id, String surname, String name) {
-        this.id = id;
-        this.surname = surname;
-        this.name = name;
-    }*/
 
     // method for create template User before search. Create InvalidUser with ID=-1
     public Account(int id) {
@@ -105,7 +93,6 @@ public class Account {
         return status;
     }
 
-
     public int getId() {
         return id;
     }
@@ -113,8 +100,6 @@ public class Account {
     public AccountRole getAccountRole() {
         return accountRole;
     }
-
-
 
     @Override
     public String toString() {
@@ -132,27 +117,28 @@ public class Account {
             return a.getSurname().compareTo(b.getSurname());
         }
     }
+
     public static class AccountNameComparator implements Comparator<Account> {
         public int compare(Account a, Account b) {
             return a.getName().compareTo(b.getName());
         }
     }
+
     public static class AccountPatronymicComparator implements Comparator<Account> {
         public int compare(Account a, Account b) {
-            if (a.getPatronymic()==null || b.getPatronymic()==null) {
+            if (a.getPatronymic() == null || b.getPatronymic() == null) {
                 return 0;
             }
             return a.getPatronymic().compareTo(b.getPatronymic());
         }
     }
+
     public static class AccountPhoneComparator implements Comparator<Account> {
         public int compare(Account a, Account b) {
-            if (a.getPhoneNumber()==null || b.getPhoneNumber()==null) {
+            if (a.getPhoneNumber() == null || b.getPhoneNumber() == null) {
                 return 0;
             }
             return a.getPhoneNumber().compareTo(b.getPhoneNumber());
         }
     }
-
-
 }

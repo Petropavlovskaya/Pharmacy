@@ -8,7 +8,7 @@
     <style>
         <%@include file="/css/style.css" %>
     </style>
-    <link href="${pageContext.request.contextPath}/images/Pharmacy_small.gif" rel="icon" type="image/gif"/>
+    <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
 <body>
 

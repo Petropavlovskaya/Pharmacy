@@ -1,10 +1,12 @@
 package by.petropavlovskaja.pharmacy.model;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 
-public class Recipe /*implements Comparable<Recipe>*/ {
+public class Recipe implements Serializable {
+    private static final long serialVersionUID = 5641772425449755744L;
     private int id;
     private String medicine;
     private String dosage;
@@ -134,21 +136,18 @@ public class Recipe /*implements Comparable<Recipe>*/ {
         return Objects.hash(medicine, doctor_id, fk_customer, validity);
     }
 
-/*    @Override
-    public int compareTo(Recipe o) {
-        return 0;
-    }*/
-
     public static class RecipeNameComparator implements Comparator<Recipe> {
         public int compare(Recipe a, Recipe b) {
             return a.getMedicine().compareTo(b.getMedicine());
         }
     }
+
     public static class RecipeDosageComparator implements Comparator<Recipe> {
         public int compare(Recipe a, Recipe b) {
             return a.getDosage().compareTo(b.getDosage());
         }
     }
+
     public static class RecipeOrderIdComparator implements Comparator<Recipe> {
         public int compare(Recipe a, Recipe b) {
             return a.getId_medicine_in_order() - b.getId_medicine_in_order();

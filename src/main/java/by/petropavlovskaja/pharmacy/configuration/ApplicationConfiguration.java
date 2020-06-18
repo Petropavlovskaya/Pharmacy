@@ -14,11 +14,11 @@ public enum ApplicationConfiguration {
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
-    private int initPoolSize = 3;
-    private int maxPoolSize = 6;
-    private int poolIncreaseStep = 2;
-    private String globalSalt;
-    private static Logger logger;
+    private int initPoolSize;
+    private int maxPoolSize;
+    private int poolIncreaseStep;
+    private String globalSalt = "2";
+//    private String globalSalt = ";Yw^1e";
 
 
     ApplicationConfiguration() {
@@ -26,7 +26,7 @@ public enum ApplicationConfiguration {
     }
 
     private void initProperties() {
-        logger = LoggerFactory.getLogger(ApplicationConfiguration.class);
+        Logger logger = LoggerFactory.getLogger(ApplicationConfiguration.class);
         String propertyFile = getClass().getResource("/").getPath() + "application.properties";
         System.out.println("source file path = " + propertyFile);
         try (InputStream inputStream = new FileInputStream(propertyFile)) {

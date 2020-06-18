@@ -1,22 +1,24 @@
 package by.petropavlovskaja.pharmacy.model;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 
-public class Order {
+public class Order implements Serializable {
+    private static final long serialVersionUID = -5957381211186194380L;
     private int id;
     private int fk_customer;
     private boolean payment_state;
     private int order_price;
     private Date order_date;
     private boolean cart;
-    // local variable, don't save in database
+    // local variable below don't save in database, they are for JSP
     private int rub; // currency unit
     private int coin; // currency unit
 
-// for test
-     public Order(int id) {
+    // for test
+    public Order(int id) {
         this.id = id;
     }
 
@@ -95,14 +97,17 @@ public class Order {
     }
 
     public static class OrderDateComparator implements Comparator<Order> {
-        public int compare(Order a, Order b) { return a.getOrder_date().compareTo(b.getOrder_date());
+        public int compare(Order a, Order b) {
+            return a.getOrder_date().compareTo(b.getOrder_date());
         }
     }
+
     public static class OrderIdComparator implements Comparator<Order> {
         public int compare(Order a, Order b) {
             return a.getId() - b.getId();
         }
     }
+
     public static class OrderPriceComparator implements Comparator<Order> {
         public int compare(Order a, Order b) {
             return a.getOrder_price() - b.getOrder_price();

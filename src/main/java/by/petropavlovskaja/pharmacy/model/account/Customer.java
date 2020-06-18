@@ -5,14 +5,15 @@ import by.petropavlovskaja.pharmacy.model.MedicineInOrder;
 import by.petropavlovskaja.pharmacy.model.Order;
 import by.petropavlovskaja.pharmacy.model.Recipe;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class Customer extends Account {
+public class Customer extends Account implements Serializable {
+    private static final long serialVersionUID = -1256423013564120517L;
     private int balance;
     private int balanceRub; // currency unit
     private int balanceCoin; // currency unit
@@ -20,11 +21,6 @@ public class Customer extends Account {
     private int creditRub; // currency unit
     private int creditCoin; // currency unit
 
-    /*
-    * 1. Order with MedicineInOrder
-    * 2. Cart with MedicineInCart
-    * 3. FavoriteMedicineSet
-    * 4. Recipe*/
     private Map<Order, Set<MedicineInOrder>> ordersWithDetails = new HashMap<>();   // history
     private Order cart = new Order(-1);                                 // cart
     private Set<MedicineInOrder> medicineInCart = new HashSet<>();          // medicine in cart
@@ -36,23 +32,14 @@ public class Customer extends Account {
         super(id);
     }
 
-    /*    public Customer(AccountBuilder accountBuilder) {
-            super(accountBuilder);
-        }*/
     public Customer(AccountBuilder accountBuilder, int balance, int credit) {
         super(accountBuilder);
         this.balance = balance;
-        this.balanceRub = balance/100;
-        this.balanceCoin = balance%100;
+        this.balanceRub = balance / 100;
+        this.balanceCoin = balance % 100;
         this.credit = credit;
-        this.creditRub = credit/100;
-        this.creditCoin = credit%100;
-    }
-    public void setCOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOIN(){
-        this.balanceRub = balance/100;
-        this.balanceCoin = balance%100;
-        this.creditRub = credit/100;
-        this.creditCoin = credit%100;
+        this.creditRub = credit / 100;
+        this.creditCoin = credit % 100;
     }
 
     public int getBalanceRub() {
@@ -91,7 +78,7 @@ public class Customer extends Account {
         return cart;
     }
 
-    public Set<MedicineInOrder> getMedicineInCart(){
+    public Set<MedicineInOrder> getMedicineInCart() {
         return medicineInCart;
     }
 
@@ -115,7 +102,7 @@ public class Customer extends Account {
         this.cart = cart;
     }
 
-    public void setCartMedicine(Set<MedicineInOrder> medicineInCart){
+    public void setCartMedicine(Set<MedicineInOrder> medicineInCart) {
         this.medicineInCart = medicineInCart;
     }
 
@@ -127,7 +114,7 @@ public class Customer extends Account {
         this.recipes = recipes;
     }
 
-    public void addMedicineIntoCart(MedicineInOrder newMedicine){
+    public void addMedicineIntoCart(MedicineInOrder newMedicine) {
         medicineInCart.add(newMedicine);
     }
 
@@ -137,5 +124,4 @@ public class Customer extends Account {
                 ", balance=" + balance +
                 ", credit=" + credit;
     }
-
 }

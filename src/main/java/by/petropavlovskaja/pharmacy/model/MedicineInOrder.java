@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
 
-public class MedicineInOrder implements Serializable{
+public class MedicineInOrder implements Serializable {
     private static final long serialVersionUID = -5073755366792754335L;
     private int id;
     private String medicine;
@@ -40,14 +40,13 @@ public class MedicineInOrder implements Serializable{
         this.fk_order = fk_order;
     }
 
-    public void setRubCoin(){
-        this.priceForQuantity = priceForOne*quantity;
-        this.rubForOne = priceForOne/100;
-        this.coinForOne = priceForOne%100;
-        this.rubForQuantity = priceForQuantity/100;
-        this.coinForQuantity = priceForQuantity%100;
+    public void setRubCoin() {
+        this.priceForQuantity = priceForOne * quantity;
+        this.rubForOne = priceForOne / 100;
+        this.coinForOne = priceForOne % 100;
+        this.rubForQuantity = priceForQuantity / 100;
+        this.coinForQuantity = priceForQuantity % 100;
     }
-
 
     public static long getSerialVersionUID() {
         return serialVersionUID;
@@ -174,11 +173,13 @@ public class MedicineInOrder implements Serializable{
             return a.getMedicine().compareTo(b.getMedicine());
         }
     }
+
     public static class DosageComparator implements Comparator<MedicineInOrder> {
         public int compare(MedicineInOrder a, MedicineInOrder b) {
             return a.getDosage().compareTo(b.getDosage());
         }
     }
+
     public static class PriceComparator implements Comparator<MedicineInOrder> {
         public int compare(MedicineInOrder a, MedicineInOrder b) {
             return a.getPriceForOne() - b.getPriceForOne();

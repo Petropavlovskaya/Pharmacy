@@ -1,9 +1,7 @@
 package by.petropavlovskaja.pharmacy.service;
 
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
-import by.petropavlovskaja.pharmacy.dao.AccountDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
-import by.petropavlovskaja.pharmacy.dao.OrderDAO;
 import by.petropavlovskaja.pharmacy.model.Medicine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +13,7 @@ import java.util.Map;
 
 public class PharmacistService {
     private static Logger logger = LoggerFactory.getLogger(PharmacistService.class);
-    private AccountDAO accountDAO = AccountDAO.getInstance();
     private MedicineDAO medicineDAO = MedicineDAO.getInstance();
-    private OrderDAO orderDAO = OrderDAO.getInstance();
 
     private PharmacistService() {
     }
@@ -52,35 +48,24 @@ public class PharmacistService {
     public Medicine findMedicineById(Map<String, Object> reqParameters, ExecuteResult executeResult) {
         Medicine medicine = new Medicine(-1);
         int medicineId = Integer.parseInt((String) reqParameters.get("medicine_id"));
-        String pharmacistLogin = (String) reqParameters.get("accountLogin");
 
-        System.out.println("PharmacistService. Try to find medicine by ID = " + medicineId);
 
         if (medicineId > 0) {
             medicine = medicineDAO.findById(medicineId);
-            System.out.println("PharmacistService. Found medicine by ID = " + medicine.toString());
         } else {
             executeResult.setResponseAttributes("message", "Medicine ID can't be less than 1.");
         }
-
         return medicine;
     }
 
     public boolean deleteMedicineFromDB(Map<String, Object> reqParameters, ExecuteResult executeResult) {
-        Medicine medicine;
-
-        String medicine_id = (String) reqParameters.get("medicine_id");
         String pharmacistLogin = (String) reqParameters.get("accountLogin");
+        Medicine medicine = findMedicineById(reqParameters, executeResult);
 
-        medicine = findMedicineById(reqParameters, executeResult);
-
-        System.out.println("PharmacistService. Try to delete medicine by ID = " + medicine_id);
         boolean result = medicineDAO.deleteById(medicine, pharmacistLogin);
-        System.out.println("PharmacistService. Delete medicine by ID = " + medicine.toString());
         if (!result) {
             executeResult.setResponseAttributes("message", "Can't delete medicine: " + medicine.toString());
         }
-
         return result;
     }
 
@@ -156,7 +141,6 @@ public class PharmacistService {
         }
         return result;
     }
-
 }
 
 
