@@ -12,8 +12,6 @@
 
   <div id="logo">
     <%@include file="../_header.jsp" %>
-
-<%--    <c:import url="../_header.jsp"/>--%>
   </div>
   <div id="line"></div>
   <div id="menu">

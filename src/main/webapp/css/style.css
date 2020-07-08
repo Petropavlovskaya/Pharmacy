@@ -1,7 +1,7 @@
 * {
-    margin: 0;
-    padding: 0;
-}
+     margin: 0;
+     padding: 0;
+ }
 
 html {
     height: 100%;
@@ -12,7 +12,7 @@ body {
     min-height: 100%;
     position: static;
     top: 20px;
-    background-color: linen;
+    background-color: #f0ece5;
 }
 
 #menu {
@@ -75,7 +75,7 @@ body {
 }
 
 #line {
-    background-color: #0a5519;
+    background-color: #36564b;
     width: 100%;
     margin: 0;
     height: 4px;
@@ -96,7 +96,7 @@ body {
     z-index: 2;
 }
 
-.div-left{
+.div-left {
     position: absolute;
     left: 3%;
 }
@@ -107,7 +107,17 @@ body {
     left: 30px;
 }
 
-.img-right {
+.img-rightRU {
+    alignment: right;
+    position: absolute;
+    right: 140px;  /*20*/
+}
+.img-rightEN {
+    alignment: right;
+    position: absolute;
+    right: 80px;   /*20*/
+}
+.img-rightPL {
     alignment: right;
     position: absolute;
     right: 20px;
@@ -136,7 +146,7 @@ body {
 }
 
 .p-hello {
-    color: #850c73;
+    color: #36564b;
     font: bold 20pt Verdana;
 }
 
@@ -157,7 +167,7 @@ form.button_line {
 }
 
 h3 {
-    color: #a72392;
+    color: #36564b;
     font-family: Courier New, serif;
     padding-top: 2%
 }
@@ -172,7 +182,7 @@ A:link {
 }
 
 A:visited {
-    COLOR: #808080;
+    COLOR: #850c73;
     text-decoration: none
 }
 
@@ -184,40 +194,68 @@ A:hover {
 th {
     font-size: 12pt;
     font-weight: bold;
-    background: #abf2a9;
-    border-top: 4px solid #850c73;
-    border-bottom: 1px solid #fb80b7;
-    color: #850c73;
+    background: #5e927c;
+    border-top: 4px solid #36564b;
+    border-bottom: 1px solid #36564b;
+    color: lightyellow;
+    /*background: #abf2a9;*/
+    /*border-top: 4px solid #850c73;*/
+    /*border-bottom: 1px solid #fb80b7;*/
+    /*color: #850c73;*/
     padding: 4px;
 }
 
 td {
     font-size: 11pt;
+    font-weight: bold;
     background: lightyellow;
-    border-bottom: 1px solid #68c398;
-    color: #0a5519;
+    border-bottom: 1px solid #36564b;
+    color: #36564b;
     border-top: 1px solid transparent;
     padding: 4px;
 }
 
 tr:hover td {
-    background: #abf2a9;
+    background: #ddd4c2;
     font-weight: bold;
     color: #850c73;
 }
 
 tr.total {
-    background: lightyellow;
+    background: #ddd4c2;
     font-weight: bold;
     color: #850c73;
 }
 
 tr.insert_row td {
-    background: azure;
+    background: #ddd4c2;
     /*background: #abf2a9;*/
     font-weight: bold;
     color: #850c73;
 }
+
+tr.navigation_row td {
+    border: transparent;
+    background: #ddd4c2;
+    /*background: #abf2a9;*/
+    font-weight: bold;
+    color: #850c73;
+}
+
+
+/*nav tr td:hover
+nav tr:hover td{
+    border: none;
+    background: none;
+    font-weight: bold;
+    color: #850c73;
+}*/
+
+/*table.navigation{
+    border: none;
+}*/
+
+
 
 textarea.table_field_high,
 input.table_field_high {
@@ -236,7 +274,14 @@ textarea.table_field_high {
 input.table_field_number {
     text-align: right;
     vertical-align: center;
-    width: 40px;
+    width: 80px;
+    height: 50px;
+}
+
+input.table_field_money {
+    text-align: right;
+    vertical-align: center;
+    width: 60px;
 }
 
 td.table_field_submit {
@@ -280,8 +325,8 @@ ul#menu-v li span,
 ul#menu-v a {
     padding: 0 6px;
     display: block;
-    background: #abf2a9;
-    color: #850c73;
+    background: #36564b;
+    color: lightyellow;
     font: bold 16px/28px Verdana, Arial;
     text-decoration: none;
     line-height: 90%;
@@ -294,15 +339,15 @@ ul#menu-v li:hover a,
 ul#menu-v li.iehover a {
     background: lightyellow;
     color: darkslategray !important;
-    border: #abf2a9 1px solid;
+    border: #5e927c 1px solid;
     line-height: 90%;
 }
 
 /*sub menu not selected*/
 ul#menu-v li:hover li a,
 ul#menu-v li.iehover li a {
-    background: #abf2a9;
-    color: darkgreen !important;
+    background: #36564b;
+    color: lightyellow !important;
     font: 14px/28px Verdana, Arial;
     border: white 1px solid;
     line-height: 90%;
@@ -315,7 +360,7 @@ ul#menu-v li.iehover li a:hover,
 ul#menu-v li.iehover li.iehover a {
     background: lightyellow;
     color: darkslategray !important;
-    border: #abf2a9 1px solid;
+    border: #36564b 1px solid;
     line-height: 90%;
 }
 
@@ -325,7 +370,7 @@ ul#menu-v ul ul ul {
     display: none;
     position: absolute;
     top: 0;
-    left: 161px;
+    left: 160px;
 }
 
 ul#menu-v li:hover ul ul,
@@ -342,4 +387,41 @@ ul#menu-v li.iehover ul,
 ul#menu-v ul li.iehover ul,
 ul#menu-v ul ul li.iehover ul {
     display: block;
+}
+
+
+label.language {
+    right: 20px;
+    top: 20px;
+    horiz-align: right;
+    width: 40px;
+    height: 40px;
+    display: block;
+    position: absolute;
+}
+
+label.language input[type="radio"] + a {
+    position: absolute;
+    width: 100%;
+    height: 70%;
+    cursor: pointer;
+    /*background: #850c73;*/
+}
+
+label.language input.ru[type="radio"] + a {
+    left: 0;
+    top: 0;
+    right: 10px;
+}
+label.language input.en[type="radio"] + a {
+    left: 0;
+    top: 40px;
+}
+label.language input.pl-en[type="radio"] + a {
+    left: 0;
+    top: 40px;
+}
+label.language input.pl-ru[type="radio"] + a {
+    left: 0;
+    top: 0;
 }

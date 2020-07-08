@@ -1,10 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-
-<html>
 <ul id="menu-v">
-    <li><a href="${pageContext.request.contextPath}/admin/main"><br>Главнвя<br><br></a></li>
+    <li><a href="${pageContext.request.contextPath}/admin/main"><br>Главная<br><br></a></li>
 
     <li><span><br>Аккаунты пользователей<br><br></span>
         <ul>
@@ -24,4 +22,3 @@
 
 
 </ul>
-</html>

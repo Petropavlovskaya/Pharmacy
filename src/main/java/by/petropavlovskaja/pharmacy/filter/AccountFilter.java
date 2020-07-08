@@ -1,5 +1,9 @@
 package by.petropavlovskaja.pharmacy.filter;
 
+import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -13,13 +17,21 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-
+/** Web filter for accounts request. Implements {@link Filter#init(FilterConfig)}. Has next properties:
+ * <b>BUSINESS_ACCOUNT_URIS</b> and <b>COMMAND_ATTRIBUTE</b>
+ */
 @WebFilter(urlPatterns = {"/pharmacist/*", "/doctor/*", "/admin/*", "/customer/*"})
 public class AccountFilter implements Filter {
+    private static Logger logger = LoggerFactory.getLogger(AccountFilter.class);
+
+    /** Property - business account uris */
     private static final Set<String> BUSINESS_ACCOUNT_URIS = new HashSet<>();
+    /** Property - command attribute */
     public static final String COMMAND_ATTRIBUTE = "command";
 
-
+    /** The override method for init filter {@link Filter#init(FilterConfig)}
+     * @param filterConfig - filter config
+     */
     @Override
     public void init(FilterConfig filterConfig) {
         BUSINESS_ACCOUNT_URIS.add("main");
@@ -29,11 +41,17 @@ public class AccountFilter implements Filter {
         BUSINESS_ACCOUNT_URIS.add("account");
     }
 
+    /** The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
+     * @param filterChain - filter chain
+     * @param servletRequest - servlet request
+     * @param servletResponse - servlet response
+     */
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
         String fullUri = req.getRequestURI();
+        req.getSession().setAttribute("fullUri", fullUri);
         String[] arrayUri = fullUri.substring(1).split("/");
         String uriRole = arrayUri[1];
         String accountAccess;
@@ -47,23 +65,26 @@ public class AccountFilter implements Filter {
         String accountRole = String.valueOf(req.getSession().getAttribute("accountRole"));
         String sessionId = String.valueOf(req.getSession().getAttribute("sessionId"));
 
-        if ((accountRole.equals("") && sessionId.equals("null")) || (accountRole.equals("") && sessionId.equals(""))) {
+
+        if (req.getParameter("locale") != null) {
+            filterChain.doFilter(servletRequest, servletResponse);
+        } else if ((accountRole.equals("") && sessionId.equals("null")) || (accountRole.equals("") && sessionId.equals(""))) {
             resp.sendRedirect("/pharmacy/login");
         } else if (BUSINESS_ACCOUNT_URIS.contains(accountAccess) && uriRole.equals(accountRole)) {
-            req.getSession().setAttribute("fullUri", fullUri);
-            req.setAttribute(COMMAND_ATTRIBUTE, accountRole);
-            req.getRequestDispatcher("/app").forward(servletRequest, servletResponse);
+            if (fullUri.contains("medicine/list") &&
+                    req.getParameter("customerCommand") == null && req.getParameter("medicineCommand") == null) {
+                filterChain.doFilter(servletRequest, servletResponse);
+            } else {
+                req.setAttribute(COMMAND_ATTRIBUTE, accountRole);
+                req.getRequestDispatcher("/app").forward(servletRequest, servletResponse);
+            }
         } else if (!uriRole.equals(accountRole)) {
             resp.sendRedirect("/pharmacy/access");
         } else if (!BUSINESS_ACCOUNT_URIS.contains(accountAccess)) {
             resp.sendRedirect("/pharmacy/error");
         } else {
+            System.out.println("1 chain");
             filterChain.doFilter(servletRequest, servletResponse);
         }
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

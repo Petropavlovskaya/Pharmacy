@@ -1,5 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page isELIgnored="false" %>
+<fmt:setLocale value="${sessionScope.get('lang')}"/>
+<fmt:setBundle basename="messages"/>
 
 <html>
 <head>
@@ -7,7 +11,7 @@
     <style>
         <%@include file="/css/style.css" %>
     </style>
-    <link href="images/pharmacy_small.gif" rel="icon" type="image/gif"/>
+    <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
 <body>
 
@@ -19,36 +23,39 @@
     <c:import url="../_customer_menu.jsp"/>
 </div>
 <div id="center_no_right">
-    <table>
+    <p class="p-red">${requestScope.get('message')}</p>
+    <table width="100%">
         <%@include file="_medicine_list_header.jsp" %>
 
-        <c:forEach var="medicine" items="${medicineList}">
+        <c:forEach var="medicine" items="${sessionScope.get('medicineList')}">
             <tr>
                 <td><c:out value="${medicine.name}"/></td>
                 <td><c:out value="${medicine.dosage}"/></td>
-                <td><c:out value="${medicine.exp_date}"/></td>
-                <td>
-                    <c:if test="${medicine.recipe_required == true}"> Да </c:if>
-                    <c:if test="${medicine.recipe_required == false}"> Нет </c:if>
+                <td><c:out value="${medicine.expDate}"/></td>
+                <td align="center">
+                    <c:if test="${medicine.recipeRequired == true}"> <fmt:message key="label.yes"/> </c:if>
+                    <c:if test="${medicine.recipeRequired == false}"> <fmt:message key="label.no"/> </c:if>
                 </td>
-                <td><c:out value="${medicine.pharm_form}"/></td>
-                <td><c:out value="${medicine.indivisible_amount}"/></td>
-                <td><c:out value="${medicine.rub}"/> руб. <c:out value="${medicine.coin}"/>коп.</td>
+                <td><c:out value="${medicine.pharmForm}"/></td>
+                <td><c:out value="${medicine.indivisibleAmount}"/></td>
+                <td><c:out value="${medicine.rub}"/> <fmt:message key="label.rub"/> <c:out value="${medicine.coin}"/>
+                    <fmt:message key="label.kop"/></td>
                 <form id="addIntoCart" class="button_line" method="post"
                       action="${pageContext.request.contextPath}/customer/medicine/list">
                     <td>
                         <input name="amountForBuy" class="table_field_number" type="number" size="3"
                                value="1" min="1" max="${medicine.amount}"
-                               title="Доступное количество ${medicine.amount} уп.">
+                               title="<fmt:message key="label.medicine.amountForBuyTitle1"/> ${medicine.amount} <fmt:message key="label.medicine.amountForBuyTitle2"/>">
                     </td>
                     <td align="center">
                         <c:if test="${medicine.customerNeedRecipe == false}">
-                            <input type="submit" value="To cart" height="8">
-                            <input type="hidden" name="medicine_id" value="${medicine.id}">
+                            <input type="submit" value=
+                                <fmt:message key="label.medicine.buttonToCart"/> height="8">
+                            <input type="hidden" name="medicineId" value="${medicine.id}">
                             <input type="hidden" name="customerCommand" value="medicineForCart">
                         </c:if>
                         <c:if test="${medicine.customerNeedRecipe == true}">
-                            <input type="submit" value=" Order recipe ">
+                            <input type="submit" value=<fmt:message key="label.medicine.buttonOrderRecipe"/>>
                             <input type="hidden" name="customerCommand" value="requestRecipe">
                             <input type="hidden" name="medicine" value="${medicine.name}">
                             <input type="hidden" name="dosage" value="${medicine.dosage}">
@@ -56,22 +63,17 @@
                     </td>
 
                 </form>
-
-                    <%-- For realize in future --%>
-                    <%--                <td>
-                                        <form class="button_line" action="${pageContext.request.contextPath}/customer/medicine/list"
-                                              method="post">
-                                            <input type="submit" value="To favorite" height="8">
-                                            <input type="hidden" name="customerCommand" value="medicineInrFavorite">
-                                            <input type="hidden" name="medicine_id" value="${medicine.id}">
-                                        </form>
-                                    </td>--%>
-                    <%--</div>--%>
-
             </tr>
         </c:forEach>
     </table>
+    <br>
+
+    <c:import url="../../_accountPageNavigation.jsp"/>
+    <c:import url="../../_accountRecordsPerPage.jsp"/>
+
+
 </div>
+
 <%--
 <div id="right_customer">
     <c:import url="../_right_cart.jsp"/>

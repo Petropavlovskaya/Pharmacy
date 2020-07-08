@@ -2,7 +2,6 @@ package by.petropavlovskaja.pharmacy.controller.command;
 
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
-import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.model.account.Customer;
 import by.petropavlovskaja.pharmacy.service.CommonService;
 import by.petropavlovskaja.pharmacy.service.CustomerService;
@@ -11,23 +10,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.Set;
 
-public class CustomerCommand implements IFrontCommand {
+/** Class for processing the customer front requests commands, implements {@link IFrontCommand}
+ */
+public final class CustomerCommand implements IFrontCommand {
     private static Logger logger = LoggerFactory.getLogger(CustomerCommand.class);
     private static CustomerService customerService = CustomerService.getInstance();
     private static CommonService commonService = CommonService.getInstance();
     private static RecipeService recipeService = RecipeService.getInstance();
 
+    /** Nested class create instance of the class */
     private static class CustomerCommandHolder {
         public static final CustomerCommand CUSTOMER_COMMAND = new CustomerCommand();
     }
 
+    /**
+     * The override method for get instance of the class
+     * @return - class instance
+     */
     @Override
     public IFrontCommand getInstance() {
         return CustomerCommandHolder.CUSTOMER_COMMAND;
     }
 
+    /**
+     * The override method process customer's GET and POST front requests
+     * @param sc - Session context {@link SessionContext}
+     * @return - class instance {@link ExecuteResult}
+     */
     @Override
     public ExecuteResult execute(SessionContext sc) {
         ExecuteResult executeResult = new ExecuteResult();
@@ -40,12 +50,6 @@ public class CustomerCommand implements IFrontCommand {
         if (sc.getRequestMethod().equals("GET")) {
             String lastUri = arrayUri[arrayUri.length - 1];
             switch (lastUri) {
-                case "list": {
-                    Set<Medicine> medicineList = commonService.getAllMedicine();
-                    customerService.checkAvailableRecipe(customer, medicineList);
-                    sc.getSession().setAttribute("medicineList", medicineList);
-                    break;
-                }
                 case "cart": {
                     customerService.updateCartWithDetails(customer);
                     sc.getSession().setAttribute("cart", customer.getCart());
@@ -63,11 +67,10 @@ public class CustomerCommand implements IFrontCommand {
                     break;
                 }
                 case "profile": {
+                    customerService.getBalance(customer);
+                    executeResult.setResponseAttributes("account", customer);
                     break;
                 }
-/*                case "favorite": {
-                    break;
-                }*/
             }
         }
 
@@ -76,37 +79,53 @@ public class CustomerCommand implements IFrontCommand {
 
         if (sc.getRequestMethod().equals("POST")) {
             String command = (String) reqParameters.get("customerCommand");
+
             switch (command) {
                 case "medicineForCart": {
                     logger.info(" Command medicineForCart is received.");
-                    customerService.addMedicineInOrder(customer, reqParameters);
+                    boolean validData = customerService.addMedicineInOrder(customer, reqParameters);
+                    if (!validData) {
+                        executeResult.setResponseAttributes("message", "Quantity of medicine for buy is incorrect. Please, try again.");
+                        executeResult.setJsp("/WEB-INF/jsp/customer/medicine/medicine_list.jsp");
+                    } else {
+                        executeResult.setJsp(fullUri);
+                    }
                     break;
                 }
                 case "changeQuantityInCart": {
-                    customerService.updateQuantityInCart(customer, reqParameters);
-                    sc.getSession().setAttribute("cart", customer.getCart());
-                    sc.getSession().setAttribute("medicineInCart", customer.getMedicineInCart());
+                    boolean validData = customerService.updateQuantityInCart(customer, reqParameters);
+                    if (!validData) {
+                        executeResult.setResponseAttributes("message", "Quantity of medicine for buy is incorrect. Please, try again.");
+                        executeResult.setJsp("/WEB-INF/jsp/customer/cabinet/cabinet_cart.jsp");
+                    } else {
+                        sc.getSession().setAttribute("medicineInCart", customer.getMedicineInCart());
+                        sc.getSession().setAttribute("cart", customer.getCart());
+                        executeResult.setJsp(fullUri);
+                    }
                     break;
                 }
                 case "deleteFromCart": {
                     customerService.deleteMedicineFromCart(customer, reqParameters);
                     sc.getSession().setAttribute("cart", customer.getCart());
                     sc.getSession().setAttribute("medicineInCart", customer.getMedicineInCart());
+                    executeResult.setJsp(fullUri);
                     break;
                 }
                 case "requestRecipe": {
-                    recipeService.customerInsertRecipe(customer, reqParameters);
+                    recipeService.customerInsertRecipe(executeResult, customer, reqParameters, fullUri);
                     sc.getSession().setAttribute("recipe", customer.getRecipes());
                     break;
                 }
                 case "extendRecipe": {
                     recipeService.setNeedExtensionByID(customer, reqParameters);
                     sc.getSession().setAttribute("recipe", customer.getRecipes());
+                    executeResult.setJsp(fullUri);
                     break;
                 }
                 case "deleteRecipe": {
                     recipeService.deleteRecipe(customer, reqParameters);
                     sc.getSession().setAttribute("recipe", customer.getRecipes());
+                    executeResult.setJsp(fullUri);
                     break;
                 }
                 case "buyInCredit":
@@ -114,28 +133,43 @@ public class CustomerCommand implements IFrontCommand {
                     customerService.createOrder(customer);
                     sc.getSession().setAttribute("cart", customer.getCart());
                     sc.getSession().setAttribute("medicineInCart", customer.getMedicineInCart());
+                    executeResult.setJsp(fullUri);
                     break;
                 }
-/*                case "medicineInFavorite": {
+                case "increaseBill": {
+                    customerService.increaseBalance(customer, reqParameters);
+                    executeResult.setJsp(fullUri);
                     break;
-                }*/
-/*                case "medicineOutOfFavorite": {
+                }
+                case "changeAccountData": {
+                    boolean successfulUpdate = commonService.changeAccountData(customer, reqParameters, accountId);
+                    if (!successfulUpdate) {
+                        executeResult.setResponseAttributes("message", "Something went wrong, please contact with the application administrator.");
+                    }
+                    executeResult.setJsp(fullUri);
                     break;
-                }*/
+                }
                 default: {
                     logger.error("Command " + command + " is not defined.");
                 }
             }
-            executeResult.setJsp(fullUri);
         }
         return executeResult;
     }
 
+    /**
+     * The method gets customer instance from database and set it to session attribute
+     * @param sc - Session context {@link SessionContext}
+     * @param accountId - customer id
+     * @return - customer instance {@link Customer}
+     */
     private Customer setCustomerSessionAttribute(SessionContext sc, int accountId) {
-        Customer customer = (Customer) sc.getSession().getAttribute("customer");
+        Customer customer;
         if (sc.getSession().getAttribute("customer") == null) {
             customer = commonService.getCustomer(accountId);
             sc.getSession().setAttribute("customer", customer);
+        } else {
+            customer = (Customer) sc.getSession().getAttribute("customer");
         }
         return customer;
     }

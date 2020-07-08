@@ -1,21 +1,21 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-
-<div align="center">
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page isELIgnored="false" %>
+<fmt:setLocale value="${sessionScope.get('lang')}"/>
+<fmt:setBundle basename="messages"/>
 
    <c:choose>
         <c:when test="${empty accountLogin}">
-            <h3>Для возможности осуществить заказ, пожалуйста
+            <h3 align="center"><fmt:message key="label.main.placeOrder"/>
                 <br>
-                <a href="${pageContext.request.contextPath}/login">Войдите</a>
-                или
-                <a href="${pageContext.request.contextPath}/signup">Зарегистрируйтесь</a>
+                <a href="${pageContext.request.contextPath}/login"><fmt:message key="label.main.Login"/></a>
+                <fmt:message key="label.main.or"/>
+                <a href="${pageContext.request.contextPath}/signup"><fmt:message key="label.main.register"/></a>
             </h3>
         </c:when>
     </c:choose>
 
     <br><br>
-    <h2> Наша он-лайн аптека - это широкий выбор лекарственных средств,
-        удобный способ оплаты и экономия Вашего времени!
+    <h2> <fmt:message key="label.main.slogan"/>
     </h2>
-</div>

@@ -1,10 +1,14 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%--<html>--%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page isELIgnored="false" %>
+<fmt:setLocale value="${sessionScope.get('lang')}"/>
+<fmt:setBundle basename="messages"/>
+
 <thead>
-<th>Наименование<%--Medicine name--%></th>
-<th>Дозировка<%--Dosage--%></th>
-<th>Использован</th>
-<th>Срок действия</th>
-<th colspan="2">Действие</th>
+<th><fmt:message key="label.tableHeader.medicineName"/></th>
+<th><fmt:message key="label.tableHeader.dosage"/></th>
+<th><fmt:message key="label.tableHeader.used"/></th>
+<th><fmt:message key="label.tableHeader.validity"/></th>
+<th colspan="2"><fmt:message key="label.tableHeader.action"/></th>
 </thead>
-<%--</html>--%>

@@ -1,5 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page isELIgnored="false" %>
+<fmt:setLocale value="${sessionScope.get('lang')}"/>
+<fmt:setBundle basename="messages"/>
 
 <html>
 <head>
@@ -19,61 +23,64 @@
     <c:import url="../_customer_menu.jsp"/>
 </div>
 <div id="center_no_right">
-    <table>
+    <p class="p-red">${requestScope.get('message')}</p>
+
+    <table width="100%">
         <%@include file="_cart_table_header.jsp" %>
 
-        <c:set var="cart" value="${cart}"/>
-        <c:set var="customer" value="${customer}"/>
+        <c:set var="cart" value="${sessionScope.get('cart')}"/>
+        <c:set var="customer" value="${sessionScope.get('customer')}"/>
 
-        <c:forEach var="medicine" items="${medicineInCart}">
+        <c:forEach var="medicine" items="${sessionScope.get('medicineInCart')}">
             <c:set var="price" value="${medicine.priceForOne}"/>
             <c:set var="quantity" value="${medicine.quantity}"/>
 
-            <tr class="insert_row">
+            <tr>
 
                 <td><c:out value="${medicine.medicine}"/></td>
                     <%-- Name --%>
                 <td><c:out value="${medicine.dosage}"/></td>
                     <%-- Dosage --%>
-                <td><c:out value="${medicine.indivisible_amount}"/></td>
+                <td><c:out value="${medicine.indivisibleAmount}"/></td>
                     <%-- Indivisible_amount --%>
                 <form id="changeInCart" action="${pageContext.request.contextPath}/customer/cabinet/cart"
                       method="post">
                     <td align="center">                                                 <%-- Quantity --%>
                         <c:if test="${price == 0}">
                             <input class="table_field_high" type="text" size="5" value="0" disabled
-                                   title="Данный товар не существует либо у Вас нет рецепта для его приобретения">
+                                   title=<fmt:message key="label.account.cabinet.medInvalidForBuy"/>>
                         </c:if>
                         <c:if test="${price >0}">
-                            <input form="changeInCart" name="amountForBuy" class="table_field_high" type="number"
-                                   size="5"
-                                   value="${quantity}" pattern="\d{1,3}" min="1" max="${medicine.amount}"
-                                   title="Доступное количество ${medicine.amount} уп.">
+                            <input name="amountForBuy" class="table_field_high" type="number" size="5"
+                                   value="${medicine.quantity}" pattern="\d{1,3}" min="1" max="${medicine.amount}"
+                                   title="<fmt:message key="label.medicine.amountForBuyTitle1"/> ${medicine.amount} <fmt:message key="label.medicine.amountForBuyTitle2"/>">
+
                         </c:if>
                     </td>
                     <td align="center">                                                 <%-- Price for one --%>
-                        <c:if test="${price == 0}"> 0 руб. 0 коп.</c:if>
-                        <c:if test="${price > 0}"> ${medicine.rubForOne} руб. ${medicine.coinForOne} коп.</c:if>
+                        <c:if test="${price == 0}"> 0 <fmt:message key="label.rub"/> 0 <fmt:message key="label.kop"/></c:if>
+                        <c:if test="${price > 0}"> ${medicine.rubForOne} <fmt:message key="label.rub"/>
+                            ${medicine.coinForOne} <fmt:message key="label.kop"/></c:if>
                     </td>
                     <td>                                                                <%-- Price for quantity --%>
-                            ${medicine.rubForQuantity} руб. ${medicine.coinForQuantity} коп.
+                            ${medicine.rubForQuantity} <fmt:message key="label.rub"/> ${medicine.coinForQuantity} <fmt:message key="label.kop"/>
                     </td>
                     <td align="center">                                                                <%-- Action --%>
                         <c:if test="${price == 0}">
-                            <input type="submit" value="Change" disabled>
+                            <input type="submit" value=<fmt:message key="label.medicine.create.actionChange"/> disabled>
                         </c:if>
                         <c:if test="${price >0}">
-                            <input type="submit" value=" Change ">
+                            <input type="submit" value=<fmt:message key="label.medicine.create.actionChange"/>>
                             <input type="hidden" name="customerCommand" value="changeQuantityInCart">
-                            <input type="hidden" name="medicine_id" value="${medicine.id}">
+                            <input type="hidden" name="medicineId" value="${medicine.id}">
                         </c:if>
                     </td>
                 </form>
                 <td align="center">
                     <form action="${pageContext.request.contextPath}/customer/cabinet/cart" method="post">
-                        <input type="submit" value=" Delete ">
+                        <input type="submit" value=<fmt:message key="label.medicine.create.actionDelete"/>>
                         <input type="hidden" name="customerCommand" value="deleteFromCart">
-                        <input type="hidden" name="medicine_id" value="${medicine.id}">
+                        <input type="hidden" name="medicineId" value="${medicine.id}">
                     </form>
 
                 </td>
@@ -85,30 +92,32 @@
                 <td colspan="3" align="right">
                     <c:choose>
                         <c:when test="${customer.balance >= 0}">
-                            <p2>Ваш баланс составляет: ${customer.balanceRub} руб. ${customer.balanceCoin} коп.</p2>
+                            <p2><fmt:message key="label.account.balanceMessage"/>: ${customer.balanceRub} <fmt:message key="label.rub"/>
+                                    ${customer.balanceCoin} <fmt:message key="label.kop"/></p2>
                         </c:when>
                         <c:otherwise>
-                            <p2>Ваш баланс составляет: - ${customer.balanceRub*(-1)} руб. ${customer.balanceCoin*(-1)}
-                                коп.
+                            <p2><fmt:message key="label.account.balanceMessage"/>: - ${customer.balanceRub*(-1)} <fmt:message key="label.rub"/>
+                                    ${customer.balanceCoin*(-1)} <fmt:message key="label.kop"/>
                             </p2>
                         </c:otherwise>
                     </c:choose>
                 </td>
                 <td colspan="3" align="right">
-                    <p2>Общая сумма заказа: ${cart.rub} руб. ${cart.coin} коп.</p2>
+                    <p2><fmt:message key="label.account.cabinet.orderPrice"/>: ${cart.rub} <fmt:message key="label.rub"/>
+                        ${cart.coin} <fmt:message key="label.kop"/></p2>
                 </td>
                 <td colspan="2" align="center">
                     <c:choose>
-                        <c:when test="${customer.balance >= cart.order_price}">
-                            <input type="submit" value=" Buy ">
+                        <c:when test="${customer.balance >= cart.orderPrice}">
+                            <input type="submit" value=<fmt:message key="label.account.buttonBuy"/>>
                             <input type="hidden" name="customerCommand" value="buy">
                         </c:when>
                         <c:when test="${customer.balance >= 0}">
-                            <input type="submit" value=" Buy in credit ">
+                            <input type="submit" value=<fmt:message key="label.account.buttonBuyInCredit"/>>
                             <input type="hidden" name="customerCommand" value="buyInCredit">
                         </c:when>
                         <c:otherwise>
-                            You have to pay off<br>the dept.
+                            <fmt:message key="label.account.balanceDebtInfo"/>.
                         </c:otherwise>
                     </c:choose>
                 </td>

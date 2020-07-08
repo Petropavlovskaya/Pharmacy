@@ -1,6 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page isELIgnored="false" %>
+<fmt:setLocale value="${sessionScope.get('lang')}"/>
+<fmt:setBundle basename="messages"/>
 
 <html>
 <head>
@@ -12,7 +15,6 @@
 </head>
 <body>
 
-
 <div id="logo">
     <c:import url="../../_header.jsp"/>
 </div>
@@ -23,32 +25,37 @@
 
 
 <div id="center_no_right">
-    <table>
+    <p class="p-red">${requestScope.get('message')}</p>
+
+    <table width="100%">
         <%@include file="_new_recipe_table_header.jsp" %>
 
         <form action="${pageContext.request.contextPath}/doctor/recipe/create" method="post">
             <tr class="insert_row">
 
-                <td><input list="customer_select" name="customer">
+                <td><input list="customer_select" name="customer" size="50">
                     <datalist id="customer_select">
-                        <c:forEach var="customer" items="${activeCustomers}">
-                            <option>${customer.value}, ${customer.key}</option>
+                        <c:forEach var="customer" items="${sessionScope.get('activeCustomers')}">
+                            <option>${customer.value}; ${customer.key}</option>
                         </c:forEach>
                     </datalist>
                 </td>
-                <td><input list="medicine_select" name="medicine">
+                <td><input list="medicine_select" name="medicine" size="30">
                     <datalist id="medicine_select">
                         <c:forEach var="medicine" items="${availableMedicine}">
-                            <option> ${medicine.name}, ${medicine.dosage}</option>
+                            <option> ${medicine.name}; ${medicine.dosage}</option>
                         </c:forEach>
                     </datalist>
                 </td>
 
-                <td><input name="exp_date" class="table_field_high" type="date" size="9" placeholder="ГГГГ-ММ-ДД"
+                <td><input name="expDate" class="table_field_high" type="date" size="15"
+                           value="${sessionScope.get('maxDate')}"
+                           min="${sessionScope.get('minDate')}" max="${sessionScope.get('maxDate')}"
+                           placeholder=<fmt:message key="label.medicine.create.datePlaceholder"/>
                            required></td>
 
                 <td align="center">
-                    <input type="submit" value=" Appoint ">
+                    <input type="submit" value=<fmt:message key="label.recipe.actionIssue"/>>
                     <input type="hidden" name="customerCommand" value="appointRecipe">
                 </td>
             </tr>

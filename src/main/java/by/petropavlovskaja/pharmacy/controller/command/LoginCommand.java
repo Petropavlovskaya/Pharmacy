@@ -8,22 +8,34 @@ import by.petropavlovskaja.pharmacy.service.CommonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-public class LoginCommand implements IFrontCommand {
+/** Class for processing the front login command, implements {@link IFrontCommand}
+ */
+public final class LoginCommand implements IFrontCommand {
     private static Logger logger = LoggerFactory.getLogger(LoginCommand.class);
     private static CommonService commonService = CommonService.getInstance();
 
+    /** Nested class create instance of the class */
     private static class LoginHolder {
         public static final LoginCommand LOGIN_COMMAND = new LoginCommand();
     }
 
+    /**
+     * The override method for get instance of the class
+     * @return - class instance
+     */
     @Override
     public IFrontCommand getInstance() {
         return LoginHolder.LOGIN_COMMAND;
     }
 
+    /**
+     * The override method process login to the application
+     * @param sc - Session context {@link SessionContext}
+     * @return - class instance {@link ExecuteResult}
+     */
     @Override
     public ExecuteResult execute(SessionContext sc) {
         ExecuteResult executeResult = new ExecuteResult();
@@ -52,10 +64,12 @@ public class LoginCommand implements IFrontCommand {
                         logger.info("User " + login + " have passed authentication.");
                         executeResult.setJsp("/pharmacy/" + account.getAccountRole().name().toLowerCase() + "/main");
                         String sessionId = sc.getSession().getId();
-                        Set<Medicine> medicineList = commonService.getAllMedicine();
+                        String lang = (String) sc.getSession().getAttribute("lang");
+                        List<Medicine> medicineList = commonService.getAllMedicine();
                         sc.setSessionAttributesForAccount(account, login, sessionId, medicineList);
-                        executeResult.setCookie(sessionId, login, String.valueOf(account.getId()), account.getAccountRole().toString());
-                        executeResult.setUpdateCookie(true);
+                        executeResult.setCookie(sessionId, login, String.valueOf(account.getId()),
+                                account.getAccountRole().toString(), lang);
+                        executeResult.isNeedUpdateCookie(true);
                     }
                 }
                 break;

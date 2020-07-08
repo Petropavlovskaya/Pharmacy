@@ -15,30 +15,45 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+/** Web filter for all requests. Implements {@link Filter#init(FilterConfig)}. Has next properties:
+ * <b>BUSINESS_URIS</b> and <b>COMMAND_ATTRIBUTE</b>
+ */
 @WebFilter(urlPatterns = "/*")
 public class UrlFilter implements Filter {
 
+    /** Property - business uris */
     private static final Set<String> BUSINESS_URIS = new HashSet<>();
+
+    /** Property - command attribute */
     public static final String COMMAND_ATTRIBUTE = "command";
 
+    /** The override method for init filter {@link Filter#init(FilterConfig)}
+     * @param filterConfig - filter config
+     */
     @Override
     public void init(FilterConfig filterConfig) {
         BUSINESS_URIS.add("signup");
         BUSINESS_URIS.add("login");
         BUSINESS_URIS.add("logout");
-        BUSINESS_URIS.add("medicine");
         BUSINESS_URIS.add("main");
         BUSINESS_URIS.add("pharmacy");
         BUSINESS_URIS.add("access");
         BUSINESS_URIS.add("error");
     }
 
+    /** The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
+     * @param filterChain - filter chain
+     * @param servletRequest - servlet request
+     * @param servletResponse - servlet response
+     */
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
         RequestDispatcher dispatcher;
-
+        if (req.getSession().getAttribute("lang") == null) {
+            req.getSession().setAttribute("lang", "ru");
+        }
         String[] arrayUri = req.getRequestURI().substring(1).split("/");
         String lastPartUri = arrayUri[arrayUri.length - 1];
 
@@ -71,7 +86,6 @@ public class UrlFilter implements Filter {
             }
             case "login":
             case "logout":
-            case "medicine":
             case "signup": {
                 req.setAttribute(COMMAND_ATTRIBUTE, lastPartUri);
                 servletRequest.getRequestDispatcher("/app").forward(servletRequest, servletResponse);
@@ -83,15 +97,16 @@ public class UrlFilter implements Filter {
         }
     }
 
-    @Override
-    public void destroy() {
-    }
-
+    /** The method gets cookie from http servlet request
+     * @param request - http servlet request
+     */
     public static void getCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie c : cookies) {
-                request.getSession().setAttribute(c.getName(), c.getValue().toLowerCase());
+                if (!c.getName().equals("lang")) {
+                    request.getSession().setAttribute(c.getName(), c.getValue());
+                }
             }
         }
     }

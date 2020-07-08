@@ -9,23 +9,34 @@ import by.petropavlovskaja.pharmacy.service.CommonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-public class SignupCommand implements IFrontCommand {
+/** Class for processing the front sign up command, implements {@link IFrontCommand}
+ */
+public final class SignupCommand implements IFrontCommand {
     private static Logger logger = LoggerFactory.getLogger(SignupCommand.class);
     private CommonService service = CommonService.getInstance();
 
+    /** Nested class create instance of the class */
     private static class SignupHolder {
         public static final SignupCommand SIGNUP_COMMAND = new SignupCommand();
     }
 
+    /**
+     * The override method for get instance of the class
+     * @return - class instance
+     */
     @Override
     public IFrontCommand getInstance() {
         return SignupHolder.SIGNUP_COMMAND;
     }
 
-
+    /**
+     * The override method process sign up in the application
+     * @param sc - Session context {@link SessionContext}
+     * @return - class instance {@link ExecuteResult}
+     */
     @Override
     public ExecuteResult execute(SessionContext sc) {
         ExecuteResult executeResult = new ExecuteResult();
@@ -45,11 +56,13 @@ public class SignupCommand implements IFrontCommand {
                 Account newAccount = service.accountRegistration(reqParameters, AccountRole.CUSTOMER);
                 if (newAccount.getId() != 1) {
                     String sessionId = sc.getSession().getId();
-                    Set<Medicine> medicineList = service.getAllMedicine();
+                    String lang = (String) sc.getSession().getAttribute("lang");
+                    List<Medicine> medicineList = service.getAllMedicine();
                     System.out.println("Registered Account is: " + newAccount.toString());
                     sc.setSessionAttributesForAccount(newAccount, login, sessionId, medicineList);
-                    executeResult.setCookie(sessionId, login, String.valueOf(newAccount.getId()), AccountRole.CUSTOMER.toString());
-                    executeResult.setUpdateCookie(true);
+                    executeResult.setCookie(sessionId, login, String.valueOf(newAccount.getId()),
+                            AccountRole.CUSTOMER.toString(), lang);
+                    executeResult.isNeedUpdateCookie(true);
                     executeResult.setJsp("/pharmacy/customer/main");
                 } else {
                     executeResult.setResponseAttributes("message", "This login already busy. Please, choose another login and try again.");

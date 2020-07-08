@@ -9,26 +9,33 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
 
+/** Enumeration for configuration the application. Has property <b>INSTANCE</b> */
 public enum ApplicationConfiguration {
+    /** Property - instance */
     INSTANCE;
+    /** Property - url */
     private String dbUrl;
+    /** Property - user */
     private String dbUser;
+    /** Property - password */
     private String dbPassword;
+    /** Property - starting pool size */
     private int initPoolSize;
+    /** Property - maximum pool size */
     private int maxPoolSize;
+    /** Property - pool increase step */
     private int poolIncreaseStep;
+    /** Property - global salt */
     private String globalSalt = "2";
 //    private String globalSalt = ";Yw^1e";
 
+    /** Constructor - create INSTANCE of class */
+    ApplicationConfiguration() { initProperties(); }
 
-    ApplicationConfiguration() {
-        initProperties();
-    }
-
+    /** The method reads and initializing the properties from a resources file for application database connect */
     private void initProperties() {
         Logger logger = LoggerFactory.getLogger(ApplicationConfiguration.class);
         String propertyFile = getClass().getResource("/").getPath() + "application.properties";
-        System.out.println("source file path = " + propertyFile);
         try (InputStream inputStream = new FileInputStream(propertyFile)) {
             Properties properties = new Properties();
             properties.load(inputStream);
@@ -53,31 +60,58 @@ public enum ApplicationConfiguration {
             throw new Error("Properties has not been loaded", e);
         }
     }
-
+    /**
+     * Method for get property of {@link ApplicationConfiguration#dbUrl}
+     * @return - Url to connect to the database
+     */
     public String getDbUrl() {
         return dbUrl;
     }
 
+    /**
+     * Method for get property of {@link ApplicationConfiguration#dbUser}
+     * @return - User login to connect to the database
+     */
     public String getDbUser() {
         return dbUser;
     }
 
+    /**
+     * Method for get property of {@link ApplicationConfiguration#dbPassword}
+     * @return - Password to connect to the database
+     */
     public String getDbPassword() {
         return dbPassword;
     }
 
+    /**
+     * Method for get property of {@link ApplicationConfiguration#initPoolSize}
+     * @return - Starting size of connection pool to the database
+     */
     public int getInitPoolSize() {
         return initPoolSize;
     }
 
+    /**
+     * Method for get property of {@link ApplicationConfiguration#maxPoolSize}
+     * @return - Maximum size of connection pool to the database
+     */
     public int getMaxPoolSize() {
         return maxPoolSize;
     }
 
+    /**
+     * Method for get property of {@link ApplicationConfiguration#poolIncreaseStep}
+     * @return - Step for increase size of connection pool to the database
+     */
     public int getPoolIncreaseStep() {
         return poolIncreaseStep;
     }
 
+    /**
+     * Method for get property of {@link ApplicationConfiguration#globalSalt}
+     * @return - Global salt for protect account passwords
+     */
     public String getGlobalSalt() {
         return globalSalt;
     }

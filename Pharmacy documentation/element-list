@@ -1,0 +1,13 @@
+by.petropavlovskaja.pharmacy.configuration
+by.petropavlovskaja.pharmacy.controller
+by.petropavlovskaja.pharmacy.controller.command
+by.petropavlovskaja.pharmacy.controller.result
+by.petropavlovskaja.pharmacy.controller.session
+by.petropavlovskaja.pharmacy.dao
+by.petropavlovskaja.pharmacy.dao.sql
+by.petropavlovskaja.pharmacy.db
+by.petropavlovskaja.pharmacy.filter
+by.petropavlovskaja.pharmacy.model
+by.petropavlovskaja.pharmacy.model.account
+by.petropavlovskaja.pharmacy.service
+by.petropavlovskaja.pharmacy.tag

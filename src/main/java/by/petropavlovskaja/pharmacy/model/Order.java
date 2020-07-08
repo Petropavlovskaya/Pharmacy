@@ -5,68 +5,114 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 
+/** Class for order entity. Has next properties:
+ * <b>serialVersionUID</b>, <b>id</b>, <b>fkCustomer</b>, <b>orderPrice</b>, <b>orderDate</b>,
+ * <b>cart</b>, <b>rub</b> and <b>coin</b>
+ */
 public class Order implements Serializable {
+    /** Property - serial version UID */
     private static final long serialVersionUID = -5957381211186194380L;
+    /** Property - order ID */
     private int id;
-    private int fk_customer;
-    private boolean payment_state;
-    private int order_price;
-    private Date order_date;
+    /** Property - customer foreign key */
+    private int fkCustomer;
+    /** Property - order price */
+    private int orderPrice;
+    /** Property - order date */
+    private Date orderDate;
+    /** Property - is order a cart */
     private boolean cart;
     // local variable below don't save in database, they are for JSP
+    /** Property - price (part in the pub) */
     private int rub; // currency unit
+    /** Property - price (part in the coin) */
     private int coin; // currency unit
 
-    // for test
+    /** Create entity of class {@link Order#Order(int, int, int, Date, boolean)}
+     * @param id - recipe ID
+     */
     public Order(int id) {
         this.id = id;
     }
 
-    public Order(int id, int fk_customer, boolean payment_state, int order_price, Date order_date, boolean cart) {
+    /** Create entity of class {@link Order#Order(int)}
+     * @param id - recipe ID
+     * @param fkCustomer - customer foreign key
+     * @param orderDate - order date
+     * @param orderPrice - order price
+     * @param cart - is order a cart
+     */
+    public Order(int id, int fkCustomer, int orderPrice, Date orderDate, boolean cart) {
         this.id = id;
-        this.fk_customer = fk_customer;
-        this.payment_state = payment_state;
-        this.order_price = order_price;
-        this.order_date = order_date;
+        this.fkCustomer = fkCustomer;
+        this.orderPrice = orderPrice;
+        this.orderDate = orderDate;
         this.cart = cart;
     }
 
+    /** The method of getting the order ID field value
+     * @return - an order ID value
+     */
     public int getId() {
         return id;
     }
 
-    public int getFk_customer() {
-        return fk_customer;
+    /** The method of getting the foreign key field value
+     * @return - a foreign key value
+     */
+    public int getFkCustomer() {
+        return fkCustomer;
     }
 
-    public boolean isPayment_state() {
-        return payment_state;
+    /** The method of getting the order price field value
+     * @return - an order price value
+     */
+    public int getOrderPrice() {
+        return orderPrice;
     }
 
-    public int getOrder_price() {
-        return order_price;
+    /** The method of getting the order date field value
+     * @return - an order date value
+     */
+    public Date getOrderDate() {
+        return orderDate;
     }
 
-    public Date getOrder_date() {
-        return order_date;
-    }
-
+    /** The method of getting is the order field a cart
+     * @return - is the order field a cart value
+     */
     public boolean isCart() {
         return cart;
     }
 
+    /** The method of getting the customer FIO field value
+     * @return - a customer FIO value
+     */
     public int getRub() {
         return rub;
     }
 
+    /**
+     * The method for setting the rub field
+     *
+     * @param rub - a rub part of order price
+     */
     public void setRub(int rub) {
         this.rub = rub;
     }
 
+    /** The method of getting the coin field value
+     * @return - a coin value
+     */
     public int getCoin() {
         return coin;
     }
 
+    /**
+     * The method for setting the coin field
+     *
+     * @param coin - a coin part of order price
+     */
     public void setCoin(int coin) {
         this.coin = coin;
     }
@@ -83,34 +129,69 @@ public class Order implements Serializable {
     public String toString() {
         return "Order{" +
                 "id=" + id +
-                ", fk_customer=" + fk_customer +
-                ", payment_state=" + payment_state +
-                ", order_price=" + order_price +
-                ", order_date=" + order_date +
+                ", fkCustomer=" + fkCustomer +
+                ", orderPrice=" + orderPrice +
+                ", orderDate=" + orderDate +
                 ", status=" + cart +
                 '}';
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, order_price);
+        return Objects.hash(id, orderPrice);
     }
 
+    /**
+     * The nested class for compare order entity {@link Order.OrderIdComparator},
+     * {@link Order.OrderPriceComparator}
+     */
     public static class OrderDateComparator implements Comparator<Order> {
+
+        /**
+         * The method compare order by order date
+         *
+         * @param a - one order
+         * @param b - another order
+         * @return - difference between two orders
+         */
         public int compare(Order a, Order b) {
-            return a.getOrder_date().compareTo(b.getOrder_date());
+            return a.getOrderDate().compareTo(b.getOrderDate());
         }
     }
 
+    /**
+     * The nested class for compare order entity {@link Order.OrderDateComparator},
+     * {@link Order.OrderPriceComparator}
+     */
     public static class OrderIdComparator implements Comparator<Order> {
+
+        /**
+         * The method compare order by order ID
+         *
+         * @param a - one order
+         * @param b - another order
+         * @return - difference between two orders
+         */
         public int compare(Order a, Order b) {
             return a.getId() - b.getId();
         }
     }
 
+    /**
+     * The nested class for compare order entity {@link Order.OrderIdComparator},
+     * {@link Order.OrderDateComparator}
+     */
     public static class OrderPriceComparator implements Comparator<Order> {
+
+        /**
+         * The method compare order by order price
+         *
+         * @param a - one order
+         * @param b - another order
+         * @return - difference between two orders
+         */
         public int compare(Order a, Order b) {
-            return a.getOrder_price() - b.getOrder_price();
+            return a.getOrderPrice() - b.getOrderPrice();
         }
     }
 }

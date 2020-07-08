@@ -31,22 +31,22 @@ body div.text{
 .hide + label {
     margin: 0;
     padding: 0;
-    color: green;
+    color: #36564b;
     cursor: pointer;
     display: inline-block;
 }
 /* вид текста label при активном переключателе */
 .hide:checked + label {
-    color: red;
+    color: #36564b;
     border-bottom: 0;
 }
 /* когда чекбокс активен показываем блоки с содержанием  */
 .hide:checked + label + div {
     display: block;
-    background: #efefef;
-    -moz-box-shadow: inset 3px 3px 10px #7d8e8f;
-    -webkit-box-shadow: inset 3px 3px 10px #7d8e8f;
-    box-shadow: inset 3px 3px 10px #7d8e8f;
+    background: lightyellow;
+    -moz-box-shadow: inset 3px 3px 10px #5e927c;
+    -webkit-box-shadow: inset 3px 3px 10px #5e927c;
+    box-shadow: inset 3px 3px 10px #5e927c;
     margin-left: 20px;
     padding: 10px;
     /* чуточку анимации при появлении */
@@ -68,7 +68,7 @@ body div.text{
     to { opacity: 1 }
 }
 .hide + label:before {
-    background-color: #0a5519;
+    background-color: #36564b;
     color: #fff;
     content: "\002B";
     display: block;

@@ -1,5 +1,9 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page isELIgnored="false" %>
+<fmt:setLocale value="${sessionScope.get('lang')}"/>
+<fmt:setBundle basename="messages"/>
 
 <html>
 <head>
@@ -22,42 +26,33 @@
 </div>
 
 <div id="center">
-    <p class="p-red">${message}</p>
+    <p class="p-red">${requestScope.get('message')}</p>
 
     <h3>
         <form action="${pageContext.request.contextPath}/login" method="post">
-            <label for="fieldUser">Логин:</label><br>
+            <label for="fieldUser"><fmt:message key="label.login.loginField"/>:</label><br>
             <input type="text" id="fieldUser" name="login"
                    required pattern="[A-Za-z]{1,}[0-9A-Za-z]{3,15}"
-                   placeholder=" Логин"
-                   title="Логин должен начинаться с латинской буквы и содержать буквы латинского алфавита или цифры. Длина от 4 до 15 символов."
+                   title=<fmt:message key="label.login.loginFieldTitle"/>
                    value="Zoba"
             >
             <br><br>
-            <label for="fieldPassword">Пароль:</label><br>
+            <label for="fieldPassword"><fmt:message key="label.login.passwordField"/>:</label><br>
             <input type="password" id="fieldPassword" name="password"
                    required pattern="[0-9A-Za-z]{5,15}"
-                   placeholder=" Пароль"
-                   title="Пароль может состоять из цифр или букв латинского алфавита. Длина пароля от 5 до 15 символов."
+                   title=<fmt:message key="label.login.passwordFieldTitle"/>
                    value="eugen"
             >
             <br><br>
-            <input type="submit" value="Log In">
+            <input type="submit" value=<fmt:message key="label.login.buttonLogin"/>>
         </form>
     </h3>
 
 </div>
 
 <div id="right">
-    <jsp:include page="_right.jsp"></jsp:include>
+    <jsp:include page="_right.jsp"/>
 </div>
-<%--<div id="right">
-    <p class="p-cen">
-        Реклама и не только...<br/><br/>
-        <a href="http://www.pogoda.by/33008" title="Погода в Бресте"> <img src="../images/pogoda.jpg"/></a><br/><br/>
-        <a href="http://www.fitness-online.by/" title="Фитнес онлайн"> <img src="../images/fitnes.jpg"/></a><br/><br/>
-    </p>
-</div>--%>
 
 <div id="footer">
     <jsp:include page="_footer.jsp"/>

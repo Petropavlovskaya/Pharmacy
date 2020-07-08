@@ -1,6 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page isELIgnored="false" %>
+<fmt:setLocale value="${sessionScope.get('lang')}"/>
+<fmt:setBundle basename="messages"/>
 
 <html>
 <head>
@@ -23,10 +26,10 @@
 
 <div id="center_no_right">
     <c:if test="${empty recipe}">
-        <p3> You have not recipes</p3>
+        <h2> <fmt:message key="label.recipe.noOrders"/> </h2>
     </c:if>
     <c:if test="${!empty recipe}">
-        <table>
+        <table width="100%">
             <%@include file="_recipe_table_header.jsp" %>
 
             <c:forEach var="recipeItem" items="${recipe}">
@@ -40,11 +43,13 @@
                         <td><c:out value="${recipeItem.dosage}"/></td>
                             <%-- Dosage --%>
                         <td align="center"> <%-- Validity --%>
-                            <input name="validity" class="table_field_high" type="date" size="9"
-                                   placeholder="ГГГГ-ММ-ДД" >
+                            <input name="validity" class="table_field_high" type="date" size="15" required
+                                   value="${sessionScope.get('maxDate')}"
+                                   min="${sessionScope.get('minDate')}" max="${sessionScope.get('maxDate')}"
+                                   placeholder=<fmt:message key="label.medicine.create.datePlaceholder"/> >
                         </td>
                         <td align="center">
-                            <input type="submit" value=" Extend recipe ">
+                            <input type="submit" value=<fmt:message key="label.recipe.actionExtend"/>>
                             <input type="hidden" name="customerCommand" value="extendRecipe">
                             <input type="hidden" name="recipeId" value="${recipeItem.id}">
                         </td>
@@ -52,8 +57,8 @@
                     <form id="deleteRecipe" action="${pageContext.request.contextPath}/doctor/recipe/ordered"
                           method="post">
                         <td align="center">
-                            <input type="submit" value=" Refuse ">
-                            <input type="hidden" name="customerCommand" value="deleteRecipe">
+                            <input type="submit" value=<fmt:message key="label.recipe.actionRefuse"/>>
+                            <input type="hidden" name="customerCommand" value="refuseRecipe">
                             <input type="hidden" name="recipeId" value="${recipeItem.id}">
                         </td>
                     </form>

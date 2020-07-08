@@ -1,5 +1,9 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page isELIgnored="false" %>
+<fmt:setLocale value="${sessionScope.get('lang')}"/>
+<fmt:setBundle basename="messages"/>
 
 <html>
 <head>
@@ -20,20 +24,18 @@
 <div class="div-left">
     <br>
     <br>
-    <p class="p-big-left">Доступ запрещен!</p>
+    <p class="p-big-left"><fmt:message key="label.access"/>!</p>
     <br>
     <br>
     <c:choose>
         <c:when test="${empty accountRole}">
-            <a class="link-back" href="${pageContext.request.contextPath}/main">Вернуться на главную</a>
+            <a class="link-back" href="${pageContext.request.contextPath}/main"><fmt:message key="label.404.goBack"/></a>
         </c:when>
         <c:otherwise>
-            <a class="link-back" href="${pageContext.request.contextPath}/${accountRole}/main">Вернуться на главную</a>
+            <a class="link-back" href="${pageContext.request.contextPath}/${accountRole}/main"><fmt:message key="label.404.goBack"/></a>
         </c:otherwise>
     </c:choose>
 </div>
 
 </body>
 </html>
-
-<%--${pageContext.request.contextPath}/--%>
