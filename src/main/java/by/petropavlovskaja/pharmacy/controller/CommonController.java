@@ -12,13 +12,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/** Common controller, extends {@link HttpServlet} */
+/**
+ * Common controller, extends {@link HttpServlet}
+ */
 @WebServlet(name = "MainServlet", urlPatterns = "/app")
 public final class CommonController extends HttpServlet {
     private static Logger logger = LoggerFactory.getLogger(CommonController.class);
 
     /**
      * The override method doGet {@link HttpServlet#doGet(HttpServletRequest, HttpServletResponse)}
+     *
      * @param req  - http servlet request
      * @param resp - http servlet response
      */
@@ -29,6 +32,7 @@ public final class CommonController extends HttpServlet {
 
     /**
      * The override method doPost {@link HttpServlet#doPost(HttpServletRequest, HttpServletResponse)}
+     *
      * @param req  - http servlet request
      * @param resp - http servlet response
      */
@@ -39,6 +43,7 @@ public final class CommonController extends HttpServlet {
 
     /**
      * The common method to process all get and post front requests
+     *
      * @param req  - http servlet request
      * @param resp - http servlet response
      */
@@ -51,7 +56,8 @@ public final class CommonController extends HttpServlet {
 
     /**
      * The common method to get the class that implements the interface {@link IFrontCommand}
-     * @param uri  - uri
+     *
+     * @param uri - uri
      * @return - class that implements the {@link IFrontCommand}
      */
     private IFrontCommand getFrontCommandClass(String uri) {

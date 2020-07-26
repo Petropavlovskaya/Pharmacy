@@ -1,8 +1,5 @@
 package by.petropavlovskaja.pharmacy.filter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -15,15 +12,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/** Web filter for pagination. Implements {@link Filter#init(FilterConfig)} */
+/**
+ * Web filter for pagination. Implements {@link Filter#init(FilterConfig)}
+ */
 @WebFilter(urlPatterns = {"/medicine/*", "/customer/medicine/list/*", "/medicine/list/*",
         "/pharmacist/medicine/list/*", "/doctor/medicine/list/*"})
 public class PageFilter implements Filter {
-    private static Logger logger = LoggerFactory.getLogger(PageFilter.class);
 
-    /** The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
-     * @param filterChain - filter chain
-     * @param servletRequest - servlet request
+    /**
+     * The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
+     *
+     * @param filterChain     - filter chain
+     * @param servletRequest  - servlet request
      * @param servletResponse - servlet response
      */
     @Override
@@ -33,6 +33,14 @@ public class PageFilter implements Filter {
         String fullUri = req.getRequestURI();
         String[] arrayUri = fullUri.substring(1).split("/");
         String lastPartUri = arrayUri[arrayUri.length - 1];
+        if (req.getSession().getAttribute("successTextSet") != null) {
+            if (req.getSession().getAttribute("successTextSet").equals("yes")) {
+                req.getSession().setAttribute("successTextSet", "no");
+            } else {
+                req.getSession().removeAttribute("successMessage");
+            }
+        }
+
 
         if (lastPartUri.matches("[1-9]{1}[0-9]*")) {
             int page = Integer.parseInt(lastPartUri);
@@ -49,7 +57,7 @@ public class PageFilter implements Filter {
 //            req.setAttribute(COMMAND_ATTRIBUTE, req.getSession().getAttribute("accountRole"));
             req.getRequestDispatcher("/page").forward(req, resp);
 
-        } else if(lastPartUri.equals("list") || lastPartUri.equals("medicine")) {
+        } else if (lastPartUri.equals("list") || lastPartUri.equals("medicine")) {
             req.getSession().setAttribute("requestPage", 1);
             req.getSession().setAttribute("fullUri", fullUri);
             req.getRequestDispatcher("/page").forward(req, resp);
@@ -59,7 +67,9 @@ public class PageFilter implements Filter {
 
     }
 
-    /** The method create uri from string array
+    /**
+     * The method create uri from string array
+     *
      * @param arrayUri - string array of uri
      * @return - uri
      */

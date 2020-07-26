@@ -11,6 +11,7 @@
     <style>
         <%@include file="/css/style.css" %>
         <%@include file="/css/hiddenDiv.css" %>
+        <%@include file="/toastr/toastr.css" %>
     </style>
     <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
@@ -27,15 +28,22 @@
 
 
 <div id="center_no_right">
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <c:import url="../../_toastr.jsp"/>
+    <c:if test="${not empty sessionScope.get('successMessage')}" >
+        <c:import url="../../_toastrFuncSuccess.jsp"/>
+    </c:if>
+
     <div class="demo">
         <%--    <c:set var="order" value="${orders}"/>--%>
         <%--    <c:set var="customer" value="${customer}"/>--%>
-        <c:if test="${empty orders}">
+        <c:if test="${empty sessionScope.get('orders')}">
             <p3><fmt:message key="label.account.cabinet.noOrdersMessage"/></p3>
         </c:if>
-        <c:if test="${!empty orders}">
+        <c:if test="${!empty sessionScope.get('orders')}">
             <%--        <c:set var=""--%>
-            <c:forEach var="order" items="${orders}">
+            <c:forEach var="order" items="${sessionScope.get('orders')}">
                 <%--                Key = ${order.key}, value = ${order.value}--%>
 
                 <input class="hide" id="${order.key.id}" type="checkbox">
@@ -61,7 +69,13 @@
 
                     </c:forEach>
                 </div>
-                <br><br>
+                <form action="${pageContext.request.contextPath}/customer/cabinet/history"
+                      method="post">
+                    <input type="submit" value=<fmt:message key="label.medicine.create.actionDelete"/>>
+                    <input type="hidden" name="frontCommand" value="deleteOrder">
+                    <input type="hidden" name="orderId" value="${order.key.id}">
+                </form>
+                <br>
             </c:forEach>
         </c:if>
     </div>

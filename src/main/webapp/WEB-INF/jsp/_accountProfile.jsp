@@ -5,9 +5,9 @@
 <fmt:setLocale value="${sessionScope.get('lang')}"/>
 <fmt:setBundle basename="messages"/>
 
+
 <h3><fmt:message key="label.account.cabinet.changePersonalData"/>:</h3>
 <p><fmt:message key="label.signup.textRequiredField1"/><span class="p-red"> * </span><fmt:message key="label.signup.textRequiredField2"/></p>
-<p class="p-red">${message}</p>
 <c:set var="account" value="${requestScope.get('account')}"/>
 <h3>
     <form action="${pageContext.request.contextPath}/${sessionScope.get('accountRole')}/cabinet/profile" method="post">
@@ -38,6 +38,33 @@
         >
         <br><br>
         <input type="submit" value=<fmt:message key="label.account.actionChange"/>>
-        <input type="hidden" name="customerCommand" value="changeAccountData">
+        <input type="hidden" name="frontCommand" value="changeAccountData">
     </form>
+
+    <br><br>
+
+    <form action="${pageContext.request.contextPath}/${sessionScope.get('accountRole')}/cabinet/profile" method="post">
+        <label for="fieldOldPassword"><fmt:message key="label.account.fieldOldPassword"/>:<span
+                class="p-red">*</span></label><br>
+        <input type="password" id="fieldOldPassword" name="oldPassword"
+               required pattern="[0-9A-Za-z]{5,15}"
+               title= <fmt:message key="label.signup.fieldPasswordTitle"/>
+        >
+        <br>
+        <label for="fieldNewPassword"><fmt:message key="label.account.fieldNewPassword"/>:<span class="p-red">*</span></label><br>
+        <input type="password" id="fieldNewPassword" name="newPassword"
+               required pattern="[0-9A-Za-z]{5,15}"
+               title= <fmt:message key="label.signup.fieldPasswordTitle"/>
+        >
+        <br>
+        <label for="fieldNewPasswordConfirm"><fmt:message key="label.account.fieldNewPasswordConfirm"/>:<span class="p-red">*</span></label><br>
+        <input type="password" id="fieldNewPasswordConfirm" name="newPasswordConfirm"
+               required pattern="[0-9A-Za-z]{5,15}"
+               title= <fmt:message key="label.signup.fieldPasswordTitle"/>
+        >
+        <br><br>
+        <input type="submit" value=<fmt:message key="label.account.actionChange"/>>
+        <input type="hidden" name="frontCommand" value="changeAccountPassword">
+    </form>
+
 </h3>

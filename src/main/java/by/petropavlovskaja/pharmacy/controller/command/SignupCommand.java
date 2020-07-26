@@ -6,25 +6,26 @@ import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.model.account.Account;
 import by.petropavlovskaja.pharmacy.model.account.AccountRole;
 import by.petropavlovskaja.pharmacy.service.CommonService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
-/** Class for processing the front sign up command, implements {@link IFrontCommand}
+/**
+ * Class for processing the front sign up command, implements {@link IFrontCommand}
  */
 public final class SignupCommand implements IFrontCommand {
-    private static Logger logger = LoggerFactory.getLogger(SignupCommand.class);
     private CommonService service = CommonService.getInstance();
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class SignupHolder {
         public static final SignupCommand SIGNUP_COMMAND = new SignupCommand();
     }
 
     /**
      * The override method for get instance of the class
+     *
      * @return - class instance
      */
     @Override
@@ -34,6 +35,7 @@ public final class SignupCommand implements IFrontCommand {
 
     /**
      * The override method process sign up in the application
+     *
      * @param sc - Session context {@link SessionContext}
      * @return - class instance {@link ExecuteResult}
      */
@@ -45,13 +47,20 @@ public final class SignupCommand implements IFrontCommand {
         executeResult.setJsp("/WEB-INF/jsp/signup.jsp");
         if (sc.getRequestMethod().equals("POST")) {
 
-            logger.info("Get request params for Signup: " + reqParameters.toString());
             String login = String.valueOf(reqParameters.get("login"));
 
-            // check login/password for null, is login busy, are password & confirm equals
             String errorMessage = service.checkAccountDataBeforeCreate(reqParameters, login);
             if (errorMessage != null) {
-                executeResult.setResponseAttributes("message", errorMessage);
+                executeResult.setResponseAttributes("errorMessage", errorMessage);
+                executeResult.setResponseAttributes("surname", reqParameters.get("accountSurname"));
+                executeResult.setResponseAttributes("name", reqParameters.get("accountName"));
+                executeResult.setResponseAttributes("login", reqParameters.get("login"));
+                if (reqParameters.get("accountPatronymic") != null) {
+                    executeResult.setResponseAttributes("patronymic", reqParameters.get("accountPatronymic"));
+                }
+                if (reqParameters.get("accountPhone") != null) {
+                    executeResult.setResponseAttributes("phone", reqParameters.get("accountPhone"));
+                }
             } else {
                 Account newAccount = service.accountRegistration(reqParameters, AccountRole.CUSTOMER);
                 if (newAccount.getId() != 1) {
@@ -64,10 +73,7 @@ public final class SignupCommand implements IFrontCommand {
                             AccountRole.CUSTOMER.toString(), lang);
                     executeResult.isNeedUpdateCookie(true);
                     executeResult.setJsp("/pharmacy/customer/main");
-                } else {
-                    executeResult.setResponseAttributes("message", "This login already busy. Please, choose another login and try again.");
                 }
-
             }
         }
         return executeResult;

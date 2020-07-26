@@ -15,19 +15,26 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Web filter for all requests. Implements {@link Filter#init(FilterConfig)}. Has next properties:
+/**
+ * Web filter for all requests. Implements {@link Filter#init(FilterConfig)}. Has next properties:
  * <b>BUSINESS_URIS</b> and <b>COMMAND_ATTRIBUTE</b>
  */
 @WebFilter(urlPatterns = "/*")
 public class UrlFilter implements Filter {
 
-    /** Property - business uris */
+    /**
+     * Property - business uris
+     */
     private static final Set<String> BUSINESS_URIS = new HashSet<>();
 
-    /** Property - command attribute */
+    /**
+     * Property - command attribute
+     */
     public static final String COMMAND_ATTRIBUTE = "command";
 
-    /** The override method for init filter {@link Filter#init(FilterConfig)}
+    /**
+     * The override method for init filter {@link Filter#init(FilterConfig)}
+     *
      * @param filterConfig - filter config
      */
     @Override
@@ -41,9 +48,11 @@ public class UrlFilter implements Filter {
         BUSINESS_URIS.add("error");
     }
 
-    /** The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
-     * @param filterChain - filter chain
-     * @param servletRequest - servlet request
+    /**
+     * The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
+     *
+     * @param filterChain     - filter chain
+     * @param servletRequest  - servlet request
      * @param servletResponse - servlet response
      */
     @Override
@@ -97,7 +106,9 @@ public class UrlFilter implements Filter {
         }
     }
 
-    /** The method gets cookie from http servlet request
+    /**
+     * The method gets cookie from http servlet request
+     *
      * @param request - http servlet request
      */
     public static void getCookie(HttpServletRequest request) {

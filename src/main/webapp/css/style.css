@@ -107,6 +107,11 @@ body {
     left: 30px;
 }
 
+.img-center {
+    padding-top: 10px;
+    position: center;
+}
+
 .img-rightRU {
     alignment: right;
     position: absolute;
@@ -153,6 +158,16 @@ body {
 .p-red {
     font-size: medium;
     font-style: italic;
+    color: red;
+}
+.p-error {
+    font-size: large;
+    font-style: italic;
+    color: red;
+}
+
+.p-redNoItalic {
+    font-size: medium;
     color: red;
 }
 

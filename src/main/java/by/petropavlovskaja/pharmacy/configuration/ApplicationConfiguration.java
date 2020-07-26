@@ -9,30 +9,54 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
 
-/** Enumeration for configuration the application. Has property <b>INSTANCE</b> */
+/**
+ * Enumeration for configuration the application. Has property <b>INSTANCE</b>
+ */
 public enum ApplicationConfiguration {
-    /** Property - instance */
+    /**
+     * Property - instance
+     */
     INSTANCE;
-    /** Property - url */
+    /**
+     * Property - url
+     */
     private String dbUrl;
-    /** Property - user */
+    /**
+     * Property - user
+     */
     private String dbUser;
-    /** Property - password */
+    /**
+     * Property - password
+     */
     private String dbPassword;
-    /** Property - starting pool size */
+    /**
+     * Property - starting pool size
+     */
     private int initPoolSize;
-    /** Property - maximum pool size */
+    /**
+     * Property - maximum pool size
+     */
     private int maxPoolSize;
-    /** Property - pool increase step */
+    /**
+     * Property - pool increase step
+     */
     private int poolIncreaseStep;
-    /** Property - global salt */
-    private String globalSalt = "2";
-//    private String globalSalt = ";Yw^1e";
+    /**
+     * Property - global salt
+     */
+//    private String globalSalt = "2";
+    private String globalSalt;
 
-    /** Constructor - create INSTANCE of class */
-    ApplicationConfiguration() { initProperties(); }
+    /**
+     * Constructor - create INSTANCE of class
+     */
+    ApplicationConfiguration() {
+        initProperties();
+    }
 
-    /** The method reads and initializing the properties from a resources file for application database connect */
+    /**
+     * The method reads and initializing the properties from a resources file for application database connect
+     */
     private void initProperties() {
         Logger logger = LoggerFactory.getLogger(ApplicationConfiguration.class);
         String propertyFile = getClass().getResource("/").getPath() + "application.properties";
@@ -52,16 +76,18 @@ public enum ApplicationConfiguration {
                 poolIncreaseStep = Integer.parseInt(properties.getProperty("poolIncreaseStep"));
             }
             if (Objects.nonNull(properties.getProperty("passwordGlobalSalt"))) {
-                globalSalt = String.valueOf(properties.getProperty("poolIncreaseStep"));
+                globalSalt = String.valueOf(properties.getProperty("passwordGlobalSalt"));
             }
             logger.info("Properties loaded successful");
         } catch (IOException e) {
-            logger.error("Properties has not been loaded", e);
-            throw new Error("Properties has not been loaded", e);
+            logger.error("Properties have not been loaded. " + e);
+            throw new Error("Properties have not been loaded", e);
         }
     }
+
     /**
      * Method for get property of {@link ApplicationConfiguration#dbUrl}
+     *
      * @return - Url to connect to the database
      */
     public String getDbUrl() {
@@ -70,6 +96,7 @@ public enum ApplicationConfiguration {
 
     /**
      * Method for get property of {@link ApplicationConfiguration#dbUser}
+     *
      * @return - User login to connect to the database
      */
     public String getDbUser() {
@@ -78,6 +105,7 @@ public enum ApplicationConfiguration {
 
     /**
      * Method for get property of {@link ApplicationConfiguration#dbPassword}
+     *
      * @return - Password to connect to the database
      */
     public String getDbPassword() {
@@ -86,6 +114,7 @@ public enum ApplicationConfiguration {
 
     /**
      * Method for get property of {@link ApplicationConfiguration#initPoolSize}
+     *
      * @return - Starting size of connection pool to the database
      */
     public int getInitPoolSize() {
@@ -94,6 +123,7 @@ public enum ApplicationConfiguration {
 
     /**
      * Method for get property of {@link ApplicationConfiguration#maxPoolSize}
+     *
      * @return - Maximum size of connection pool to the database
      */
     public int getMaxPoolSize() {
@@ -102,6 +132,7 @@ public enum ApplicationConfiguration {
 
     /**
      * Method for get property of {@link ApplicationConfiguration#poolIncreaseStep}
+     *
      * @return - Step for increase size of connection pool to the database
      */
     public int getPoolIncreaseStep() {
@@ -110,6 +141,7 @@ public enum ApplicationConfiguration {
 
     /**
      * Method for get property of {@link ApplicationConfiguration#globalSalt}
+     *
      * @return - Global salt for protect account passwords
      */
     public String getGlobalSalt() {
@@ -121,7 +153,6 @@ public enum ApplicationConfiguration {
         return "ApplicationConfiguration{" +
                 "dbUrl='" + dbUrl + '\'' +
                 ", dbUser='" + dbUser + '\'' +
-                ", dbPassword='" + dbPassword + '\'' +
                 ", initPoolSize=" + initPoolSize + '\'' +
                 ", maxPoolSize=" + maxPoolSize + '\'' +
                 ", poolIncreaseStep=" + poolIncreaseStep +

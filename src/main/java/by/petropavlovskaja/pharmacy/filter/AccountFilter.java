@@ -1,9 +1,5 @@
 package by.petropavlovskaja.pharmacy.filter;
 
-import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -17,19 +13,25 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Web filter for accounts request. Implements {@link Filter#init(FilterConfig)}. Has next properties:
+/**
+ * Web filter for accounts request. Implements {@link Filter#init(FilterConfig)}. Has next properties:
  * <b>BUSINESS_ACCOUNT_URIS</b> and <b>COMMAND_ATTRIBUTE</b>
  */
 @WebFilter(urlPatterns = {"/pharmacist/*", "/doctor/*", "/admin/*", "/customer/*"})
 public class AccountFilter implements Filter {
-    private static Logger logger = LoggerFactory.getLogger(AccountFilter.class);
 
-    /** Property - business account uris */
+    /**
+     * Property - business account uris
+     */
     private static final Set<String> BUSINESS_ACCOUNT_URIS = new HashSet<>();
-    /** Property - command attribute */
+    /**
+     * Property - command attribute
+     */
     public static final String COMMAND_ATTRIBUTE = "command";
 
-    /** The override method for init filter {@link Filter#init(FilterConfig)}
+    /**
+     * The override method for init filter {@link Filter#init(FilterConfig)}
+     *
      * @param filterConfig - filter config
      */
     @Override
@@ -41,9 +43,11 @@ public class AccountFilter implements Filter {
         BUSINESS_ACCOUNT_URIS.add("account");
     }
 
-    /** The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
-     * @param filterChain - filter chain
-     * @param servletRequest - servlet request
+    /**
+     * The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
+     *
+     * @param filterChain     - filter chain
+     * @param servletRequest  - servlet request
      * @param servletResponse - servlet response
      */
     @Override
@@ -71,8 +75,7 @@ public class AccountFilter implements Filter {
         } else if ((accountRole.equals("") && sessionId.equals("null")) || (accountRole.equals("") && sessionId.equals(""))) {
             resp.sendRedirect("/pharmacy/login");
         } else if (BUSINESS_ACCOUNT_URIS.contains(accountAccess) && uriRole.equals(accountRole)) {
-            if (fullUri.contains("medicine/list") &&
-                    req.getParameter("customerCommand") == null && req.getParameter("medicineCommand") == null) {
+            if (fullUri.contains("medicine/list") && req.getParameter("frontCommand") == null) {
                 filterChain.doFilter(servletRequest, servletResponse);
             } else {
                 req.setAttribute(COMMAND_ATTRIBUTE, accountRole);

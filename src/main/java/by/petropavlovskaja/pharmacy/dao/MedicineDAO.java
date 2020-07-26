@@ -18,21 +18,28 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-/** Class for executing SQL queries to the database related to the medicine */
-public final class MedicineDAO {
+/**
+ * Class for executing SQL queries to the database related to the medicine
+ */
+public class MedicineDAO {
     private static Logger logger = LoggerFactory.getLogger(MedicineDAO.class);
 
-    /** Constructor - create INSTANCE of class */
+    /**
+     * Constructor - create INSTANCE of class
+     */
     private MedicineDAO() {
     }
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class MedicineDAOHolder {
         public static final MedicineDAO MEDICINE_DAO = new MedicineDAO();
     }
 
     /**
      * The method for get instance of the class
+     *
      * @return - class instance
      */
     public static MedicineDAO getInstance() {
@@ -41,6 +48,7 @@ public final class MedicineDAO {
 
     /**
      * The method finds in the database a set of medicines to update the available amount of medicines
+     *
      * @param orderId - order ID
      * @return - a set of medicines
      */
@@ -66,6 +74,7 @@ public final class MedicineDAO {
 
     /**
      * The method finds a medicine in the database
+     *
      * @param medicineId - medicine ID
      * @return - a medicine
      */
@@ -79,6 +88,7 @@ public final class MedicineDAO {
 
     /**
      * The method finds all medicines in the database
+     *
      * @return - a list of medicines
      */
     public List<Medicine> getAll() {
@@ -100,6 +110,7 @@ public final class MedicineDAO {
 
     /**
      * The method of getting a number of medicines in the database
+     *
      * @return - a count of medicines
      */
     public int getNumberOfRows() {
@@ -123,7 +134,8 @@ public final class MedicineDAO {
 
     /**
      * The method finds some medicines in the database for certain page
-     * @param currentPage - a number of view page
+     *
+     * @param currentPage    - a number of view page
      * @param recordsPerPage - a number of records per page
      * @return - a list of medicines
      */
@@ -150,6 +162,7 @@ public final class MedicineDAO {
 
     /**
      * The method finds all medicines in the database that require a recipe
+     *
      * @return - a set of medicines
      */
     public Set<Medicine> getAllForDoctor() {
@@ -174,6 +187,7 @@ public final class MedicineDAO {
 
     /**
      * The method inserts a new medicine into the database
+     *
      * @param medicine - a new medicine
      * @return - true if insert was successful
      */
@@ -198,6 +212,7 @@ public final class MedicineDAO {
 
     /**
      * The method updates a medicine in the database
+     *
      * @param medicine - a new medicine
      * @return - true if insert was successful
      */
@@ -222,7 +237,8 @@ public final class MedicineDAO {
 
     /**
      * The method deletes a medicine from the database
-     * @param medicine - a medicine
+     *
+     * @param medicine        - a medicine
      * @param pharmacistLogin - a pharmacist's login
      * @return - true if delete was successful
      */
@@ -249,21 +265,20 @@ public final class MedicineDAO {
 
     /**
      * The method checks is a medicine in the database
+     *
      * @param medicineName - a medicine name
-     * @param dosage - a medicine dosage
+     * @param dosage       - a medicine dosage
      * @return - true if medicine is in the database
      */
     public boolean isMedicine(String medicineName, String dosage) {
         List<Medicine> medicineList = findBy(MedicineSQL.FIND_MEDICINES_BY_NAME_DOSAGE.getQuery(), medicineName, dosage);
-        if (medicineList.size() > 0) {
-            return true;
-        }
-        return false;
+        return medicineList.size() > 0;
     }
 
     /**
      * The method finds medicines in the database
-     * @param sql - SQL query
+     *
+     * @param sql    - SQL query
      * @param values - search criteria
      * @return - list of medicines
      */
@@ -285,6 +300,7 @@ public final class MedicineDAO {
 
     /**
      * The method creates medicine instance from ResultSet
+     *
      * @param rs - ResultSet
      * @return - Medicine instance if medicine was found or NULL if wasn't
      */
@@ -305,8 +321,9 @@ public final class MedicineDAO {
 
     /**
      * The method creates a PreparedStatement from a variable number of parameters
-     * @param conn - Connection
-     * @param sql - SQL query
+     *
+     * @param conn   - Connection
+     * @param sql    - SQL query
      * @param values - parameters
      * @return - PreparedStatement
      */
@@ -321,8 +338,9 @@ public final class MedicineDAO {
 
     /**
      * The method creates a PreparedStatement for create or update a medicine
-     * @param conn - Connection
-     * @param sql - SQL query
+     *
+     * @param conn     - Connection
+     * @param sql      - SQL query
      * @param medicine - medicine
      * @return - PreparedStatement
      */

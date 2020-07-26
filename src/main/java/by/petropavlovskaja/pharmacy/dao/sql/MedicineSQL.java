@@ -1,6 +1,8 @@
 package by.petropavlovskaja.pharmacy.dao.sql;
 
-/** Enumeration for medicine SQL query */
+/**
+ * Enumeration for medicine SQL query
+ */
 public enum MedicineSQL {
     GET_ALL_MEDICINES("SELECT * FROM medicine ORDER BY \"name\", dosage, date(exp_date) ASC;"),
     GET_ALL_FOR_PAGE("SELECT * FROM medicine ORDER BY \"name\", dosage, date(exp_date) ASC  OFFSET ? ROWS FETCH FIRST ? ROWS ONLY;"),
@@ -18,17 +20,23 @@ public enum MedicineSQL {
     UPDATE_MEDICINE_AFTER_BUY("UPDATE medicine SET amount=? WHERE id = ?;"),
     DELETE_MEDICINE("DELETE from medicine WHERE id = ?;");
 
-    /** Property - query */
+    /**
+     * Property - query
+     */
     private String query;
 
-    /** Constructor - create medicine SQL query
+    /**
+     * Constructor - create medicine SQL query
+     *
      * @param query - query
      */
     MedicineSQL(String query) {
         this.query = query;
     }
 
-    /** The method of getting a medicine SQL query {@link MedicineSQL#query}
+    /**
+     * The method of getting a medicine SQL query {@link MedicineSQL#query}
+     *
      * @return - SQL query
      */
     public String getQuery() {

@@ -5,52 +5,90 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 
-/** Class for medicine entity. Has next properties:
+/**
+ * Class for medicine entity. Has next properties:
  * <b>serialVersionUID</b>, <b>id</b>, <b>name</b>, <b>indivisibleAmount</b>, <b>amount</b>, <b>dosage</b>,
  * <b>expDate</b>, <b>recipeRequired</b>, <b>price</b>, <b>rub</b>, <b>coin</b>,
  * <b>addedBy</b>, <b>pharmForm</b> and <b>customerNeedRecipe</b>
  */
 public class Medicine implements Serializable {
-    /** Property - serial version UID */
+    /**
+     * Property - serial version UID
+     */
     private static final long serialVersionUID = -8167764826188030073L;
-    /** Property - medicine ID */
+    /**
+     * Property - medicine ID
+     */
     private int id;
-    /** Property - medicine name */
+    /**
+     * Property - medicine name
+     */
     private String name;
-    /** Property - medicine indivisible amount */
+    /**
+     * Property - medicine indivisible amount
+     */
     private int indivisibleAmount;
-    /** Property - medicine amount */
+    /**
+     * Property - medicine amount
+     */
     private int amount;
-    /** Property - medicine dosage */
+    /**
+     * Property - medicine dosage
+     */
     private String dosage;
-    /** Property - medicine expiration date */
+    /**
+     * Property - medicine expiration date
+     */
     private Date expDate;
-    /** Property - is medicine recipe required */
+    /**
+     * Property - is medicine recipe required
+     */
     private boolean recipeRequired;
-    /** Property - medicine price */
+    /**
+     * Property - medicine price
+     */
     private int price;
-    /** Property - rub part of medicine price */
+    /**
+     * Property - rub part of medicine price
+     */
     private int rub; // currency unit
-    /** Property - coin part of medicine price */
+    /**
+     * Property - coin part of medicine price
+     */
     private int coin; // currency unit
-    /** Property - ID pharmacist who added medicine */
+    /**
+     * Property - ID pharmacist who added medicine
+     */
     private int addedBy;
-    /** Property - medicine pharmacy form */
+    /**
+     * Property - medicine pharmacy form
+     */
     private String pharmForm;
-    /** Property - is customer need the recipe for this medicine */
+    /**
+     * Property - is customer need the recipe for this medicine
+     */
     private boolean customerNeedRecipe;
+    /**
+     * Property - count of medicines in customer cart
+     */
+    // field uses for view at jsp in the table of medicine list
+    private int countInCustomerCart;
 
-    /** Create entity of class {@link Medicine#Medicine(String, String)}, {@link Medicine#Medicine(int, String, String, int, int)},
+    /**
+     * Create entity of class {@link Medicine#Medicine(String, String)}, {@link Medicine#Medicine(int, String, String, int, int)},
      * {@link Medicine#Medicine(int, String, int, int, String, Date, boolean, int, int, String)}
+     *
      * @param id - medicine ID
      */
     public Medicine(int id) {
         this.id = id;
     }
 
-    /** Create entity of class {@link Medicine#Medicine(int)}, {@link Medicine#Medicine(int, String, String, int, int)},
+    /**
+     * Create entity of class {@link Medicine#Medicine(int)}, {@link Medicine#Medicine(int, String, String, int, int)},
      * {@link Medicine#Medicine(int, String, int, int, String, Date, boolean, int, int, String)}
-     * @param name - medicine name
+     *
+     * @param name   - medicine name
      * @param dosage - medicine dosage
      */
     // For Doctor (list available medicine)
@@ -59,12 +97,14 @@ public class Medicine implements Serializable {
         this.dosage = dosage;
     }
 
-    /** Create entity of class {@link Medicine#Medicine(int)}, {@link Medicine#Medicine(String, String)},
+    /**
+     * Create entity of class {@link Medicine#Medicine(int)}, {@link Medicine#Medicine(String, String)},
      * {@link Medicine#Medicine(int, String, int, int, String, Date, boolean, int, int, String)}
-     * @param id - medicine ID
-     * @param name - medicine name
+     *
+     * @param id     - medicine ID
+     * @param name   - medicine name
      * @param dosage - medicine dosage
-     * @param price - medicine price
+     * @param price  - medicine price
      * @param amount - medicine amount
      */
     // For create Order (recount available amount)
@@ -76,18 +116,20 @@ public class Medicine implements Serializable {
         this.amount = amount;
     }
 
-    /** Create entity of class {@link Medicine#Medicine(int)}, {@link Medicine#Medicine(int, String, String, int, int)},
+    /**
+     * Create entity of class {@link Medicine#Medicine(int)}, {@link Medicine#Medicine(int, String, String, int, int)},
      * {@link Medicine#Medicine(String, String)}
-     * @param id - medicine ID
-     * @param name - medicine name
+     *
+     * @param id                - medicine ID
+     * @param name              - medicine name
      * @param indivisibleAmount - medicine indivisible amount
-     * @param amount - medicine amount
-     * @param dosage - medicine dosage
-     * @param expDate - medicine expiration day
-     * @param recipeRequired - is recipe required for medicine
-     * @param price - medicine price
-     * @param addedBy - pharmacist ID who added medicine
-     * @param pharmForm - medicine pharmacy form
+     * @param amount            - medicine amount
+     * @param dosage            - medicine dosage
+     * @param expDate           - medicine expiration day
+     * @param recipeRequired    - is recipe required for medicine
+     * @param price             - medicine price
+     * @param addedBy           - pharmacist ID who added medicine
+     * @param pharmForm         - medicine pharmacy form
      */
     public Medicine(int id, String name, int indivisibleAmount, int amount, String dosage, Date expDate,
                     boolean recipeRequired, int price, int addedBy, String pharmForm) {
@@ -105,7 +147,9 @@ public class Medicine implements Serializable {
         this.coin = price % 100;
     }
 
-    /** The method of getting is the customer need a recipe for that medicine
+    /**
+     * The method of getting is the customer need a recipe for that medicine
+     *
      * @return - is the customer need a recipe for that medicine
      */
     public boolean isCustomerNeedRecipe() {
@@ -121,88 +165,130 @@ public class Medicine implements Serializable {
         this.customerNeedRecipe = customerNeedRecipe;
     }
 
-    /** The method of getting the medicine ID value
+    /**
+     * The method of getting the medicine ID value
+     *
      * @return - a medicine ID value
      */
     public int getId() {
         return id;
     }
 
-    /** The method of getting the medicine name value
+    /**
+     * The method of getting the medicine name value
+     *
      * @return - a medicine name value
      */
     public String getName() {
         return name;
     }
 
-    /** The method of getting the medicine indivisible amount value
+    /**
+     * The method of getting the medicine indivisible amount value
+     *
      * @return - a medicine indivisible amount value
      */
     public int getIndivisibleAmount() {
         return indivisibleAmount;
     }
 
-    /** The method of getting the medicine amount value
+    /**
+     * The method of getting the medicine amount value
+     *
      * @return - a medicine amount value
      */
     public int getAmount() {
         return amount;
     }
 
-    /** The method of getting the medicine dosage value
+    /**
+     * The method of getting the medicine dosage value
+     *
      * @return - a medicine dosage value
      */
     public String getDosage() {
         return dosage;
     }
 
-    /** The method of getting the medicine expiration date value
+    /**
+     * The method of getting the medicine expiration date value
+     *
      * @return - a medicine expiration date value
      */
     public Date getExpDate() {
         return expDate;
     }
 
-    /** The method of getting is the medicine required a recipe
+    /**
+     * The method of getting is the medicine required a recipe
+     *
      * @return - is the medicine required a recipe
      */
     public boolean isRecipeRequired() {
         return recipeRequired;
     }
 
-    /** The method of getting the medicine price value
+    /**
+     * The method of getting the medicine price value
+     *
      * @return - a medicine price value
      */
     public int getPrice() {
         return price;
     }
 
-    /** The method of getting the pharmacist ID value who added a medicine
+    /**
+     * The method of getting the pharmacist ID value who added a medicine
+     *
      * @return - a pharmacist ID value
      */
     public int getAddedBy() {
         return addedBy;
     }
 
-    /** The method of getting the medicine pharmacy form value
+    /**
+     * The method of getting the medicine pharmacy form value
+     *
      * @return - a medicine pharmacy form value
      */
     public String getPharmForm() {
         return pharmForm;
     }
 
-    /** The method of getting the rub part of medicine price value
+    /**
+     * The method of getting the rub part of medicine price value
+     *
      * @return - a rub part of medicine price value
      */
     public int getRub() {
         return rub;
     }
 
-    /** The method of getting the coin part of medicine price value
+    /**
+     * The method of getting the coin part of medicine price value
+     *
      * @return - a coin part of medicine price value
      */
     public int getCoin() {
         return coin;
+    }
+
+    /**
+     * The method of getting the count of medicine in the customer cart
+     *
+     * @return - a count of medicine in the customer cart
+     */
+    public int getCountInCustomerCart() {
+        return countInCustomerCart;
+    }
+
+    /**
+     * The method for setting the count of medicine in the customer cart
+     *
+     * @param countInCustomerCart - a count of medicine in the customer cart
+     */
+    public void setCountInCustomerCart(int countInCustomerCart) {
+        this.countInCustomerCart = countInCustomerCart;
     }
 
     /**
@@ -238,7 +324,7 @@ public class Medicine implements Serializable {
         return indivisibleAmount == medicine.indivisibleAmount &&
                 name.equals(medicine.name) &&
                 Objects.equals(dosage, medicine.dosage) &&
-                expDate.equals(medicine.expDate);
+                Objects.equals(expDate, medicine.expDate);
     }
 
     @Override
@@ -246,7 +332,9 @@ public class Medicine implements Serializable {
         return Objects.hash(name, dosage, price);
     }
 
-    /** The nested class for compare medicine entity {@link Medicine.MedicineDosageComparator}, {@link Medicine.MedicineDateComparator}  */
+    /**
+     * The nested class for compare medicine entity {@link Medicine.MedicineDosageComparator}, {@link Medicine.MedicineDateComparator}
+     */
     public static class MedicineNameComparator implements Comparator<Medicine> {
 
         /**
@@ -261,7 +349,9 @@ public class Medicine implements Serializable {
         }
     }
 
-    /** The nested class for compare medicine entity {@link Medicine.MedicineNameComparator}, {@link Medicine.MedicineDateComparator}  */
+    /**
+     * The nested class for compare medicine entity {@link Medicine.MedicineNameComparator}, {@link Medicine.MedicineDateComparator}
+     */
     public static class MedicineDosageComparator implements Comparator<Medicine> {
 
         /**
@@ -276,7 +366,9 @@ public class Medicine implements Serializable {
         }
     }
 
-    /** The nested class for compare medicine entity {@link Medicine.MedicineDosageComparator}, {@link Medicine.MedicineNameComparator}  */
+    /**
+     * The nested class for compare medicine entity {@link Medicine.MedicineDosageComparator}, {@link Medicine.MedicineNameComparator}
+     */
     public static class MedicineDateComparator implements Comparator<Medicine> {
 
         /**

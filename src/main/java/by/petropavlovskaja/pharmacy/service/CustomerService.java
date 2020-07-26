@@ -1,7 +1,9 @@
 package by.petropavlovskaja.pharmacy.service;
 
+import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.dao.AccountDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
+import by.petropavlovskaja.pharmacy.dao.MedicineInOrderDAO;
 import by.petropavlovskaja.pharmacy.dao.OrderDAO;
 import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.model.MedicineInOrder;
@@ -15,7 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Class for services of customer role. Uses {@link RecipeService}, {@link CommonService}, {@link AccountDAO},
+/**
+ * Class for services of customer role. Uses {@link RecipeService}, {@link CommonService}, {@link AccountDAO},
  * {@link MedicineDAO} and {@link OrderDAO}
  */
 public class CustomerService {
@@ -25,6 +28,7 @@ public class CustomerService {
     private AccountDAO accountDAO = AccountDAO.getInstance();
     private MedicineDAO medicineDAO = MedicineDAO.getInstance();
     private OrderDAO orderDAO = OrderDAO.getInstance();
+    private MedicineInOrderDAO medicineInOrderDAO = MedicineInOrderDAO.getInstance();
 
     /**
      * Constructor without parameters
@@ -49,14 +53,15 @@ public class CustomerService {
     }
 
     /**
-     * The method for writing into database record of medicine in order. Uses {@link OrderDAO#createMedicineInOrder(int, Medicine, int)},
-     * {@link OrderDAO#createActiveMedicineRelation(int, int)} ation}, {@link OrderDAO#updateMedicineInCart(int, int)}
+     * The method for writing into database record of medicine in order. Uses {@link MedicineInOrderDAO#createMedicineInOrder(int, Medicine, int)},
+     * {@link OrderDAO#createActiveMedicineRelation(int, int)} ation}, {@link MedicineInOrderDAO#updateMedicineInCart(int, int)}
      *
-     * @param customer - customer instance
+     * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
      * @return - true if process was successful
      */
     public boolean addMedicineInOrder(Customer customer, Map<String, Object> reqParameters) {
+        boolean result = false;
         String requestAmount = (String) reqParameters.get("amountForBuy");
         if (commonService.isNumber(requestAmount)) {
             int amountForBuy = Integer.parseInt((String) reqParameters.get("amountForBuy"));
@@ -66,25 +71,26 @@ public class CustomerService {
                 Medicine medicine = findMedicineById(reqParameters);
                 int idPresentMedicineInOrder = checkMedicineForPresentInOrder(medicine, orderId);
                 if (idPresentMedicineInOrder == -1) {
-                    int idInsertMedicine = orderDAO.createMedicineInOrder(orderId, medicine, amountForBuy);        // add Medicine to DB
+                    int idInsertMedicine = medicineInOrderDAO.createMedicineInOrder(orderId, medicine, amountForBuy);        // add Medicine to DB
                     if (idInsertMedicine == -1) {
                         logger.error("Cant't get ID for insert Medicine " + medicine.toString() + " into Cart.");
                     } else {
                         orderDAO.createActiveMedicineRelation(medicine.getId(), idInsertMedicine);
+                        result = true;
                     }
                 } else {
-                    orderDAO.updateMedicineInCart(idPresentMedicineInOrder, amountForBuy);
+                    medicineInOrderDAO.updateMedicineInCart(idPresentMedicineInOrder, amountForBuy);
+                    result = true;
                 }
             }
-            return true;
         }
-        return false;
+        return result;
     }
 
     /**
-     * The method for updating in database quantity of medicine in cart. Uses {@link OrderDAO#updateMedicineInCart(int, int)}
+     * The method for updating in database quantity of medicine in cart. Uses {@link MedicineInOrderDAO#updateMedicineInCart(int, int)}
      *
-     * @param customer - customer instance
+     * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
      * @return - true if process was successful
      */
@@ -94,26 +100,26 @@ public class CustomerService {
             int amountForBuy = Integer.parseInt((String) reqParameters.get("amountForBuy"));
             int medicineId = Integer.parseInt((String) reqParameters.get("medicineId"));
             if (amountForBuy > 0) {
-                orderDAO.updateMedicineInCart(medicineId, amountForBuy);
+                medicineInOrderDAO.updateMedicineInCart(medicineId, amountForBuy);
                 updateCartWithDetails(customer);
+                return true;
             }
-            return true;
+//                return true;
         }
         return false;
-
     }
 
     /**
-     * The method for checking is the medicine present in the order. Uses {@link OrderDAO#findMedicineInOrderByMedicine(Medicine, int)}
+     * The method for checking is the medicine present in the order. Uses {@link MedicineInOrderDAO#findMedicineInOrderByMedicine(Medicine, int)}
      *
      * @param medicine - medicine instance
-     * @param orderId - order ID
+     * @param orderId  - order ID
      * @return - ID medicine if it present in the order or -1
      */
     // If Medicine exist function return ID  Medicine in Order, else "-1"
     private int checkMedicineForPresentInOrder(Medicine medicine, int orderId) {
         int result = -1;
-        MedicineInOrder medicineInOrder = orderDAO.findMedicineInOrderByMedicine(medicine, orderId);
+        MedicineInOrder medicineInOrder = medicineInOrderDAO.findMedicineInOrderByMedicine(medicine, orderId);
         if (medicineInOrder.getId() != -1) {
             boolean theSame = medicine.getName().equals(medicineInOrder.getMedicine()) &&
                     medicine.getDosage().equals(medicineInOrder.getDosage()) &&
@@ -153,11 +159,11 @@ public class CustomerService {
 
     /**
      * The method blocks the medicine from the purchase if the customer hasn't a recipe.
-     * Uses {@link RecipeService#getValidRecipes(Customer)}, {@link OrderDAO#updateMedicinePriceInCart(int, Set)}
+     * Uses {@link RecipeService#getValidRecipes(Customer)}, {@link MedicineInOrderDAO#updateMedicinePriceInCart(int, Set)}
      *
-     * @param customer - customer instance
+     * @param customer       - customer instance
      * @param medicineInCart - a medicines in cart set
-     * @param cartId - a cart ID
+     * @param cartId         - a cart ID
      */
     private void blockMedicineWithoutRecipe(Customer customer, Set<MedicineInOrder> medicineInCart, int cartId) {
         Set<Recipe> recipes = recipeService.getValidRecipes(customer);
@@ -183,24 +189,24 @@ public class CustomerService {
                 medicineItem.setCoinForQuantity(0);*/
             }
         }
-        orderDAO.updateMedicinePriceInCart(cartId, medicineInCart);
+        medicineInOrderDAO.updateMedicinePriceInCart(cartId, medicineInCart);
     }
 
     /**
      * The method gets the actual prices of medicines and sets it to customer cart into database
-     * Uses {@link OrderDAO#findMedicineInCartWithActualPrice(int, boolean)} and {@link OrderDAO#updateMedicinePriceInCart(int, Set)}
+     * Uses {@link MedicineInOrderDAO#findMedicineInCartWithActualPrice(int, boolean)} and {@link MedicineInOrderDAO#updateMedicinePriceInCart(int, Set)}
      *
      * @param cartId - a cart ID
      * @return medicine in order set
      */
     private Set<MedicineInOrder> findActualPriceAndSetToCartInDB(int cartId) {
-        Set<MedicineInOrder> medicineInCartWithActualPrice = orderDAO.findMedicineInCartWithActualPrice(cartId, true);
+        Set<MedicineInOrder> medicineInCartWithActualPrice = medicineInOrderDAO.findMedicineInCartWithActualPrice(cartId, true);
         for (MedicineInOrder medicineInOrder : medicineInCartWithActualPrice) {
-            if ((medicineInOrder.getAmount() != 0) && (medicineInOrder.getQuantity() > medicineInOrder.getAmount())){
+            if ((medicineInOrder.getAmount() != 0) && (medicineInOrder.getQuantity() > medicineInOrder.getAmount())) {
                 medicineInOrder.setQuantity(medicineInOrder.getAmount());
             }
         }
-        orderDAO.updateMedicinePriceInCart(cartId, medicineInCartWithActualPrice);
+        medicineInOrderDAO.updateMedicinePriceInCart(cartId, medicineInCartWithActualPrice);
         return medicineInCartWithActualPrice;
     }
 
@@ -208,7 +214,7 @@ public class CustomerService {
      * The method for update total price in cart
      * Uses {@link OrderDAO#updateCartPrice(int, int)}
      *
-     * @param cartId - a cart ID
+     * @param cartId                        - a cart ID
      * @param medicineInCartWithActualPrice - set of medicines
      */
     private void updateTotalPriceInDB(int cartId, Set<MedicineInOrder> medicineInCartWithActualPrice) {
@@ -260,16 +266,16 @@ public class CustomerService {
 
     /**
      * The method for deleting the medicine from the cart.
-     * Uses {@link CommonService#isNumber(String)} and {@link OrderDAO#deleteMedicineFromOrder(int)}
+     * Uses {@link CommonService#isNumber(String)} and {@link MedicineInOrderDAO#deleteMedicineFromOrder(int)}
      *
-     * @param customer - customer instance
+     * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
      */
     public void deleteMedicineFromCart(Customer customer, Map<String, Object> reqParameters) {
         String frontMedicineId = (String) reqParameters.get("medicineId");
         if (commonService.isNumber(frontMedicineId)) {
             int medicineId = Integer.parseInt(frontMedicineId);
-            orderDAO.deleteMedicineFromOrder(medicineId);
+            medicineInOrderDAO.deleteMedicineFromOrder(medicineId);
             updateCartWithDetails(customer);
         }
     }
@@ -278,7 +284,7 @@ public class CustomerService {
      * The method for checking customer's recipes for view medicine list that are available to purchased.
      * Uses {@link RecipeService#getValidRecipes(Customer)}
      *
-     * @param customer - customer instance
+     * @param customer     - customer instance
      * @param medicineList - medicine list
      */
     public void checkAvailableRecipe(Customer customer, List<Medicine> medicineList) {
@@ -299,39 +305,52 @@ public class CustomerService {
 
     /**
      * The method for creating the order.
-     * Uses {@link OrderDAO#findCart(int)}, {@link OrderDAO#findMedicineInCartWithActualPrice(int, boolean)},
+     * Uses {@link OrderDAO#findCart(int)}, {@link MedicineInOrderDAO#findMedicineInCartWithActualPrice(int, boolean)},
      * {@link OrderDAO#createOrder(Customer, Order, Set)}
      *
      * @param customer - customer instance
+     * @return true if update information after purchasing has successfully changed in database
      */
-    public void createOrder(Customer customer) {
+    public boolean createOrder(Customer customer) {
+        boolean updateResult = false;
         Order cart = orderDAO.findCart(customer.getId());
-        Set<MedicineInOrder> medicineInOrderSet = orderDAO.findMedicineInCartWithActualPrice(cart.getId(), false);
+        Set<MedicineInOrder> medicineInOrderSet = medicineInOrderDAO.findMedicineInCartWithActualPrice(cart.getId(), false);
         boolean resultOrderUpdate = orderDAO.createOrder(customer, cart, medicineInOrderSet);
         if (resultOrderUpdate) {
             cart = orderDAO.findCart(customer.getId());
-            medicineInOrderSet = orderDAO.findMedicineInCartWithActualPrice(cart.getId(), false);
+            medicineInOrderSet = medicineInOrderDAO.findMedicineInCartWithActualPrice(cart.getId(), false);
             customer.setCartMedicine(medicineInOrderSet);
+            updateResult = true;
         }
+        return updateResult;
     }
 
     /**
      * The method for increasing customer balance.
      * Uses {@link CommonService#isNumber(String)}, {@link AccountDAO#increaseCustomerBalance(int, int)},
      *
-     * @param customer - customer instance
+     * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
+     * @param executeResult - execute result instance
+     * @return true if increasing of balance was successful
      */
-    public void increaseBalance(Customer customer, Map<String, Object> reqParameters) {
+    public boolean increaseBalance(Customer customer, Map<String, Object> reqParameters, ExecuteResult executeResult) {
+        boolean increaseResult = false;
         String frontBalance = (String) reqParameters.get("balance");
         if (commonService.isNumber(frontBalance)) {
             int countIncrease = Integer.parseInt(frontBalance) * 100;
-            int newBalance = 0;
-            if (countIncrease > 0) {
+            int newBalance;
+            if ((countIncrease > 0) && (countIncrease < 9999)) {
                 newBalance = customer.getBalance() + countIncrease;
                 accountDAO.increaseCustomerBalance(customer.getId(), newBalance);
+                customer.setBalance(newBalance);
+                increaseResult = true;
+            } else {
+                executeResult.setResponseAttributes("errorMessage", "The quantity of money must be more then 0 and less then 9999.");
             }
-            customer.setBalance(newBalance);
+        } else {
+            executeResult.setResponseAttributes("errorMessage", "Incorrect data of the money.");
         }
+        return increaseResult;
     }
 }

@@ -10,6 +10,7 @@
     <title>On-line pharmacy. Medicine items</title>
     <style>
         <%@include file="/css/style.css" %>
+        <%@include file="/toastr/toastr.css" %>
     </style>
     <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
@@ -23,7 +24,13 @@
     <c:import url="../_customer_menu.jsp"/>
 </div>
 <div id="center_no_right">
-    <p class="p-red">${requestScope.get('message')}</p>
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <c:import url="../../_toastr.jsp"/>
+    <c:if test="${not empty sessionScope.get('successMessage')}" >
+        <c:import url="../../_toastrFuncSuccess.jsp"/>
+    </c:if>
+
     <table width="100%">
         <%@include file="_medicine_list_header.jsp" %>
 
@@ -47,16 +54,25 @@
                                value="1" min="1" max="${medicine.amount}"
                                title="<fmt:message key="label.medicine.amountForBuyTitle1"/> ${medicine.amount} <fmt:message key="label.medicine.amountForBuyTitle2"/>">
                     </td>
+                    <c:if test="${medicine.countInCustomerCart !=0}">
+                        <td>
+                            <a href="${pageContext.request.contextPath}/customer/cabinet/cart"><img src="${pageContext.request.contextPath}/images/cart.gif"></a>
+                            <p class="p-redNoItalic" align="center"><c:out value="${medicine.countInCustomerCart}"/></p>
+                        </td>
+                    </c:if>
+                    <c:if test="${medicine.countInCustomerCart ==0}">
+                        <td></td>
+                    </c:if>
                     <td align="center">
                         <c:if test="${medicine.customerNeedRecipe == false}">
                             <input type="submit" value=
                                 <fmt:message key="label.medicine.buttonToCart"/> height="8">
                             <input type="hidden" name="medicineId" value="${medicine.id}">
-                            <input type="hidden" name="customerCommand" value="medicineForCart">
+                            <input type="hidden" name="frontCommand" value="medicineForCart">
                         </c:if>
                         <c:if test="${medicine.customerNeedRecipe == true}">
                             <input type="submit" value=<fmt:message key="label.medicine.buttonOrderRecipe"/>>
-                            <input type="hidden" name="customerCommand" value="requestRecipe">
+                            <input type="hidden" name="frontCommand" value="requestRecipe">
                             <input type="hidden" name="medicine" value="${medicine.name}">
                             <input type="hidden" name="dosage" value="${medicine.dosage}">
                         </c:if>

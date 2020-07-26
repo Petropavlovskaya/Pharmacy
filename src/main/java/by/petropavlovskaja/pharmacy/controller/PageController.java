@@ -2,6 +2,7 @@ package by.petropavlovskaja.pharmacy.controller;
 
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
 import by.petropavlovskaja.pharmacy.model.Medicine;
+import by.petropavlovskaja.pharmacy.model.MedicineInOrder;
 import by.petropavlovskaja.pharmacy.model.account.Customer;
 import by.petropavlovskaja.pharmacy.service.CommonService;
 import by.petropavlovskaja.pharmacy.service.CustomerService;
@@ -14,8 +15,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
-/** Pagination controller, extends {@link HttpServlet} */
+/**
+ * Pagination controller, extends {@link HttpServlet}
+ */
 @WebServlet(name = "PageServlet", urlPatterns = "/page")
 public final class PageController extends HttpServlet {
     private static CommonService commonService = CommonService.getInstance();
@@ -24,6 +28,7 @@ public final class PageController extends HttpServlet {
 
     /**
      * The override method doGet
+     *
      * @param req  - http servlet request
      * @param resp - http servlet response
      * @throws IOException      - throws IOException
@@ -62,6 +67,18 @@ public final class PageController extends HttpServlet {
                     int accountId = Integer.parseInt(String.valueOf(req.getSession().getAttribute("accountId")));
                     Customer customer = commonService.getCustomer(accountId);
                     customerService.checkAvailableRecipe(customer, medicineList);
+                    customerService.updateCartWithDetails(customer);
+                    Set<MedicineInOrder> medicineInOrderSet = customer.getMedicineInCart();
+                    req.getSession().setAttribute("medicineInCart", medicineInOrderSet);
+                    for (Medicine medicine : medicineList) {
+                        for (MedicineInOrder medicineInOrder : medicineInOrderSet) {
+                            if (medicine.getName().equals(medicineInOrder.getMedicine()) &&
+                                    medicine.getDosage().equals(medicineInOrder.getDosage()) &&
+                                    medicine.getIndivisibleAmount() == medicineInOrder.getIndivisibleAmount()) {
+                                medicine.setCountInCustomerCart(medicineInOrder.getQuantity());
+                            }
+                        }
+                    }
                 }
                 dispatcher = req.getRequestDispatcher("/WEB-INF/jsp/" + accountRole + "/medicine/medicine_list.jsp");
             } else {
@@ -73,6 +90,7 @@ public final class PageController extends HttpServlet {
 
     /**
      * The override method doPost
+     *
      * @param req  - http servlet request
      * @param resp - http servlet response
      * @throws IOException - throws IOException
@@ -81,7 +99,7 @@ public final class PageController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String fullUri = (String) req.getSession().getAttribute("fullUri");
         int currentPage = Integer.parseInt(String.valueOf(req.getSession().getAttribute("requestPage")));
-        int recordsPerPage = 0;
+        int recordsPerPage = 5;
         if (req.getParameter("recordsPerPage") != null) {
             recordsPerPage = Integer.parseInt(req.getParameter("recordsPerPage"));
         }
@@ -97,13 +115,14 @@ public final class PageController extends HttpServlet {
 
     /**
      * The method counts number of pages by records per page
-     * @param recordsPerPage  - records per page
+     *
+     * @param recordsPerPage - records per page
      * @return - count of pages
      */
     private int countNumOfPages(int recordsPerPage) {
         int rows = medicineDAO.getNumberOfRows();
         int numOfPages = rows / recordsPerPage;
-        if (numOfPages % recordsPerPage > 0) {
+        if (rows % recordsPerPage > 0) {
             numOfPages++;
         }
         return numOfPages;

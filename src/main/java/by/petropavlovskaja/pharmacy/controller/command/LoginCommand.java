@@ -11,19 +11,23 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-/** Class for processing the front login command, implements {@link IFrontCommand}
+/**
+ * Class for processing the front login command, implements {@link IFrontCommand}
  */
 public final class LoginCommand implements IFrontCommand {
     private static Logger logger = LoggerFactory.getLogger(LoginCommand.class);
     private static CommonService commonService = CommonService.getInstance();
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class LoginHolder {
         public static final LoginCommand LOGIN_COMMAND = new LoginCommand();
     }
 
     /**
      * The override method for get instance of the class
+     *
      * @return - class instance
      */
     @Override
@@ -33,6 +37,7 @@ public final class LoginCommand implements IFrontCommand {
 
     /**
      * The override method process login to the application
+     *
      * @param sc - Session context {@link SessionContext}
      * @return - class instance {@link ExecuteResult}
      */
@@ -59,7 +64,7 @@ public final class LoginCommand implements IFrontCommand {
                     // If AccountId = -1 then account doesn't exist or password isn't correct
                     if (account.getId() == -1) {
                         logger.info("User " + login + " haven't passed authentication.");
-                        executeResult.setResponseAttributes("message", "Login or/and password are incorrect. Please, try again.");
+                        executeResult.setResponseAttributes("errorMessage", "Login or/and password are incorrect. Please, try again.");
                     } else {
                         logger.info("User " + login + " have passed authentication.");
                         executeResult.setJsp("/pharmacy/" + account.getAccountRole().name().toLowerCase() + "/main");

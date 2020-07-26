@@ -1,5 +1,7 @@
 package by.petropavlovskaja.pharmacy.service;
 
+import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
+import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.dao.AccountDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
 import by.petropavlovskaja.pharmacy.model.Medicine;
@@ -15,6 +17,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Class for common services. Uses {@link MedicineDAO} and {@link AccountDAO}
@@ -96,25 +99,56 @@ public class CommonService {
     /**
      * The method of changing customer information  {@link AccountDAO#changeAccountData(int, String, String, String, String)}
      *
-     * @param customer      - customer
+     * @param account       - account instance
      * @param reqParameters - customer request parameters
      * @param accountId     - customer ID
      * @return - true if changing was successful
      */
-    public boolean changeAccountData(Customer customer, Map<String, Object> reqParameters, int accountId) {
+    public boolean changeAccountData(Account account, Map<String, Object> reqParameters, int accountId) {
         String accountSurname = (String) reqParameters.get("accountSurname");
         String accountName = (String) reqParameters.get("accountName");
         String accountPatronymic = (String) reqParameters.get("accountPatronymic");
         String accountPhone = (String) reqParameters.get("accountPhone");
         boolean successfulUpdate = accountDAO.changeAccountData(accountId, accountSurname, accountName, accountPatronymic, accountPhone);
         if (successfulUpdate) {
-            customer.setSurname(accountSurname);
-            customer.setName(accountName);
-            customer.setPatronymic(accountPatronymic);
-            customer.setPhoneNumber(accountPhone);
+            account.setSurname(accountSurname);
+            account.setName(accountName);
+            account.setPatronymic(accountPatronymic);
+            account.setPhoneNumber(accountPhone);
             return true;
         }
         return false;
+    }
+
+    /**
+     * The method of changing customer information  {@link AccountDAO#changeAccountData(int, String, String, String, String)}
+     *
+     * @param reqParameters - customer request parameters
+     * @param login         - account login
+     * @return - error message or NULL
+     */
+    public String changeAccountPassword(Map<String, Object> reqParameters, String login) {
+        String result = "noError";
+        String accountOldPassword = (String) reqParameters.get("oldPassword");
+        String accountNewPassword = (String) reqParameters.get("newPassword");
+        String accountNewPasswordConfirm = (String) reqParameters.get("newPasswordConfirm");
+        Account account = accountDAO.checkLoginAndPassword(login, accountOldPassword);
+        if (account.getId() != -1) {
+            String s = checkPasswordEquals(accountNewPassword, accountNewPasswordConfirm);
+            if (s != null) {
+                result = s;
+            } else {
+                String accountSalt = accountDAO.getSaltByLogin(login);
+                String newDbPassword = AccountDAO.getMd5Password(accountNewPassword, accountSalt);
+                boolean insertSuccess = accountDAO.setNewAccountPassword(login, newDbPassword);
+                if (!insertSuccess) {
+                    result = "Error. Can't insert into database. Please, contact with site administrator.";
+                }
+            }
+        } else {
+            result = "Old password is incorrect!";
+        }
+        return result;
     }
 
     /**
@@ -129,10 +163,59 @@ public class CommonService {
         String password = String.valueOf(reqParameters.get("password"));
         String passwordConfirm = String.valueOf(reqParameters.get("passwordConfirm"));
 
-        if (login == null || password == null) {
-            result = "Login or/and password can't be empty. Please, enter login or/and password and try again.";
+        if (login == null) {
+            result = "Login can't be empty. Please, enter login and try again.";
         } else if (isLoginBusy(login)) {
             result = "This login already busy. Please, choose another login and try again.";
+        } else if (!loginMatchRegex(login)) {
+            result = "Account login insert data is incorrect. Please, enter valid data and try again.";
+        }
+        String s = checkPasswordEquals(password, passwordConfirm);
+        if (s != null) {
+            result = s;
+        }
+        String fioError = checkAccountDataBeforeCreate(reqParameters);
+        if (fioError != null) {
+            result = fioError;
+        }
+        return result;
+    }
+
+
+    /**
+     * The method for checking account fio data before account creates
+     *
+     * @param reqParameters - customer request parameters
+     * @return - string of error message or NULL
+     */
+    public String checkAccountDataBeforeCreate(Map<String, Object> reqParameters) {
+        String result = null;
+        String surname = (String) reqParameters.get("accountSurname");
+        String name = (String) reqParameters.get("accountName");
+        if (!fioMatchRegex(surname) || !fioMatchRegex(name)) {
+            result = "Account surname and/or name insert data are incorrect. Please, enter valid data and try again.";
+        } else if (reqParameters.get("accountPatronymic") != null) {
+            String patronymic = (String) reqParameters.get("accountPatronymic");
+            if (!fioMatchRegex(patronymic)) {
+                result = "Account patronymic insert data is incorrect. Please, enter valid data and try again.";
+            }
+        }
+        return result;
+    }
+
+
+    /**
+     * The method for checking account data before account creates
+     *
+     * @param password        - new account password
+     * @param passwordConfirm - confirm of new account password
+     * @return - string of error message or NULL
+     */
+    public String checkPasswordEquals(String password, String passwordConfirm) {
+        String result = null;
+
+        if (password == null || passwordConfirm == null) {
+            result = "Password or/and password confirm can't be empty. Please, enter password or/and password confirm and try again.";
         } else if (!password.equals(passwordConfirm)) {
             result = "Password and password confirm are not equals. Please, try again.";
         }
@@ -145,7 +228,7 @@ public class CommonService {
      * @param login - account ligin
      * @return - true if the login already exist in database
      */
-    private boolean isLoginBusy(String login) {
+    boolean isLoginBusy(String login) {
         boolean result = false;
         if ((login.length() > 3) && (login.length() < 16)) {
             result = AccountDAO.getInstance().isLoginBusy(login);
@@ -220,6 +303,7 @@ public class CommonService {
         requiredDate = cal.getTime();
         return requiredDate;
     }
+
     /**
      * The method for getting the future required date as string
      *
@@ -228,7 +312,52 @@ public class CommonService {
      */
     public String getStringDate(int plusDays) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        String newDate = format.format(getFutureDate(plusDays));
-        return newDate;
+        return format.format(getFutureDate(plusDays));
     }
+
+    /**
+     * The method for getting an account instance
+     *
+     * @param accountId - account ID
+     * @return - account instance
+     */
+    public Account getAccount(int accountId) {
+        return accountDAO.find(accountId);
+    }
+
+    public boolean changePassword(Map<String, Object> reqParameters, ExecuteResult executeResult, String login, SessionContext sc) {
+        boolean changeResult = false;
+        String errorMessage = changeAccountPassword(reqParameters, login);
+        if (errorMessage.equals("noError")) {
+            sc.getSession().setAttribute("successMessage", "The password has changed successfully.");
+            sc.getSession().setAttribute("successTextSet", "yes");
+            changeResult = true;
+        } else {
+            executeResult.setResponseAttributes("errorMessage", errorMessage);
+        }
+        return changeResult;
+    }
+
+    /**
+     * The method for checking login against regular expression
+     *
+     * @param login - account login
+     * @return - true if login against regular expression
+     */
+    public boolean loginMatchRegex(String login) {
+        String regex = "[A-Za-z]+[A-Za-z0-9]{3,15}";
+        return Pattern.matches(regex, login);
+    }
+
+    /**
+     * The method for checking login against regular expression
+     *
+     * @param info - account surname/name/patronymic
+     * @return - true if info against regular expression
+     */
+    public boolean fioMatchRegex(String info) {
+        String regex = "(([A-ZА-Я][a-zа-я]{1,20})[-\\s]*)+?";
+        return Pattern.matches(regex, info);
+    }
+
 }

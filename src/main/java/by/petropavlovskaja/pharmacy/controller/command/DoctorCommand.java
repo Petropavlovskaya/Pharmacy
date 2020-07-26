@@ -4,17 +4,18 @@ import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.model.Recipe;
+import by.petropavlovskaja.pharmacy.model.account.Account;
 import by.petropavlovskaja.pharmacy.service.CommonService;
 import by.petropavlovskaja.pharmacy.service.DoctorService;
 import by.petropavlovskaja.pharmacy.service.RecipeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-/** Class for processing the doctor front requests commands, implements {@link IFrontCommand}
+/**
+ * Class for processing the doctor front requests commands, implements {@link IFrontCommand}
  */
 public final class DoctorCommand implements IFrontCommand {
     private static Logger logger = LoggerFactory.getLogger(DoctorCommand.class);
@@ -22,13 +23,16 @@ public final class DoctorCommand implements IFrontCommand {
     private static RecipeService recipeService = RecipeService.getInstance();
     private static CommonService commonService = CommonService.getInstance();
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class DoctorCommandHolder {
         public static final DoctorCommand DOCTOR_COMMAND = new DoctorCommand();
     }
 
     /**
      * The override method for get instance of the class
+     *
      * @return - class instance
      */
     @Override
@@ -38,6 +42,7 @@ public final class DoctorCommand implements IFrontCommand {
 
     /**
      * The override method process doctor's GET and POST front requests
+     *
      * @param sc - Session context {@link SessionContext}
      * @return - class instance {@link ExecuteResult}
      */
@@ -51,6 +56,14 @@ public final class DoctorCommand implements IFrontCommand {
         String requestMethod = sc.getRequestMethod();
         executeResult.setJsp(arrayUri);
         int accountId = Integer.parseInt(String.valueOf(sc.getSession().getAttribute("accountId")));
+        Account doctor = commonService.getAccount(accountId);
+        if (sc.getSession().getAttribute("successTextSet") != null) {
+            if (sc.getSession().getAttribute("successTextSet").equals("yes")) {
+                sc.getSession().setAttribute("successTextSet", "no");
+            } else {
+                sc.getSession().removeAttribute("successMessage");
+            }
+        }
 
         if (requestMethod.equals("GET")) {
             String lastUri = arrayUri[arrayUri.length - 1];
@@ -75,14 +88,8 @@ public final class DoctorCommand implements IFrontCommand {
                     sc.getSession().setAttribute("availableMedicine", availableMedicine);
                     break;
                 }
-/*                case "history": {
-                    customerService.updateCartWithDetails(customer);
-                    sc.getSession().setAttribute("cart", customer.getCart());
-                    sc.getSession().setAttribute("medicineInCart", customer.getMedicineInCart());
-                    break;
-                }
-*/
                 case "profile": {
+                    executeResult.setResponseAttributes("account", doctor);
                     break;
                 }
             }
@@ -90,35 +97,65 @@ public final class DoctorCommand implements IFrontCommand {
         executeResult.setJsp(arrayUri);
 
         if (requestMethod.equals("POST")) {
-            String command = (String) reqParameters.get("customerCommand");
+            String command = (String) reqParameters.get("frontCommand");
             switch (command) {
                 case "extendRecipe": {
                     logger.info(" Command extendRecipe is received.");
-                    recipeService.validateRecipe(accountId, reqParameters);
-                    executeResult.setJsp(fullUri);
+                    boolean result = recipeService.validateRecipe(accountId, reqParameters, executeResult);
+                    if (result) {
+                        sc.getSession().setAttribute("successMessage", "The recipe has extended successfully.");
+                        sc.getSession().setAttribute("successTextSet", "yes");
+                        executeResult.setJsp(fullUri);
+                    } else {
+                        executeResult.setJsp("/WEB-INF/jsp/doctor/recipe/recipe_ordered.jsp");
+                    }
                     break;
                 }
                 case "refuseRecipe": {
                     logger.info(" Command refuseRecipe is received.");
                     doctorService.refuseRecipe(accountId, reqParameters);
+                    sc.getSession().setAttribute("successMessage", "The recipe has refused successfully.");
+                    sc.getSession().setAttribute("successTextSet", "yes");
                     executeResult.setJsp(fullUri);
                     break;
                 }
-                case "appointRecipe": {
-                    logger.info(" Command appointRecipe is received.");
-                    String errorData = doctorService.createRecipe(accountId, reqParameters);
+                case "createRecipe": {
+                    logger.info(" Command createRecipe is received.");
+                    String errorMessage = doctorService.createRecipe(accountId, reqParameters);
 
-                    if (!errorData.equals("noError")) {
-                        executeResult.setResponseAttributes("message", errorData);
+                    if (!errorMessage.equals("noError")) {
+//                        executeResult.setResponseAttributes("msgErrorText", "The changes have not saved. " + errorMessage);
+                        executeResult.setResponseAttributes("errorMessage", errorMessage);
                         executeResult.setJsp("/WEB-INF/jsp/doctor/recipe/recipe_create.jsp");
-                    }
-                    else {
+                    } else {
+                        sc.getSession().setAttribute("successMessage", "The recipe has added successfully.");
+                        sc.getSession().setAttribute("successTextSet", "yes");
                         executeResult.setJsp(fullUri);
+                    }
+                    break;
+                }
+                case "changeAccountData": {
+                    boolean successfulUpdate = commonService.changeAccountData(doctor, reqParameters, accountId);
+                    if (!successfulUpdate) {
+                        executeResult.setResponseAttributes("errorMessage", "Something went wrong, please contact with the application administrator.");
+                    }
+                    executeResult.setJsp(fullUri);
+                    break;
+                }
+                case "changeAccountPassword": {
+                    String login = (String) sc.getSession().getAttribute("accountLogin");
+                    boolean result = commonService.changePassword(reqParameters, executeResult, login, sc);
+                    if (result) {
+                        executeResult.setJsp(fullUri);
+                    } else {
+                        executeResult.setJsp("/WEB-INF/jsp/doctor/cabinet/cabinet_profile.jsp");
                     }
                     break;
                 }
                 default: {
                     logger.error("Command " + command + " is not defined.");
+                    executeResult.setJsp("/WEB-INF/jsp/404.jsp");
+                    executeResult.setResponseAttributes("errorMessage", "Command is not defined.");
                 }
             }
         }

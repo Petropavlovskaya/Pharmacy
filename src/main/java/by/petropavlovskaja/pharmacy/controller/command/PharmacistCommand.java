@@ -9,11 +9,10 @@ import by.petropavlovskaja.pharmacy.service.PharmacistService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-/** Class for processing the pharmacist front requests commands, implements {@link IFrontCommand}
+/**
+ * Class for processing the pharmacist front requests commands, implements {@link IFrontCommand}
  */
 public final class PharmacistCommand implements IFrontCommand {
     private static Logger logger = LoggerFactory.getLogger(PharmacistCommand.class);
@@ -21,13 +20,16 @@ public final class PharmacistCommand implements IFrontCommand {
     private static CommonService commonService = CommonService.getInstance();
     private static MedicineDAO medicineDAO = MedicineDAO.getInstance();
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class PharmacistHolder {
         private static final PharmacistCommand PHARMACIST_COMMAND = new PharmacistCommand();
     }
 
     /**
      * The override method for get instance of the class
+     *
      * @return - class instance
      */
     @Override
@@ -37,6 +39,7 @@ public final class PharmacistCommand implements IFrontCommand {
 
     /**
      * The override method process customer's GET and POST front requests
+     *
      * @param sc - Session context {@link SessionContext}
      * @return - class instance {@link ExecuteResult}
      */
@@ -46,24 +49,33 @@ public final class PharmacistCommand implements IFrontCommand {
         Map<String, Object> reqParameters = sc.getRequestParameters();
         String fullUri = (String) sc.getSession().getAttribute("fullUri");
         String[] arrayUri = fullUri.substring(1).split("/");
+        if (sc.getSession().getAttribute("successTextSet") != null) {
+            if (sc.getSession().getAttribute("successTextSet").equals("yes")) {
+                sc.getSession().setAttribute("successTextSet", "no");
+            } else {
+                sc.getSession().removeAttribute("successMessage");
+            }
+        }
 
 //        List<Medicine> medicineList = CommonService.getInstance().getAllMedicine();
 //        sc.getSession().setAttribute("medicineList", medicineList);
 
-        if (sc.getRequestMethod().equals("GET")){
+        if (sc.getRequestMethod().equals("GET")) {
             String minDate = commonService.getStringDate(2);
             sc.getSession().setAttribute("minDate", minDate);
         }
         executeResult.setJsp(arrayUri);
 
         if (sc.getRequestMethod().equals("POST")) {
-            String command = (String) reqParameters.get("medicineCommand");
+            String command = (String) reqParameters.get("frontCommand");
             switch (command) {
                 case "create": {
                     // delete
                     logger.info(" Command create Medicine is received.");
                     boolean result = pharmacistService.addMedicineIntoDB(reqParameters, executeResult);
                     if (result) {
+                        sc.getSession().setAttribute("successMessage", "The medicine has created successfully.");
+                        sc.getSession().setAttribute("successTextSet", "yes");
                         executeResult.setJsp(fullUri);
                         logger.info(" Create in DAO was successful");
                     }
@@ -71,16 +83,20 @@ public final class PharmacistCommand implements IFrontCommand {
                 }
                 case "setChanges": {
                     logger.info(" Command edit Medicine is received.");
+                    int currentPage = 1;
+                    int recordsPerPage = 5;
+                    if (sc.getSession().getAttribute("currentPage") != null && sc.getSession().getAttribute("recordsPerPage") != null) {
+                        currentPage = Integer.parseInt(String.valueOf(sc.getSession().getAttribute("requestPage")));
+                        recordsPerPage = Integer.parseInt(String.valueOf(sc.getSession().getAttribute("recordsPerPage")));
+                    }
                     boolean result = pharmacistService.changeMedicineInDB(reqParameters, executeResult);
                     if (result) {
-                        int currentPage = 1;
-                        int recordsPerPage = 5;
-                        if (sc.getSession().getAttribute("currentPage") != null && sc.getSession().getAttribute("recordsPerPage") != null) {
-                            currentPage = Integer.parseInt(String.valueOf(sc.getSession().getAttribute("requestPage")));
-                            recordsPerPage = Integer.parseInt(String.valueOf(sc.getSession().getAttribute("recordsPerPage")));
-                        }
-                        List<Medicine> medicineList = medicineDAO.findMedicine(currentPage, recordsPerPage);
+                        sc.getSession().setAttribute("successMessage", "The changes have saved successfully.");
+                        sc.getSession().setAttribute("successTextSet", "yes");
+                        medicineDAO.findMedicine(currentPage, recordsPerPage);
                         executeResult.setJsp(fullUri);
+                    } else {
+                        executeResult.setJsp(arrayUri);
                     }
                     break;
                 }
@@ -92,17 +108,25 @@ public final class PharmacistCommand implements IFrontCommand {
                     }
                     break;
                 }
+                case "cancelChanges": {
+                    logger.info(" Command medicineCancel is received.");
+                    executeResult.setJsp(fullUri);
+                    break;
+                }
                 case "medicineForDelete": {
                     logger.info(" Command delete Medicine is received.");
                     boolean result = pharmacistService.deleteMedicineFromDB(reqParameters, executeResult);
                     if (result) {
+                        sc.getSession().setAttribute("successMessage", "The medicine has deleted successfully.");
+                        sc.getSession().setAttribute("successTextSet", "yes");
                         executeResult.setJsp(fullUri);
                     }
                     break;
                 }
                 default: {
                     logger.error("Command " + command + " is not defined.");
-                    executeResult.setResponseAttributes("message", "Command is not defined.");
+                    executeResult.setJsp("/WEB-INF/jsp/404.jsp");
+                    executeResult.setResponseAttributes("errorMessage", "Command is not defined.");
                 }
             }
         }

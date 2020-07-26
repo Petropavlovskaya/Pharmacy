@@ -27,12 +27,16 @@
     <p class="p-big-left"><fmt:message key="label.404.sorry"/>, <br><fmt:message key="label.404.pageNotFound"/></p>
     <br>
     <br>
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+    <br>
     <c:choose>
         <c:when test="${empty accountRole}">
-            <a class="link-back" href="${pageContext.request.contextPath}/main"><fmt:message key="label.404.goBack"/></a>
+            <a class="link-back" href="${pageContext.request.contextPath}/main"><fmt:message
+                    key="label.404.goBack"/></a>
         </c:when>
         <c:otherwise>
-            <a class="link-back" href="${pageContext.request.contextPath}/${accountRole}/main"><fmt:message key="label.404.goBack"/></a>
+            <a class="link-back" href="${pageContext.request.contextPath}/${accountRole}/main"><fmt:message
+                    key="label.404.goBack"/></a>
         </c:otherwise>
     </c:choose>
 </div>

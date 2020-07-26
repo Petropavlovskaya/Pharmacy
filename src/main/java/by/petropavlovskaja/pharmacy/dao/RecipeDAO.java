@@ -16,21 +16,28 @@ import java.util.Date;
 import java.util.Set;
 import java.util.TreeSet;
 
-/** Class for executing SQL queries to the database related to the recipe */
-public final class RecipeDAO {
+/**
+ * Class for executing SQL queries to the database related to the recipe
+ */
+public class RecipeDAO {
     private static Logger logger = LoggerFactory.getLogger(RecipeDAO.class);
 
-    /** Constructor - create INSTANCE of class */
+    /**
+     * Constructor - create INSTANCE of class
+     */
     private RecipeDAO() {
     }
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class RecipeDAOHolder {
         public static final RecipeDAO RECIPE_DAO = new RecipeDAO();
     }
 
     /**
      * The method for get instance of the class
+     *
      * @return - class instance
      */
     public static RecipeDAO getInstance() {
@@ -39,10 +46,11 @@ public final class RecipeDAO {
 
     /**
      * The method finds all customer's recipes in the database
+     *
      * @param customerId - customer ID
      * @return - a set of recipes
      */
-    public Set<Recipe> getAllForCustomer(int customerId) {
+    public Set<Recipe> getAllCustomerRecipe(int customerId) {
         Comparator<Recipe> comp = new Recipe.RecipeNameComparator().thenComparing(new Recipe.RecipeDosageComparator()
                 .thenComparing(new Recipe.RecipeOrderIdComparator()));
         Set<Recipe> recipes = new TreeSet(comp);
@@ -66,6 +74,7 @@ public final class RecipeDAO {
 
     /**
      * The method delete a recipe from the database
+     *
      * @param recipeId - a recipe ID
      */
     public void deleteRecipe(int recipeId) {
@@ -89,8 +98,9 @@ public final class RecipeDAO {
 
     /**
      * The method for setting the field id_medicine_in_order = -1 into the database field as a refuse criterion when extension the recipe
+     *
      * @param accountId - a customer ID
-     * @param recipeId - a recipe ID
+     * @param recipeId  - a recipe ID
      */
     public void refuseRecipe(int accountId, int recipeId) {
         try (
@@ -114,6 +124,7 @@ public final class RecipeDAO {
 
     /**
      * The method finds all valid customer's recipes in the database
+     *
      * @param customerId - a customer ID
      * @return - a set of recipes
      */
@@ -141,6 +152,7 @@ public final class RecipeDAO {
 
     /**
      * The method finds in the database all customers's recipes that need an extension
+     *
      * @return - a set of recipes
      */
     public Set<Recipe> getAllOrdered() {
@@ -165,9 +177,10 @@ public final class RecipeDAO {
 
     /**
      * The method inserts into the database new customer's recipe that need an extension
+     *
      * @param medicineName - a medicine name
-     * @param dosage - a medicine dosage
-     * @param customerId - a customer ID
+     * @param dosage       - a medicine dosage
+     * @param customerId   - a customer ID
      */
     public void insertRecipeCustomer(String medicineName, String dosage, int customerId) {
         try (
@@ -192,11 +205,12 @@ public final class RecipeDAO {
 
     /**
      * The method inserts into the database new recipe for customer
+     *
      * @param medicineName - a medicine name
-     * @param dosage - a medicine dosage
-     * @param customerId - a customer ID
+     * @param dosage       - a medicine dosage
+     * @param customerId   - a customer ID
      * @param pharmacistId - a pharmacist ID
-     * @param date - a recipe validity date
+     * @param date         - a recipe validity date
      */
     public void insertRecipeDoctor(String medicineName, String dosage, int customerId, int pharmacistId, Date date) {
         try (
@@ -223,6 +237,7 @@ public final class RecipeDAO {
 
     /**
      * The method updates in the database recipe. It setting for recipe with invalidity date status "need an extension"
+     *
      * @param recipeId - a recipe ID
      */
     public void setNeedExtensionByID(int recipeId) {
@@ -244,6 +259,7 @@ public final class RecipeDAO {
 
     /**
      * The method updates in the database recipe. It setting validity date for recipe that needed an extension
+     *
      * @param recipeId - a recipe ID
      * @param doctorId - a doctor ID
      * @param validFor - a recipe validity date
@@ -269,6 +285,7 @@ public final class RecipeDAO {
 
     /**
      * The method creates recipe instance from ResultSet
+     *
      * @param rs - ResultSet
      * @return - Recipe instance if recipe was found or Recipe instance with id = -1 if wasn't
      */

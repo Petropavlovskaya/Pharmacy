@@ -23,15 +23,21 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-    /** Class for executing SQL queries to the database related to the account */
-public final class AccountDAO {
+/**
+ * Class for executing SQL queries to the database related to the account
+ */
+public class AccountDAO {
     private static Logger logger = LoggerFactory.getLogger(AccountDAO.class);
 
-    /** Constructor - create INSTANCE of class */
+    /**
+     * Constructor - create INSTANCE of class
+     */
     private AccountDAO() {
     }
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class AccountDAOHolder {
         public static final AccountDAO ACCOUNT_DAO = new AccountDAO();
     }
@@ -39,6 +45,7 @@ public final class AccountDAO {
     /**
      * The method for get instance of the class
      * The method for get instance of the class
+     *
      * @return - class instance
      */
     public static AccountDAO getInstance() {
@@ -47,6 +54,7 @@ public final class AccountDAO {
 
     /**
      * The method finds an account in the database
+     *
      * @param id - account ID
      * @return - account instance
      */
@@ -56,7 +64,8 @@ public final class AccountDAO {
 
     /**
      * The method checks match account login and password for login to the application
-     * @param login - account login
+     *
+     * @param login    - account login
      * @param password - account password
      * @return - Account instance from the database if parameters are match or Account with ID = -1 if doesn't match
      */
@@ -83,6 +92,7 @@ public final class AccountDAO {
 
     /**
      * The method checks is login already exist in the database
+     *
      * @param login - account login
      * @return - true if login is busy
      */
@@ -106,6 +116,7 @@ public final class AccountDAO {
 
     /**
      * The method of getting a set of all active customers in the database
+     *
      * @return - active customers
      */
     public Set<Account> getActiveCustomers() {
@@ -140,8 +151,9 @@ public final class AccountDAO {
 
     /**
      * The method inserts new account into the database
-     * @param account - account
-     * @param login - account login
+     *
+     * @param account  - account
+     * @param login    - account login
      * @param password - account password
      * @return - true if write to the database was successful
      */
@@ -168,7 +180,7 @@ public final class AccountDAO {
             countInsertRowsLogin = statementLogin.executeUpdate();
             if (countInsertRowsLogin != 1) {
                 conn.rollback(savepoint);
-                logger.error("Insert into table Login is failed. We insert: " + countInsertRowsLogin + " rows for login: " + login);
+                logger.error("Insert into table Login has failed. We insert: " + countInsertRowsLogin + " rows for login: " + login);
             } else {
                 ResultSet resultSet = statementLogin.getGeneratedKeys();
                 if (resultSet.next()) {
@@ -187,7 +199,7 @@ public final class AccountDAO {
                     int countInsertRowsAccount = statementAccount.executeUpdate();
                     if (countInsertRowsAccount != 1) {
                         conn.rollback(savepoint);
-                        logger.error("Insert into table Account is failed. We insert: " + countInsertRowsAccount + " rows for login: " + login);
+                        logger.error("Insert into table Account has failed. We insert: " + countInsertRowsAccount + " rows for login: " + login);
                     } else {
                         if (account.getAccountRole().equals(AccountRole.CUSTOMER)) {
                             OrderDAO.getInstance().createCart(userId);
@@ -225,11 +237,12 @@ public final class AccountDAO {
 
     /**
      * The method changes account info in the database
-     * @param accountId - account ID
-     * @param surname - account surname
-     * @param name - account name
+     *
+     * @param accountId  - account ID
+     * @param surname    - account surname
+     * @param name       - account name
      * @param patronymic - account password
-     * @param phone - account phone
+     * @param phone      - account phone
      * @return - true if write to the database was successful
      */
     public boolean changeAccountData(int accountId, String surname, String name, String patronymic, String phone) {
@@ -247,7 +260,7 @@ public final class AccountDAO {
             int countUpdateRowsAccount = statement.executeUpdate();
             if (countUpdateRowsAccount != 1) {
                 logger.error("Can't update data for account id = " + accountId);
-            }else {
+            } else {
                 resultAccountSet = true;
             }
         } catch (SQLException e) {
@@ -258,7 +271,8 @@ public final class AccountDAO {
 
     /**
      * The method finds account in the database by criteria
-     * @param sql - sql query
+     *
+     * @param sql    - sql query
      * @param values - criteria
      * @return - Account instance if account was found or Account with ID = -1 if wasn't
      */
@@ -280,6 +294,7 @@ public final class AccountDAO {
 
     /**
      * The method finds in the database customer by ID
+     *
      * @param customerId - customer ID
      * @return - Customer instance if account was found or Customer with ID = -1 if wasn't
      */
@@ -289,6 +304,7 @@ public final class AccountDAO {
 
     /**
      * The method finds customer in the database by login
+     *
      * @param login - customer login
      * @return - Customer instance if account was found or Customer with ID = -1 if wasn't
      */
@@ -298,6 +314,7 @@ public final class AccountDAO {
 
     /**
      * The method of getting a customer balance from the database
+     *
      * @param accountId - customer ID
      * @return - customer balance
      */
@@ -320,7 +337,8 @@ public final class AccountDAO {
 
     /**
      * The method finds customer in the database by criterion
-     * @param query - sql query
+     *
+     * @param query     - sql query
      * @param parameter - criterion
      * @return - Customer instance if account was found or Customer with ID = -1 if wasn't
      */
@@ -346,6 +364,7 @@ public final class AccountDAO {
 
     /**
      * The method creates account instance from ResultSet
+     *
      * @param rs - ResultSet
      * @return - Account instance if account was found or NULL if wasn't
      */
@@ -373,8 +392,9 @@ public final class AccountDAO {
 
     /**
      * The method creates a PreparedStatement from a variable number of parameters
-     * @param conn - Connection
-     * @param sql - SQL query
+     *
+     * @param conn   - Connection
+     * @param sql    - SQL query
      * @param values - parameters
      * @return - PreparedStatement
      */
@@ -389,8 +409,9 @@ public final class AccountDAO {
 
     /**
      * The method creates a Md5Password with personal and global salt
+     *
      * @param userPassword - account password
-     * @param userSalt - account salt
+     * @param userSalt     - account salt
      * @return - Md5Password
      */
     public static String getMd5Password(String userPassword, String userSalt) {
@@ -408,6 +429,7 @@ public final class AccountDAO {
 
     /**
      * The method generates personal random salt for password
+     *
      * @return - random salt
      */
     private static String generateRandomSalt() {
@@ -423,6 +445,7 @@ public final class AccountDAO {
 
     /**
      * The method finds account password and personal salt in the database by login
+     *
      * @param login - account login
      * @return -  a map of password and personal salt
      */
@@ -453,25 +476,78 @@ public final class AccountDAO {
 
     /**
      * The method updates account balance in the database
+     *
      * @param customerId - customer ID
-     * @param balance - customer balance
+     * @param balance    - customer balance
      */
     public void increaseCustomerBalance(int customerId, int balance) {
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement psAccount = conn.prepareStatement(AccountSQL.UPDATE_BALANCE.getQuery());
+                PreparedStatement psAccount = conn.prepareStatement(AccountSQL.UPDATE_BALANCE.getQuery())
         ) {
             psAccount.setInt(1, balance);
             psAccount.setInt(2, customerId);
             int updateRow = psAccount.executeUpdate();
             if (updateRow != 1) {
-                logger.error("Update in table Account is failed. We update: " + updateRow + " rows for accountId: " + customerId);
+                logger.error("Update in table Account has failed. We update: " + updateRow + " rows for accountId: " + customerId);
             } else {
                 logger.info("Update in table Account complete. For account id = " + customerId + " was set balance: " + balance);
             }
         } catch (SQLException e) {
             logger.error("SQL Error in method increaseCustomerBalance. " + e);
         }
+    }
+
+    /**
+     * The method gets account salt
+     *
+     * @param login - account login
+     * @return - account salt or NULL
+     */
+    public String getSaltByLogin(String login) {
+        String salt = null;
+        try (
+                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
+                PreparedStatement statement = conn.prepareStatement(AccountSQL.GET_SALT_BY_LOGIN.getQuery())
+        ) {
+            statement.setString(1, login);
+            ResultSet rs = statement.executeQuery();
+            if (rs.next()) {
+                salt = rs.getString("salt");
+            }
+        } catch (
+                SQLException e) {
+            logger.info("No results were found. ((");
+            e.printStackTrace();
+        }
+        return salt;
+    }
+
+    /**
+     * The method updates account password in the database
+     *
+     * @param login    - customer login
+     * @param password - customer new password
+     * @return true if update was successful
+     */
+    public boolean setNewAccountPassword(String login, String password) {
+        try (
+                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
+                PreparedStatement ps = conn.prepareStatement(AccountSQL.UPDATE_ACCOUNT_PASSWORD.getQuery())
+        ) {
+            ps.setString(1, password);
+            ps.setString(2, login);
+            int updateRow = ps.executeUpdate();
+            if (updateRow != 1) {
+                logger.error("Update in table Login has failed. We update: " + updateRow + " rows for accountLogin: " + login);
+            } else {
+                logger.info("Update in table Login complete. For account login = " + login + " was set new password.");
+                return true;
+            }
+        } catch (SQLException e) {
+            logger.error("SQL Error in method setNewAccountPassword. " + e);
+        }
+        return false;
     }
 }
 

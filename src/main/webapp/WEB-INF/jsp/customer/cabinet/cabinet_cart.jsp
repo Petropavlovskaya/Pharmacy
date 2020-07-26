@@ -10,6 +10,7 @@
     <title>On-line pharmacy. Cart</title>
     <style>
         <%@include file="/css/style.css" %>
+        <%@include file="/toastr/toastr.css" %>
     </style>
     <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
@@ -23,7 +24,12 @@
     <c:import url="../_customer_menu.jsp"/>
 </div>
 <div id="center_no_right">
-    <p class="p-red">${requestScope.get('message')}</p>
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <c:import url="../../_toastr.jsp"/>
+    <c:if test="${not empty sessionScope.get('successMessage')}" >
+        <c:import url="../../_toastrFuncSuccess.jsp"/>
+    </c:if>
 
     <table width="100%">
         <%@include file="_cart_table_header.jsp" %>
@@ -71,7 +77,7 @@
                         </c:if>
                         <c:if test="${price >0}">
                             <input type="submit" value=<fmt:message key="label.medicine.create.actionChange"/>>
-                            <input type="hidden" name="customerCommand" value="changeQuantityInCart">
+                            <input type="hidden" name="frontCommand" value="changeQuantityInCart">
                             <input type="hidden" name="medicineId" value="${medicine.id}">
                         </c:if>
                     </td>
@@ -79,7 +85,7 @@
                 <td align="center">
                     <form action="${pageContext.request.contextPath}/customer/cabinet/cart" method="post">
                         <input type="submit" value=<fmt:message key="label.medicine.create.actionDelete"/>>
-                        <input type="hidden" name="customerCommand" value="deleteFromCart">
+                        <input type="hidden" name="frontCommand" value="deleteFromCart">
                         <input type="hidden" name="medicineId" value="${medicine.id}">
                     </form>
 
@@ -110,11 +116,11 @@
                     <c:choose>
                         <c:when test="${customer.balance >= cart.orderPrice}">
                             <input type="submit" value=<fmt:message key="label.account.buttonBuy"/>>
-                            <input type="hidden" name="customerCommand" value="buy">
+                            <input type="hidden" name="frontCommand" value="buy">
                         </c:when>
                         <c:when test="${customer.balance >= 0}">
                             <input type="submit" value=<fmt:message key="label.account.buttonBuyInCredit"/>>
-                            <input type="hidden" name="customerCommand" value="buyInCredit">
+                            <input type="hidden" name="frontCommand" value="buyInCredit">
                         </c:when>
                         <c:otherwise>
                             <fmt:message key="label.account.balanceDebtInfo"/>.

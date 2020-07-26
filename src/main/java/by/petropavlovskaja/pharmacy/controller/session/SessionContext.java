@@ -13,26 +13,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Class for processing the front requests commands. Has next properties:
+/**
+ * Class for processing the front requests commands. Has next properties:
  * <b>requestMethod</b>, <b>requestParameters</b> and <b>session</b>
  */
 public final class SessionContext {
     private static Logger logger = LoggerFactory.getLogger(SessionContext.class);
 
-    /** Property - request method */
+    /**
+     * Property - request method
+     */
     private static String requestMethod;
-    /** Property - request parameters */
+    /**
+     * Property - request parameters
+     */
     private static Map<String, Object> requestParameters;
-    /** Property - session */
+    /**
+     * Property - session
+     */
     private static HttpSession session;
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class SessionContextHolder {
         public static final SessionContext SESSION_CONTEXT = new SessionContext();
     }
 
     /**
      * The method for get instance of the class
+     *
      * @param request - http servlet request
      * @return - class instance
      */
@@ -51,7 +61,9 @@ public final class SessionContext {
         return SessionContextHolder.SESSION_CONTEXT;
     }
 
-    /** The method for setting the request parameters {@link SessionContext#requestParameters}
+    /**
+     * The method for setting the request parameters {@link SessionContext#requestParameters}
+     *
      * @param request - http servlet request
      */
     private static void setParameterOfRequest(HttpServletRequest request) {
@@ -63,17 +75,21 @@ public final class SessionContext {
         logger.info("We set next req param: " + requestParameters.toString());
     }
 
-    /** The method of getting the request method {@link SessionContext#requestMethod}
+    /**
+     * The method of getting the request method {@link SessionContext#requestMethod}
+     *
      * @return - String value of request method
      */
     public String getRequestMethod() {
         return requestMethod;
     }
 
-    /** The method for setting the session attributes for account {@link SessionContext#session}
-     * @param account - account
-     * @param login - account login
-     * @param sessionId - session ID
+    /**
+     * The method for setting the session attributes for account {@link SessionContext#session}
+     *
+     * @param account      - account
+     * @param login        - account login
+     * @param sessionId    - session ID
      * @param medicineList - list of medicines
      */
     public void setSessionAttributesForAccount(Account account, String login, String sessionId, List<Medicine> medicineList) {
@@ -85,14 +101,18 @@ public final class SessionContext {
         session.setAttribute("account", account);
     }
 
-    /** The method of getting the request parameters {@link SessionContext#requestParameters}
+    /**
+     * The method of getting the request parameters {@link SessionContext#requestParameters}
+     *
      * @return - map of request parameters
      */
     public Map<String, Object> getRequestParameters() {
         return requestParameters;
     }
 
-    /** The method of getting the session {@link SessionContext#session}
+    /**
+     * The method of getting the session {@link SessionContext#session}
+     *
      * @return - HttpSession
      */
     public HttpSession getSession() {

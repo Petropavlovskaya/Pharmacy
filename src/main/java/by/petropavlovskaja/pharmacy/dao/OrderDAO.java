@@ -1,6 +1,7 @@
 package by.petropavlovskaja.pharmacy.dao;
 
 import by.petropavlovskaja.pharmacy.dao.sql.AccountSQL;
+import by.petropavlovskaja.pharmacy.dao.sql.MedicineInOrderSQL;
 import by.petropavlovskaja.pharmacy.dao.sql.MedicineSQL;
 import by.petropavlovskaja.pharmacy.dao.sql.OrderSQL;
 import by.petropavlovskaja.pharmacy.dao.sql.RecipeSQL;
@@ -22,23 +23,31 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.*;
 
-/** Class for executing SQL queries to the database related to the order */
-public final class OrderDAO {
+/**
+ * Class for executing SQL queries to the database related to the order
+ */
+public class OrderDAO {
     private static Logger logger = LoggerFactory.getLogger(OrderDAO.class);
     private static RecipeDAO recipeDAO = RecipeDAO.getInstance();
     private static MedicineDAO medicineDAO = MedicineDAO.getInstance();
+    private static MedicineInOrderDAO medicineInOrderDAO = MedicineInOrderDAO.getInstance();
 
-    /** Constructor - create INSTANCE of class */
+    /**
+     * Constructor - create INSTANCE of class
+     */
     private OrderDAO() {
     }
 
-    /** Nested class create instance of the class */
+    /**
+     * Nested class create instance of the class
+     */
     private static class OrderDAOHolder {
         public static final OrderDAO ORDER_DAO = new OrderDAO();
     }
 
     /**
      * The method for get instance of the class
+     *
      * @return - class instance
      */
     public static OrderDAO getInstance() {
@@ -47,6 +56,7 @@ public final class OrderDAO {
 
     /**
      * The method inserts an order as cart into the database
+     *
      * @param accountId - account ID
      */
     public void createCart(int accountId) {
@@ -69,45 +79,9 @@ public final class OrderDAO {
     }
 
     /**
-     * The method inserts a medicine in order into the database
-     * @param orderId - order ID
-     * @param medicine - medicine
-     * @param quantity - quantity
-     * @return - ID record of insert medicine if insert was successful or ID = -1
-     */
-    public int createMedicineInOrder(int orderId, Medicine medicine, int quantity) {
-        int idInsertMedicine = -1;
-        int countInsertRowsLogin;
-        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(OrderSQL.INSERT_MEDICINE_IN_ORDER.getQuery(), Statement.RETURN_GENERATED_KEYS)
-        ) {
-            statement.setString(1, medicine.getName());
-            statement.setString(2, medicine.getDosage());
-            statement.setBoolean(3, medicine.isRecipeRequired());
-            statement.setInt(4, medicine.getIndivisibleAmount());
-            statement.setInt(5, quantity);
-            statement.setInt(6, medicine.getPrice());
-            statement.setInt(7, orderId);
-            countInsertRowsLogin = statement.executeUpdate();
-            if (countInsertRowsLogin != 1) {
-                logger.error("Can't add Medicine: " + medicine.toString() + " into table Cart/Order id = " + orderId);
-            } else {
-                ResultSet resultSet = statement.getGeneratedKeys();
-                if (resultSet.next()) {
-                    idInsertMedicine = resultSet.getInt(1);
-                    logger.info("Insert into table Active_med_in_cart complete. Insert Medicine id= " + idInsertMedicine);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return idInsertMedicine;
-    }
-
-    /**
      * The method updates in the database a total price of medicines
-     * @param cartId - cart ID
+     *
+     * @param cartId     - cart ID
      * @param totalPrice - total price of medicines
      */
     public void updateCartPrice(int cartId, int totalPrice) {
@@ -129,33 +103,6 @@ public final class OrderDAO {
     }
 
     /**
-     * The method updates in the database a price of each medicine in the cart
-     * @param cartId - cart ID
-     * @param medicineInOrderSet - set of medicines in the cart
-     */
-    public void updateMedicinePriceInCart(int cartId, Set<MedicineInOrder> medicineInOrderSet) {
-        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(OrderSQL.UPDATE_PRICE_AMOUNT_IN_CART_BY_ID_AND_CART_ID.getQuery())
-        ) {
-            for (MedicineInOrder medicineItem : medicineInOrderSet) {
-                statement.setInt(1, medicineItem.getPriceForOne());
-                statement.setInt(2, medicineItem.getQuantity());
-                statement.setInt(3, medicineItem.getId());
-//                statement.setInt(3, cartId);
-                int countUpdateRowsMedicine = statement.executeUpdate();
-                if (countUpdateRowsMedicine != 1) {
-                    logger.error("Update into table MedicineInOrder is failed. We update for: " + medicineItem.toString() + " " + countUpdateRowsMedicine + " rows.");
-                } else {
-                    logger.info("Update into table MedicineInOrder complete. We update next medicine data: " + medicineItem.toString());
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("SQL Exception in method updateMedicinePriceInCart. Cart id = " + cartId + ". " + e);
-        }
-    }
-
-    /**
      * The method creates record and modify tables in the database after purchasing medicines.
      * It uses savepoint statement and consist methods: {@link OrderDAO#setOrder(Savepoint, Connection, PreparedStatement, Customer, Order)},
      * {@link OrderDAO#moveMedicineFromCartToOrder(Savepoint, Connection, PreparedStatement, int, Set)},
@@ -163,8 +110,9 @@ public final class OrderDAO {
      * {@link OrderDAO#getMedicineUpdateInfo(Set, int)}, {@link OrderDAO#updateMedicineAfterBuy(Savepoint, Connection, PreparedStatement, Set)},
      * {@link OrderDAO#updateAccountBalance(Savepoint, Connection, PreparedStatement, int, int)},
      * {@link OrderDAO#updateCartAfterBuy(Savepoint, Connection, PreparedStatement, Set)}
-     * @param customer - customer
-     * @param order - order
+     *
+     * @param customer           - customer
+     * @param order              - order
      * @param medicineInOrderSet - set of medicines in the order
      * @return true if total update was successful
      */
@@ -179,11 +127,11 @@ public final class OrderDAO {
 
         try (
                 PreparedStatement psOrder = conn.prepareStatement(OrderSQL.INSERT_ORDER.getQuery(), Statement.RETURN_GENERATED_KEYS);
-                PreparedStatement psMedicineInOrder = conn.prepareStatement(OrderSQL.INSERT_MEDICINE_IN_ORDER.getQuery());
+                PreparedStatement psMedicineInOrder = conn.prepareStatement(MedicineInOrderSQL.INSERT_MEDICINE_IN_ORDER.getQuery());
                 PreparedStatement psRecipe = conn.prepareStatement(RecipeSQL.UPDATE_ID_MEDICINE_IN_ORDER.getQuery());
                 PreparedStatement psMedicine = conn.prepareStatement(MedicineSQL.UPDATE_MEDICINE_AFTER_BUY.getQuery());
                 PreparedStatement psAccount = conn.prepareStatement(AccountSQL.UPDATE_BALANCE.getQuery());
-                PreparedStatement psUpdateCart = conn.prepareStatement(OrderSQL.DELETE_MEDICINE_BY_ID.getQuery())
+                PreparedStatement psUpdateCart = conn.prepareStatement(MedicineInOrderSQL.DELETE_MEDICINE_BY_ID.getQuery())
         ) {
             conn.setAutoCommit(false);
             savepoint = conn.setSavepoint();
@@ -250,10 +198,11 @@ public final class OrderDAO {
 
     /**
      * The method updates the curt after purchasing medicines {@link OrderDAO#createOrder(Customer, Order, Set)}
-     * @param conn - connection to the database
-     * @param savepoint - save point statement
+     *
+     * @param conn           - connection to the database
+     * @param savepoint      - save point statement
      * @param medicineForBuy - set of medicines for purchasing
-     * @param psUpdateCart - prepared statement for execute SQL query
+     * @param psUpdateCart   - prepared statement for execute SQL query
      * @return true if update was successful
      */
     // 5 Update Cart after buy
@@ -295,6 +244,7 @@ public final class OrderDAO {
 
     /**
      * The method of getting the available medicines for purchasing
+     *
      * @param medicineInOrderSet - set of medicines in the cart
      * @return - set of medicines available for purchasing
      */
@@ -310,11 +260,12 @@ public final class OrderDAO {
 
     /**
      * The method updates the curt after purchasing medicines {@link OrderDAO#createOrder(Customer, Order, Set)}
-     * @param conn - connection to the database
-     * @param savepoint - save point statement
+     *
+     * @param conn       - connection to the database
+     * @param savepoint  - save point statement
      * @param psSetOrder - prepared statement for execute SQL query
-     * @param customer - customer instance
-     * @param order - order instance
+     * @param customer   - customer instance
+     * @param order      - order instance
      * @return ID record of created order if update was successful or ID = -1 if wasn't
      */
     // 1 Set Order
@@ -350,11 +301,12 @@ public final class OrderDAO {
 
     /**
      * The method moves available for purchasing medicines from the curt to created record of order {@link OrderDAO#createOrder(Customer, Order, Set)}
-     * @param conn - connection to the database
-     * @param savepoint - save point statement
+     *
+     * @param conn              - connection to the database
+     * @param savepoint         - save point statement
      * @param psMedicineInOrder - prepared statement for execute SQL query
-     * @param medicineForBuy - set of medicines
-     * @param orderId - order ID
+     * @param medicineForBuy    - set of medicines
+     * @param orderId           - order ID
      * @return true if update was successful
      */
     // 2 Set MIO
@@ -390,12 +342,13 @@ public final class OrderDAO {
 
     /**
      * The method ties a recipe to a purchased medicine {@link OrderDAO#createOrder(Customer, Order, Set)}
-     * @param conn - connection to the database
-     * @param savepoint - save point statement
-     * @param psRecipe - prepared statement for execute SQL query
+     *
+     * @param conn           - connection to the database
+     * @param savepoint      - save point statement
+     * @param psRecipe       - prepared statement for execute SQL query
      * @param medicineForBuy - set of medicines
-     * @param orderId - order ID
-     * @param recipes - set of recipes
+     * @param orderId        - order ID
+     * @param recipes        - set of recipes
      * @return true if update was successful
      */
     // 3 Set Recipe
@@ -451,8 +404,9 @@ public final class OrderDAO {
 
     /**
      * The method of getting a purchased medicines to update the available amount of medicines
+     *
      * @param medicineInOrderSet - set of medicines
-     * @param orderId - order ID
+     * @param orderId            - order ID
      * @return set of medicines
      */
     // 4.1
@@ -472,7 +426,8 @@ public final class OrderDAO {
 
     /**
      * The method equals the medicine in the database with the medicine in the order {@link OrderDAO#createOrder(Customer, Order, Set)}
-     * @param realMedicine - a medicine in the database
+     *
+     * @param realMedicine    - a medicine in the database
      * @param medicineInOrder - a medicine in the order
      * @return true if medicines are the same
      */
@@ -485,9 +440,10 @@ public final class OrderDAO {
 
     /**
      * The method updates medicines available amount after purchased {@link OrderDAO#createOrder(Customer, Order, Set)}
-     * @param conn - connection to the database
-     * @param savepoint - save point statement
-     * @param psMedicine - prepared statement for execute SQL query
+     *
+     * @param conn            - connection to the database
+     * @param savepoint       - save point statement
+     * @param psMedicine      - prepared statement for execute SQL query
      * @param realMedicineSet - purchased set of medicines
      * @return true if update was successful
      */
@@ -522,11 +478,12 @@ public final class OrderDAO {
 
     /**
      * The method updates customer balance after purchased {@link OrderDAO#createOrder(Customer, Order, Set)}
-     * @param conn - connection to the database
-     * @param savepoint - save point statement
-     * @param psAccount - prepared statement for execute SQL query
+     *
+     * @param conn       - connection to the database
+     * @param savepoint  - save point statement
+     * @param psAccount  - prepared statement for execute SQL query
      * @param customerId - customer ID
-     * @param balance - balance
+     * @param balance    - balance
      * @return true if update was successful
      */
     // 5
@@ -555,52 +512,9 @@ public final class OrderDAO {
     }
 
     /**
-     * The method updates quantity of medicines in the cart
-     * @param idMedicine - medicine ID
-     * @param quantity - medicine quantity
-     */
-    public void updateMedicineInCart(int idMedicine, int quantity) {
-        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(OrderSQL.UPDATE_MEDICINES_QUANTITY_IN_CART_BY_ID.getQuery())
-        ) {
-            statement.setInt(1, quantity);
-            statement.setInt(2, idMedicine);
-            int countUpdateRowsMedicine = statement.executeUpdate();
-            if (countUpdateRowsMedicine != 1) {
-                logger.error("Update into table MedicineInOrder is failed. Row for update id = " + idMedicine + ". Was updated " + countUpdateRowsMedicine + " rows.");
-            } else {
-                logger.info("Update into table MedicineInOrder complete. We update next medicine id = " + idMedicine);
-            }
-        } catch (SQLException e) {
-            logger.error("SQL Exception when update medicine in cart. Medicine id = " + idMedicine + ". " + e);
-        }
-    }
-
-    /**
-     * The method deletes the medicines from the cart
-     * @param medicineId - medicine ID
-     */
-    public void deleteMedicineFromOrder(int medicineId) {
-        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(OrderSQL.DELETE_MEDICINE_BY_ID.getQuery())
-        ) {
-            statement.setInt(1, medicineId);
-            int countUpdateRowsMedicine = statement.executeUpdate();
-            if (countUpdateRowsMedicine != 1) {
-                logger.error("Delete from table MedicineInOrder is failed. There Was deleted " + countUpdateRowsMedicine + " rows.");
-            } else {
-                logger.info("Delete from table MedicineInOrder complete. We delete next medicine id = " + medicineId);
-            }
-        } catch (SQLException e) {
-            logger.error("SQL Exception in delete medicine. Medicine Id = " + medicineId + ". " + e);
-        }
-    }
-
-    /**
      * The method inserts a relation between the medicines in the cart and in the medicines set
-     * @param idMedicine - medicine ID
+     *
+     * @param idMedicine        - medicine ID
      * @param idMedicineInOrder - medicine in the cart ID
      */
     public void createActiveMedicineRelation(int idMedicine, int idMedicineInOrder) {
@@ -617,38 +531,8 @@ public final class OrderDAO {
     }
 
     /**
-     * The method finds a medicine in the order
-     * @param medicine - medicine
-     * @param orderId - order ID
-     * @return - medicine in order instance
-     */
-    public MedicineInOrder findMedicineInOrderByMedicine(Medicine medicine, int orderId) {
-        MedicineInOrder resultMedicine = new MedicineInOrder(-1);
-        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(OrderSQL.FIND_MEDICINE_IN_CART_BY_NAME_DOSAGE_AMOUNT.getQuery())
-        ) {
-            statement.setString(1, medicine.getName());
-            statement.setString(2, medicine.getDosage());
-            statement.setInt(3, medicine.getIndivisibleAmount());
-            statement.setInt(4, orderId);
-
-            ResultSet rs = statement.executeQuery();
-            if (rs.next()) {
-                resultMedicine = createMedicineInOrderFromDB(rs, false);
-            } else {
-                System.out.println("Nothing was found ((");
-            }
-
-        } catch (SQLException e) {
-            logger.error("SQL Exception in method findMedicineInOrderByMedicine with medicine: id = " + medicine.getId()
-                    + ", name = " + medicine.getName() + ", dosage = " + medicine.getDosage() + ". " + e);
-        }
-        return resultMedicine;
-    }
-
-    /**
      * The method finds all customer's orders (except cart) with medicines details
+     *
      * @param customerId - customer ID
      * @return - orders with medicines details
      */
@@ -666,36 +550,7 @@ public final class OrderDAO {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
                 orders.add(createOrderFromDB(rs));
-                orderDetails.add(createMedicineInOrderFromDB(rs, false));
-            }
-        } catch (
-                SQLException e) {
-            System.out.println("Nothing was find ((");
-            e.printStackTrace();
-        }
-        return createOrderWithDetails(orders, orderDetails);
-    }
-
-    /**
-     * The method finds all customer's orders (include cart) with medicines details
-     * @param customerId - customer ID
-     * @return - orders with medicines details
-     */
-    public Map<Order, Set<MedicineInOrder>> getCustomerOrdersWithDetails(int customerId) {
-        Comparator<Order> orderComparator = new Order.OrderIdComparator();
-        Comparator<MedicineInOrder> medicineInOrderComparator = new MedicineInOrder.NameComparator()
-                .thenComparing(new MedicineInOrder.DosageComparator().thenComparing(new MedicineInOrder.PriceComparator()));
-        Set<Order> orders = new TreeSet<>(orderComparator);
-        Set<MedicineInOrder> orderDetails = new TreeSet<>(medicineInOrderComparator);
-        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(OrderSQL.FIND_ORDERS_WITH_DETAILS_BY_CUSTOMER_ID.getQuery())
-        ) {
-            statement.setInt(1, customerId);
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                orders.add(createOrderFromDB(rs));
-                orderDetails.add(createMedicineInOrderFromDB(rs, false));
+                orderDetails.add(medicineInOrderDAO.createMedicineInOrderFromDB(rs, false));
             }
         } catch (
                 SQLException e) {
@@ -707,6 +562,7 @@ public final class OrderDAO {
 
     /**
      * The method finds customer's cart
+     *
      * @param customerId - customer ID
      * @return - cart
      */
@@ -730,41 +586,8 @@ public final class OrderDAO {
     }
 
     /**
-     * The method finds customer's medicines details in the cart and can update price in it
-     * @param cartId - cart ID
-     * @param needActualPrice - is prices need to update
-     * @return - set of medicines in the cart
-     */
-    public Set<MedicineInOrder> findMedicineInCartWithActualPrice(int cartId,
-                                                                  boolean needActualPrice) {
-        Comparator<MedicineInOrder> comparator = new MedicineInOrder.NameComparator().thenComparing(
-                new MedicineInOrder.DosageComparator().thenComparing(new MedicineInOrder.PriceComparator()));
-        Set<MedicineInOrder> cartDetails = new TreeSet<>(comparator);
-        String sql;
-        if (needActualPrice) {
-            sql = OrderSQL.FIND_ACTUAL_PRICE_FOR_MEDICINES_IN_CART_BY_CART_ID.getQuery();
-        } else {
-            sql = OrderSQL.FIND_MEDICINE_IN_CART_BY_ORDER_ID.getQuery();
-        }
-        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = conn.prepareStatement(sql)
-        ) {
-            statement.setInt(1, cartId);
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                cartDetails.add(createMedicineInOrderFromDB(rs, needActualPrice));
-            }
-        } catch (
-                SQLException e) {
-            System.out.println("Nothing was find ((");
-            e.printStackTrace();
-        }
-        return cartDetails;
-    }
-
-    /**
      * The method creates order instance from ResultSet
+     *
      * @param rs - ResultSet
      * @return - Order instance if account was found or Order with id = -1 if wasn't
      */
@@ -783,35 +606,14 @@ public final class OrderDAO {
     }
 
     /**
-     * The method creates medicines in the order instance from ResultSet
-     * @param rs - ResultSet
-     * @return - Order instance if account was found or Order with id = -1 if wasn't
-     */
-    private MedicineInOrder createMedicineInOrderFromDB(ResultSet rs,
-                                                        boolean needTotalAmountFromMedicineList) {
-        MedicineInOrder medicineInOrder = new MedicineInOrder(-1);
-        try {
-            medicineInOrder = new MedicineInOrder(rs.getInt("id"), rs.getString("medicine"),
-                    rs.getInt("indivisible_amount"), rs.getString("dosage"), rs.getBoolean("recipe_required"),
-                    rs.getInt("quantity"), rs.getInt("price"), rs.getInt("fk_order"));
-            if (needTotalAmountFromMedicineList) {
-                medicineInOrder.setAmount(rs.getInt("amount"));
-            }
-            medicineInOrder.setRubCoin();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return medicineInOrder;
-    }
-
-    /**
      * The method creates map of orders and medicines set in them
-     * @param orders - orders
+     *
+     * @param orders       - orders
      * @param orderDetails - medicines set in the orders
      * @return - map of orders and medicines set in them
      */
     private Map<Order, Set<MedicineInOrder>> createOrderWithDetails
-            (Set<Order> orders, Set<MedicineInOrder> orderDetails) {
+    (Set<Order> orders, Set<MedicineInOrder> orderDetails) {
         Comparator<Order> orderComparator = new Order.OrderIdComparator();
         Comparator<MedicineInOrder> medicineInOrderComparator = new MedicineInOrder.NameComparator()
                 .thenComparing(new MedicineInOrder.DosageComparator().thenComparing(new MedicineInOrder.PriceComparator()));
@@ -826,5 +628,31 @@ public final class OrderDAO {
             ordersWithDetails.put(order, thisOrderDetails);
         }
         return ordersWithDetails;
+    }
+
+    /**
+     * The method deletes an order and medicines in it (method uses for delete information from "order history")
+     *
+     * @param orderId - an order ID
+     * @return - true if order was delete successful
+     */
+    public boolean deleteOrder(int orderId) {
+        boolean resultDelete = false;
+        try (
+                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
+                PreparedStatement statement = conn.prepareStatement(OrderSQL.DELETE_ORDER.getQuery())
+        ) {
+            statement.setInt(1, orderId);
+            int countUpdateRowsMedicine = statement.executeUpdate();
+            if (countUpdateRowsMedicine != 1) {
+                logger.error("Update table Order is failed. We delete for orderId: " + orderId + " " + countUpdateRowsMedicine + " rows.");
+            } else {
+                resultDelete = true;
+                logger.info("Update table Order complete. We delete next orderId: " + orderId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return resultDelete;
     }
 }

@@ -10,6 +10,7 @@
     <title>On-line pharmacy. Medicine items</title>
     <style>
         <%@include file="/css/style.css" %>
+        <%@include file="/toastr/toastr.css" %>
     </style>
     <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
@@ -23,31 +24,37 @@
     <c:import url="../_pharmacist_menu.jsp"/>
 </div>
 <div id="center_no_right">
-    <c:if test="${!empty sessionScope.get('message')}">
-        <p class="p-red">${sessionScope.get('message')}</p><br>
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <c:import url="../../_toastr.jsp"/>
+    <c:if test="${not empty sessionScope.get('successMessage')}" >
+        <c:import url="../../_toastrFuncSuccess.jsp"/>
     </c:if>
 
-    <table>
+    <table width="100%">
         <%@include file="_pharmacist_medicine_table_header.jsp" %>
 
 
         <%--        Next form view if item was selected to edit--%>
         <c:if test="${!empty requestScope.get('editMedicine')}">
 
-            <form action="${pageContext.request.contextPath}/pharmacist/medicine/list" method="post">
-                <tr class="insert_row">
+            <tr class="insert_row">
+                <form action="${pageContext.request.contextPath}/pharmacist/medicine/list" method="post">
                     <td><textarea name="medicineName" class="table_field_high"
                                   required pattern="[А-ЯЁ]{1}[а-яё\s-){1,19}"> ${editMedicine.name}</textarea></td>
                     <td><input name="indivisibleAmount" class="table_field_number" type="number"
                                value="${editMedicine.indivisibleAmount}"
-                               required pattern="\d{1,3}" min="1" title=<fmt:message key="label.medicine.create.indivisibleTitle"/>></td>
+                               required pattern="\d{1,3}" min="1" title=<fmt:message
+                            key="label.medicine.create.indivisibleTitle"/>></td>
                     <td><input name="amount" class="table_field_number" type="number" value="${editMedicine.amount}"
-                               required pattern="\d{1,4}" min="1" title=<fmt:message key="label.medicine.create.amountTitle"/>></td>
+                               required pattern="\d{1,4}" min="1" title=<fmt:message
+                            key="label.medicine.create.amountTitle"/>></td>
                     <td><input name="dosage" class="table_field_number" type="text" value="${editMedicine.dosage}"
                                required></td>
                     <td><input name="expDate" class="table_field_high" type="date" value="${editMedicine.expDate}"
                                min="${sessionScope.get('minDate')}"
-                               placeholder=<fmt:message key="label.medicine.create.datePlaceholder"/> required></td>
+                               placeholder=
+                                   <fmt:message key="label.medicine.create.datePlaceholder"/> required></td>
                     <c:choose>
                         <c:when test="${editMedicine.recipeRequired == true}">
                             <td><input name="recipeRequired" class="table_field_high" type="checkbox" checked></td>
@@ -57,23 +64,32 @@
                         </c:otherwise>
                     </c:choose>
                     <td><input name="priceRub" type="number" value="${editMedicine.rub}" class="table_field_money"
-                               required pattern="\d{0,3}" min="0" align="right" title=<fmt:message key="label.medicine.create.priceRub"/>>
+                               required pattern="\d{0,3}" min="0" align="right" title=<fmt:message
+                            key="label.medicine.create.priceRub"/>>
                         руб.
                         <input name="priceKop" type="number" value="${editMedicine.coin}" class="table_field_money"
-                               required pattern="\d{0,2}" min="0" align="right" title=<fmt:message key="label.medicine.create.priceKop"/>>
+                               required pattern="\d{0,2}" min="0" align="right" title=<fmt:message
+                                key="label.medicine.create.priceKop"/>>
                         коп.
                     </td>
                     <td><textarea name="pharmForm" class="table_field_high" type="text"
                                   required>${editMedicine.pharmForm}</textarea></td>
                     <td><input type="submit" value=<fmt:message key="label.medicine.create.actionSave"/>></td>
-                </tr>
-                <input type="hidden" name="medicineCommand" value="setChanges"/>
-                <input type="hidden" name="accountId" value="${accountId}">
-                <input type="hidden" name="medicineId" value="${editMedicine.id}">
-            </form>
+                    <input type="hidden" name="frontCommand" value="setChanges"/>
+                    <input type="hidden" name="accountId" value="${sessionScope.get('accountId')}">
+                    <input type="hidden" name="medicineId" value="${editMedicine.id}">
+                </form>
+
+                <td>
+                    <form action="${pageContext.request.contextPath}/pharmacist/medicine/list" method="post">
+                        <input type="submit" value=<fmt:message key="label.medicine.create.actionCancel"/>>
+                        <input type="hidden" name="frontCommand" value="cancelChanges"/>
+                    </form>
+                </td>
+            </tr>
         </c:if>
 
-        <c:forEach var="medicine" items="${medicineList}">
+        <c:forEach var="medicine" items="${sessionScope.get('medicineList')}">
             <tr>
                 <td><c:out value="${medicine.name}"/></td>
                 <td><c:out value="${medicine.indivisibleAmount}"/></td>
@@ -90,16 +106,18 @@
                     <form class="button_line" action="${pageContext.request.contextPath}/pharmacist/medicine/list"
                           method="post">
                         <input type="submit" value=<fmt:message key="label.medicine.create.actionChange"/>>
-                        <input type="hidden" name="medicineCommand" value="medicineForEdit">
+                        <input type="hidden" name="frontCommand" value="medicineForEdit">
                         <input type="hidden" name="medicineId" value="${medicine.id}">
-                        <input type="hidden" name="accountLogin" value="${accountLogin}">
+                        <input type="hidden" name="accountLogin" value="${sessionScope.get('accountLogin')}">
                     </form>
+                </td>
+                <td>
                     <form class="button_line" action="${pageContext.request.contextPath}/pharmacist/medicine/list"
                           method="post">
                         <input type="submit" value=<fmt:message key="label.medicine.create.actionDelete"/>>
-                        <input type="hidden" name="medicineCommand" value="medicineForDelete">
+                        <input type="hidden" name="frontCommand" value="medicineForDelete">
                         <input type="hidden" name="medicineId" value="${medicine.id}">
-                        <input type="hidden" name="accountLogin" value="${accountLogin}">
+                        <input type="hidden" name="accountLogin" value="${sessionScope.get('accountLogin')}">
                     </form>
                 </td>
             </tr>

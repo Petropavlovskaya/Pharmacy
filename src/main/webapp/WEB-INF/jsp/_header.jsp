@@ -15,7 +15,7 @@
 
 <div align="center">
     <%--    <c:out value="${locale}" ></c:out>--%>
-    <img src="${pageContext.request.contextPath}/images/logo-z.gif" vspace="10px" alt="On-line pharmacy"/>
+    <img class="img-center" src="${pageContext.request.contextPath}/images/logo-z.gif" alt="On-line pharmacy" />
     <img class="img-left" src="${pageContext.request.contextPath}/images/doctor.gif" alt="Doctor"/>
 </div>
 <div align="right">

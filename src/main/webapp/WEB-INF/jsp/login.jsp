@@ -26,7 +26,7 @@
 </div>
 
 <div id="center">
-    <p class="p-red">${requestScope.get('message')}</p>
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
 
     <h3>
         <form action="${pageContext.request.contextPath}/login" method="post">

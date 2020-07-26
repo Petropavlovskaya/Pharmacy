@@ -13,14 +13,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/** Web filter for locale request */
+/**
+ * Web filter for locale request
+ */
 @WebFilter(filterName = "LocaleFilter", urlPatterns = {"/*"})
 public class LocaleFilter implements Filter {
     private static Logger logger = LoggerFactory.getLogger(LocaleFilter.class);
 
-    /** The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
-     * @param chain - filter chain
-     * @param request - servlet request
+    /**
+     * The override method for do filter {@link Filter#doFilter(ServletRequest, ServletResponse, FilterChain)}
+     *
+     * @param chain    - filter chain
+     * @param request  - servlet request
      * @param response - servlet response
      */
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)

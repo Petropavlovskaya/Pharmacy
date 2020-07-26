@@ -10,7 +10,7 @@
     <title>On-line pharmacy. Profile</title>
     <style>
         <%@include file="/css/style.css" %>
-        <%@include file="/css/style.css" %>
+        <%@include file="/toastr/toastr.css" %>
     </style>
     <link href="${pageContext.request.contextPath}/toastr/toastr.min.css" rel="stylesheet"/>
     <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
@@ -25,17 +25,19 @@
     <c:import url="../_customer_menu.jsp"/>
 </div>
 <div id="center_no_right">
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <c:import url="../../_toastr.jsp"/>
+    <c:if test="${not empty sessionScope.get('successMessage')}" >
+        <c:import url="../../_toastrFuncSuccess.jsp"/>
+    </c:if>
     <div>
-        <c:if test="${not empty message}">
-            <p class="p-red">${message}<br></p>
-        </c:if>
-
         <h3><fmt:message key="label.account.balanceReplenishment"/>:</h3>
         <form action="${pageContext.request.contextPath}/customer/cabinet/profile" method="post">
             <input name="balance" type="text" size="6"
                    required pattern="\d{1,4}" min="1" title=<fmt:message key="label.account.balanceFieldTitle"/>>
             <input type="submit" value=<fmt:message key="label.account.buttonReplenish"/>>
-            <input type="hidden" name="customerCommand" value="increaseBill">
+            <input type="hidden" name="frontCommand" value="increaseBill">
         </form>
         <br>
         <%--    <h3>Текущий баланс:</h3>--%>
@@ -58,36 +60,7 @@
         <br>
         <c:import url="../../_accountProfile.jsp"/>
     </div>
-    <div>
-        <br>
-        <script src="${pageContext.request.contextPath}/toastr/toastr.min.js" type="text/javascript"></script>
-        <script src="${pageContext.request.contextPath}/toastr/jquery-3.5.1.min.js" type="text/javascript"></script>
-        <script type="text/javascript">$('#invokesToastMessage').click(function () {
-            // toastr["success"]("Test", "A")
 
-            toastr.options = {
-                "closeButton": true,
-                "debug": false,
-                "newestOnTop": false,
-                "progressBar": false,
-                "positionClass": "toast-top-right",
-                "preventDuplicates": false,
-                "onclick": null,
-                "showDuration": "300",
-                "hideDuration": "1000",
-                "timeOut": "5000",
-                "extendedTimeOut": "1000",
-                "showEasing": "swing",
-                "hideEasing": "linear",
-                "showMethod": "fadeIn",
-                "hideMethod": "fadeOut"
-            }
-            toastr.success('Test', 'title');
-
-        });</script>
-
-        <button id="invokesToastMessage">Click Alert!</button>
-    </div>
 </div>
 
 <div id="footer">

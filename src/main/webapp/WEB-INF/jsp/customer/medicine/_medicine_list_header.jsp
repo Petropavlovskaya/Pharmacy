@@ -12,8 +12,8 @@
 <th><fmt:message key="label.tableHeader.exp"/></th>
 <th><fmt:message key="label.tableHeader.recipeRequired"/></th>
 <th><fmt:message key="label.tableHeader.releaseForm"/></th>
-<th><fmt:message key="label.tableHeader.available"/></th>
+<th><fmt:message key="label.tableHeader.indivisibleQuantity"/></th>
 <th><fmt:message key="label.tableHeader.price"/></th>
-<th><fmt:message key="label.tableHeader.amount"/></th>
+<th colspan="2"><fmt:message key="label.tableHeader.amount"/></th>
 <th><fmt:message key="label.tableHeader.action"/></th>
 </thead>

@@ -10,6 +10,7 @@
     <title>On-line pharmacy. Recipe orders</title>
     <style>
         <%@include file="/css/style.css" %>
+        <%@include file="/toastr/toastr.css" %>
     </style>
     <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
@@ -25,10 +26,17 @@
 
 
 <div id="center_no_right">
-    <c:if test="${empty recipe}">
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <c:import url="../../_toastr.jsp"/>
+    <c:if test="${not empty sessionScope.get('successMessage')}" >
+        <c:import url="../../_toastrFuncSuccess.jsp"/>
+    </c:if>
+
+    <c:if test="${empty sessionScope.get('recipe')}">
         <h2> <fmt:message key="label.recipe.noOrders"/> </h2>
     </c:if>
-    <c:if test="${!empty recipe}">
+    <c:if test="${!empty sessionScope.get('recipe')}">
         <table width="100%">
             <%@include file="_recipe_table_header.jsp" %>
 
@@ -50,7 +58,7 @@
                         </td>
                         <td align="center">
                             <input type="submit" value=<fmt:message key="label.recipe.actionExtend"/>>
-                            <input type="hidden" name="customerCommand" value="extendRecipe">
+                            <input type="hidden" name="frontCommand" value="extendRecipe">
                             <input type="hidden" name="recipeId" value="${recipeItem.id}">
                         </td>
                     </form>
@@ -58,7 +66,7 @@
                           method="post">
                         <td align="center">
                             <input type="submit" value=<fmt:message key="label.recipe.actionRefuse"/>>
-                            <input type="hidden" name="customerCommand" value="refuseRecipe">
+                            <input type="hidden" name="frontCommand" value="refuseRecipe">
                             <input type="hidden" name="recipeId" value="${recipeItem.id}">
                         </td>
                     </form>

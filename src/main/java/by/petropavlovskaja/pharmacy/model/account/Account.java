@@ -2,30 +2,50 @@ package by.petropavlovskaja.pharmacy.model.account;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Objects;
 
-/** Class for account entity. Has next properties:
+/**
+ * Class for account entity. Has next properties:
  * <b>serialVersionUID</b>, <b>id</b>, <b>surname</b>, <b>name</b>, <b>patronymic</b>,
  * <b>phoneNumber</b>, <b>accountRole</b> and <b>status</b>
  */
 public class Account implements Serializable {
-    /** Property - serial version UID */
+    /**
+     * Property - serial version UID
+     */
     private static final long serialVersionUID = 8487635767584478029L;
-    /** Property - account ID */
+    /**
+     * Property - account ID
+     */
     private int id;
-    /** Property - account surname */
+    /**
+     * Property - account surname
+     */
     private String surname;
-    /** Property - account name */
+    /**
+     * Property - account name
+     */
     private String name;
-    /** Property - account patronymic */
+    /**
+     * Property - account patronymic
+     */
     private String patronymic;
-    /** Property - account phone number */
+    /**
+     * Property - account phone number
+     */
     private String phoneNumber;
-    /** Property - account role {@link AccountRole}*/
+    /**
+     * Property - account role {@link AccountRole}
+     */
     private AccountRole accountRole;
-    /** Property - account status */
+    /**
+     * Property - account status
+     */
     private boolean status;
 
-    /** Create entity of class {@link Account#Account(AccountBuilder)}
+    /**
+     * Create entity of class {@link Account#Account(AccountBuilder)}
+     *
      * @param id - account ID
      */
     // method for create template User before search. Create InvalidUser with ID=-1
@@ -33,7 +53,9 @@ public class Account implements Serializable {
         this.id = id;
     }
 
-    /** Create entity of class {@link Account#Account(int)}
+    /**
+     * Create entity of class {@link Account#Account(int)}
+     *
      * @param accountBuilder - account builder {@link Account.AccountBuilder}
      */
     public Account(AccountBuilder accountBuilder) {
@@ -46,26 +68,44 @@ public class Account implements Serializable {
         this.status = accountBuilder.status;
     }
 
-    /** The nested class for build the account entity  */
+    /**
+     * The nested class for build the account entity
+     */
     public static class AccountBuilder {
-        /** Property - account ID */
+        /**
+         * Property - account ID
+         */
         private int id;
-        /** Property - account surname */
+        /**
+         * Property - account surname
+         */
         private String surname;
-        /** Property - account name */
+        /**
+         * Property - account name
+         */
         private String name;
-        /** Property - account patronymic */
+        /**
+         * Property - account patronymic
+         */
         private String patronymic;
-        /** Property - account phone number */
+        /**
+         * Property - account phone number
+         */
         private String phoneNumber;
-        /** Property - account role {@link AccountRole}*/
+        /**
+         * Property - account role {@link AccountRole}
+         */
         private AccountRole accountRole;
-        /** Property - account status */
+        /**
+         * Property - account status
+         */
         private boolean status = true;
 
-        /** Create entity of nested class
-         * @param surname - account surname
-         * @param name - account name
+        /**
+         * Create entity of nested class
+         *
+         * @param surname     - account surname
+         * @param name        - account name
          * @param accountRole - account role
          */
         public AccountBuilder(String surname, String name, AccountRole accountRole) {
@@ -74,7 +114,9 @@ public class Account implements Serializable {
             this.accountRole = accountRole;
         }
 
-        /** Create entity of nested class with account ID
+        /**
+         * Create entity of nested class with account ID
+         *
          * @param id - account ID
          * @return - account builder instance
          */
@@ -83,7 +125,9 @@ public class Account implements Serializable {
             return this;
         }
 
-        /** Create entity of nested class with account patronymic
+        /**
+         * Create entity of nested class with account patronymic
+         *
          * @param patronymic - account patronymic
          * @return - account builder instance
          */
@@ -92,7 +136,9 @@ public class Account implements Serializable {
             return this;
         }
 
-        /** Create entity of nested class with account phone number
+        /**
+         * Create entity of nested class with account phone number
+         *
          * @param phoneNumber - account phone number
          * @return - account builder instance
          */
@@ -101,7 +147,9 @@ public class Account implements Serializable {
             return this;
         }
 
-        /** Create entity of nested class with account status
+        /**
+         * Create entity of nested class with account status
+         *
          * @param status - account status
          * @return - account builder instance
          */
@@ -110,14 +158,18 @@ public class Account implements Serializable {
             return this;
         }
 
-        /** The method of getting the account role value
+        /**
+         * The method of getting the account role value
+         *
          * @return - an account role value
          */
         public AccountRole getAccountRole() {
             return accountRole;
         }
 
-        /** The method for build account entity
+        /**
+         * The method for build account entity
+         *
          * @return - an account entity
          */
         public Account build() {
@@ -161,49 +213,63 @@ public class Account implements Serializable {
         this.phoneNumber = phoneNumber;
     }
 
-    /** The method of getting the account surname value
+    /**
+     * The method of getting the account surname value
+     *
      * @return - an account surname value
      */
     public String getSurname() {
         return surname;
     }
 
-    /** The method of getting the account name value
+    /**
+     * The method of getting the account name value
+     *
      * @return - an account name value
      */
     public String getName() {
         return name;
     }
 
-    /** The method of getting the account patronymic value
+    /**
+     * The method of getting the account patronymic value
+     *
      * @return - an account patronymic value
      */
     public String getPatronymic() {
         return patronymic;
     }
 
-    /** The method of getting the account phone number value
+    /**
+     * The method of getting the account phone number value
+     *
      * @return - an account phone number value
      */
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    /** The method of getting the account status value
+    /**
+     * The method of getting the account status value
+     *
      * @return - an account status value
      */
     public boolean isActive() {
         return status;
     }
 
-    /** The method of getting the account ID value
+    /**
+     * The method of getting the account ID value
+     *
      * @return - an account ID value
      */
     public int getId() {
         return id;
     }
 
-    /** The method of getting the account account role value {@link AccountRole}
+    /**
+     * The method of getting the account account role value {@link AccountRole}
+     *
      * @return - an account account role value
      */
     public AccountRole getAccountRole() {
@@ -221,7 +287,8 @@ public class Account implements Serializable {
                 ", status=" + status;
     }
 
-    /** The nested class for compare accounts entity {@link Account.AccountNameComparator},
+    /**
+     * The nested class for compare accounts entity {@link Account.AccountNameComparator},
      * {@link Account.AccountPatronymicComparator}, {@link Account.AccountPhoneComparator}
      */
     public static class AccountSurnameComparator implements Comparator<Account> {
@@ -237,7 +304,9 @@ public class Account implements Serializable {
             return a.getSurname().compareTo(b.getSurname());
         }
     }
-    /** The nested class for compare accounts entity {@link Account.AccountSurnameComparator},
+
+    /**
+     * The nested class for compare accounts entity {@link Account.AccountSurnameComparator},
      * {@link Account.AccountPatronymicComparator}, {@link Account.AccountPhoneComparator}
      */
     public static class AccountNameComparator implements Comparator<Account> {
@@ -253,7 +322,9 @@ public class Account implements Serializable {
             return a.getName().compareTo(b.getName());
         }
     }
-    /** The nested class for compare accounts entity {@link Account.AccountNameComparator},
+
+    /**
+     * The nested class for compare accounts entity {@link Account.AccountNameComparator},
      * {@link Account.AccountSurnameComparator}, {@link Account.AccountPhoneComparator}
      */
     public static class AccountPatronymicComparator implements Comparator<Account> {
@@ -272,7 +343,9 @@ public class Account implements Serializable {
             return a.getPatronymic().compareTo(b.getPatronymic());
         }
     }
-    /** The nested class for compare accounts entity {@link Account.AccountNameComparator},
+
+    /**
+     * The nested class for compare accounts entity {@link Account.AccountNameComparator},
      * {@link Account.AccountPatronymicComparator}, {@link Account.AccountSurnameComparator}
      */
     public static class AccountPhoneComparator implements Comparator<Account> {
@@ -290,5 +363,30 @@ public class Account implements Serializable {
             }
             return a.getPhoneNumber().compareTo(b.getPhoneNumber());
         }
+    }
+
+    /**
+     * The method checks are the entities equals. The method uses in program testing
+     *
+     * @param o - oAccount entity
+     * @return - true if an entities are equals
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
+        return id == account.id &&
+                Objects.equals(status, account.status) &&
+                Objects.equals(surname, account.surname) &&
+                Objects.equals(name, account.name) &&
+                Objects.equals(patronymic, account.patronymic) &&
+                Objects.equals(phoneNumber, account.phoneNumber) &&
+                Objects.equals(accountRole, account.accountRole);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, surname, name, patronymic, phoneNumber, accountRole, status);
     }
 }

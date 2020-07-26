@@ -26,37 +26,38 @@
 
 
 <div id="center">
-    <p class="p-red">${message} <br></p>
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+
     <p><fmt:message key="label.signup.textRequiredField1"/><span class="p-red"> * </span><fmt:message key="label.signup.textRequiredField2"/></p>
     <h3>
         <form action="${pageContext.request.contextPath}/signup" method="post">
             <label for="fieldSurname"><fmt:message key="label.signup.fieldSurname"/>:<span
                     class="p-red">*</span></label><br>
-            <input type="text" id="fieldSurname" name="accountSurname"
+            <input type="text" id="fieldSurname" name="accountSurname" value="${requestScope.get('surname')}"
                    required maxlength="30" title=
                    <fmt:message key="label.signup.fieldSurnameTitle"/>
             >
             <br>
             <label for="fieldName"><fmt:message key="label.signup.fieldName"/>:<span class="p-red">*</span></label><br>
-            <input type="text" id="fieldName" name="accountName"
+            <input type="text" id="fieldName" name="accountName" value="${requestScope.get('name')}"
                    required maxlength="20" title=
                    <fmt:message key="label.signup.fieldNameTitle"/>
             >
             <br>
             <label for="fieldPatronymic"><fmt:message key="label.signup.fieldPatronymic"/>:</label><br>
-            <input type="text" id="fieldPatronymic" name="accountPatronymic" maxlength="30"
+            <input type="text" id="fieldPatronymic" name="accountPatronymic" maxlength="30" value="${requestScope.get('patronymic')}"
                    title=
                    <fmt:message key="label.signup.fieldPatronymicTitle"/>
             >
             <br>
             <label for="fieldPhoneNum"><fmt:message key="label.signup.fieldPhone"/>:</label><br>
-            <input type="tel" id="fieldPhoneNum" name="accountPhone"
+            <input type="tel" id="fieldPhoneNum" name="accountPhone" value="${requestScope.get('phone')}"
                    placeholder="+375(XX)XXX-XX-XX" pattern="\+375\([1-9]{2}\)[1-9][0-9]{2}-[0-9]{2}-[0-9]{2}"
                    title="+375(XX)XXX-XX-XX"
             >
             <br>
             <label for="fieldUser"><fmt:message key="label.signup.fieldLogin"/>:<span class="p-red">*</span></label><br>
-            <input type="text" id="fieldUser" name="login" required pattern="[A-Za-z]{1,}[0-9A-Za-z]{3,15}"
+            <input type="text" id="fieldUser" name="login" required pattern="[A-Za-z]{1,}[0-9A-Za-z]{3,15}" value="${requestScope.get('login')}"
                    title=
                    <fmt:message key="label.signup.fieldLoginTitle"/>
             >
@@ -84,7 +85,7 @@
 </div>
 
 <div id="right">
-    <jsp:include page="_right.jsp"></jsp:include>
+    <jsp:include page="_right.jsp"/>
 </div>
 <%--<div id="right">
     <p class="p-cen">

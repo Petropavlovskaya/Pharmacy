@@ -15,13 +15,14 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <postgresqlVersion>42.2.13</postgresqlVersion>
-        <logggerVersoin>2.13.1</logggerVersoin>
+        <loggerVersoin>2.13.1</loggerVersoin>
         <jUnitVersoin>5.6.0</jUnitVersoin>
         <mockitoVersoin>3.3.0</mockitoVersoin>
         <servletApiVersoin>4.0.1</servletApiVersoin>
         <servletJspApiVersoin>2.3.3</servletJspApiVersoin>
         <jstlVersoin>1.2</jstlVersoin>
         <commonsCodecVersion>1.14</commonsCodecVersion> <!--for password MD5-->
+        <h2Version>1.4.200</h2Version>
     </properties>
 
     <dependencies>
@@ -40,17 +41,17 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>${logggerVersoin}</version>
+            <version>${loggerVersoin}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>${logggerVersoin}</version>
+            <version>${loggerVersoin}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-            <version>${logggerVersoin}</version>
+            <version>${loggerVersoin}</version>
         </dependency>
 
         <dependency>
@@ -65,6 +66,12 @@
             <version>${mockitoVersoin}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2Version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -84,6 +91,13 @@
             <artifactId>jstl</artifactId>
             <version>${jstlVersoin}</version>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+
 
     </dependencies>
 

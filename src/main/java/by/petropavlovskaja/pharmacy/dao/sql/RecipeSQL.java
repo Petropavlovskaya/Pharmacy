@@ -1,6 +1,8 @@
 package by.petropavlovskaja.pharmacy.dao.sql;
 
-/** Enumeration for recipe SQL query */
+/**
+ * Enumeration for recipe SQL query
+ */
 public enum RecipeSQL {
     GET_ALL_RECIPE_BY_CUSTOMER_ID("SELECT * FROM recipe WHERE fk_customer=?;"),
     GET_ALL_ACTIVE_RECIPE_BY_CUSTOMER_ID("SELECT * FROM recipe WHERE id_medicine_in_order is null AND " +
@@ -15,20 +17,25 @@ public enum RecipeSQL {
             "VALUES (?, ?, ?, true);"),
     INSERT_RECIPE_DOCTOR("INSERT INTO recipe (medicine, dosage, doctor_id, fk_customer, validity, need_extension) " +
             "VALUES (?, ?, ?, ?, ?, false);"),
-    DELETE_RECIPE_BY_ID("DELETE FROM recipe WHERE recipe_id=?;")
-    ;
+    DELETE_RECIPE_BY_ID("DELETE FROM recipe WHERE recipe_id=?;");
 
-    /** Property - query */
+    /**
+     * Property - query
+     */
     private String query;
 
-    /** Constructor - create recipe SQL query
+    /**
+     * Constructor - create recipe SQL query
+     *
      * @param query - query
      */
     RecipeSQL(String query) {
         this.query = query;
     }
 
-    /** The method of getting a recipe SQL query {@link RecipeSQL#query}
+    /**
+     * The method of getting a recipe SQL query {@link RecipeSQL#query}
+     *
      * @return - SQL query
      */
     public String getQuery() {

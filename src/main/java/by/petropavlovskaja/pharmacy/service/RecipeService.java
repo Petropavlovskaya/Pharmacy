@@ -1,11 +1,7 @@
 package by.petropavlovskaja.pharmacy.service;
 
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
-import by.petropavlovskaja.pharmacy.dao.AccountDAO;
-import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
-import by.petropavlovskaja.pharmacy.dao.OrderDAO;
 import by.petropavlovskaja.pharmacy.dao.RecipeDAO;
-import by.petropavlovskaja.pharmacy.model.Medicine;
 import by.petropavlovskaja.pharmacy.model.Recipe;
 import by.petropavlovskaja.pharmacy.model.account.Customer;
 import org.slf4j.Logger;
@@ -17,10 +13,13 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-/** Class for services of recipe instance. Uses {@link CommonService}, {@link RecipeDAO} */
+/**
+ * Class for services of recipe instance. Uses {@link CommonService}, {@link RecipeDAO}
+ */
 public class RecipeService {
     private static Logger logger = LoggerFactory.getLogger(RecipeService.class);
     private CommonService commonService = CommonService.getInstance();
+    //    private DoctorService doctorService = DoctorService.getInstance();
     private RecipeDAO recipeDAO = RecipeDAO.getInstance();
 
     /**
@@ -46,13 +45,12 @@ public class RecipeService {
     }
 
     public void getRecipes(Customer customer) {
-        Set<Recipe> recipes = recipeDAO.getAllForCustomer(customer.getId());
+        Set<Recipe> recipes = recipeDAO.getAllCustomerRecipe(customer.getId());
         customer.setRecipes(recipes);
     }
 
     /**
      * The method for getting customer's recipes. Uses {@link RecipeDAO#getAllValidRecipe(int)},
-     * {@link OrderDAO#createActiveMedicineRelation(int, int)} ation}, {@link OrderDAO#updateMedicineInCart(int, int)}
      *
      * @param customer - customer instance
      * @return - recipe set
@@ -65,7 +63,7 @@ public class RecipeService {
      * The method for setting a flag "need extension" for recipe. Uses {@link CommonService#isNumber(String)},
      * {@link RecipeDAO#setNeedExtensionByID(int)}
      *
-     * @param customer - customer instance
+     * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
      */
     public void setNeedExtensionByID(Customer customer, Map<String, Object> reqParameters) {
@@ -82,12 +80,14 @@ public class RecipeService {
      * Uses {@link RecipeDAO#insertRecipeCustomer(String, String, int)}
      *
      * @param executeResult - execute result instance
-     * @param customer - customer instance
+     * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
-     * @param fullUri - request URI
+     * @param fullUri       - request URI
+     * @return true if insert recipe was successful
      */
-    public void customerInsertRecipe(ExecuteResult executeResult, Customer customer, Map<String, Object> reqParameters,
-                                     String fullUri) {
+    public boolean customerInsertRecipe(ExecuteResult executeResult, Customer customer, Map<String, Object> reqParameters,
+                                        String fullUri) {
+        boolean result = false;
         String medicine = (String) reqParameters.get("medicine");
         String dosage = (String) reqParameters.get("dosage");
         boolean recipePresent = checkRecipeAlreadyPresent(customer, medicine, dosage);
@@ -98,7 +98,9 @@ public class RecipeService {
             recipeDAO.insertRecipeCustomer(medicine, dosage, customer.getId());
             executeResult.setJsp(fullUri);
             getRecipes(customer);
+            result = true;
         }
+        return result;
     }
 
     /**
@@ -106,7 +108,7 @@ public class RecipeService {
      *
      * @param customer - customer instance
      * @param medicine - medicine name
-     * @param dosage - medicine dosage
+     * @param dosage   - medicine dosage
      * @return - true if recipe is already in extension
      */
     public boolean checkRecipeAlreadyPresent(Customer customer, String medicine, String dosage) {
@@ -126,11 +128,11 @@ public class RecipeService {
      * The method for inserting a recipe into database.
      * Uses {@link RecipeDAO#insertRecipeDoctor(String, String, int, int, Date)}
      *
-     * @param medicine - medicine name
-     * @param dosage - medicine dosage
-     * @param customerId - customer ID
+     * @param medicine     - medicine name
+     * @param dosage       - medicine dosage
+     * @param customerId   - customer ID
      * @param pharmacistId - pharmacist ID
-     * @param date - recipe validity date
+     * @param date         - recipe validity date
      */
     public void doctorInsertRecipe(String medicine, String dosage, int pharmacistId, int customerId, Date date) {
         recipeDAO.insertRecipeDoctor(medicine, dosage, customerId, pharmacistId, date);
@@ -140,7 +142,7 @@ public class RecipeService {
      * The method for deleting the recipe from database.
      * Uses {@link CommonService#isNumber(String)}, {@link RecipeDAO#deleteRecipe(int)}
      *
-     * @param customer - customer instance
+     * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
      */
     public void deleteRecipe(Customer customer, Map<String, Object> reqParameters) {
@@ -156,7 +158,7 @@ public class RecipeService {
      * The method for refusing an extension by recipe. Uses {@link RecipeDAO#refuseRecipe(int, int)}
      *
      * @param accountId - account ID
-     * @param recipeId - recipe ID
+     * @param recipeId  - recipe ID
      */
     public void doctorRefuseRecipe(int accountId, int recipeId) {
         recipeDAO.refuseRecipe(accountId, recipeId);
@@ -165,26 +167,35 @@ public class RecipeService {
     /**
      * The method for extension the recipe. Uses {@link CommonService#isNumber(String)}, {@link RecipeDAO#validateRecipe(int, Date, int)}
      *
-     * @param accountId - account ID
+     * @param accountId     - account ID
      * @param reqParameters - request parameters from jsp
+     * @param executeResult - execute result instance
+     * @return true if validate recipe was successful
      */
-    public void validateRecipe(int accountId, Map<String, Object> reqParameters) {
+    public boolean validateRecipe(int accountId, Map<String, Object> reqParameters, ExecuteResult executeResult) {
+        boolean result = false;
         String frontRecipeId = (String) reqParameters.get("recipeId");
         if (commonService.isNumber(frontRecipeId)) {
             int recipeId = Integer.parseInt(frontRecipeId);
 
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             String requestDate = (String) reqParameters.get("validity");
-            Date validity = null;
+            Date validity;
             try {
                 validity = format.parse(requestDate);
+                boolean validDate = DoctorService.getInstance().isDateValid(validity);
+                if (validDate) {
+                    recipeDAO.validateRecipe(recipeId, validity, accountId);
+                    result = true;
+                } else {
+                    executeResult.setResponseAttributes("errorMessage", "The date is invalid. Please, enter the correct data and rty again.");
+                }
             } catch (ParseException e) {
-                logger.error("Can't parse request parameter ExpDate: " + validity + ". Error: " + e);
-            }
-            if (validity != null) {
-                recipeDAO.validateRecipe(recipeId, validity, accountId);
+                executeResult.setResponseAttributes("errorMessage", "The date is invalid. Please, enter the correct data and rty again.");
+                logger.error("Can't parse request parameter ExpDate. Error: " + e);
             }
         }
+        return result;
     }
 
     /**
