@@ -191,10 +191,6 @@ public class Customer extends Account implements Serializable {
         this.recipes = recipes;
     }
 
-//    public void addMedicineIntoCart(MedicineInOrder newMedicine) {
-//        medicineInCart.add(newMedicine);
-//    }
-
     @Override
     public String toString() {
         return super.toString();

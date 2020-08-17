@@ -303,6 +303,7 @@ class CommonServiceTest {
         assertFalse(CommonService.getInstance().fioMatchRegex("Яв*ин"));
         assertFalse(CommonService.getInstance().fioMatchRegex("Yt3kk"));
         assertFalse(CommonService.getInstance().fioMatchRegex("somov"));
+        assertFalse(CommonService.getInstance().fioMatchRegex("Somov-"));
 
         assertTrue(CommonService.getInstance().fioMatchRegex("Somov"));
         assertTrue(CommonService.getInstance().fioMatchRegex("Як"));

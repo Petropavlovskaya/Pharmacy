@@ -35,9 +35,10 @@ public class LocaleFilter implements Filter {
 
         if (req.getParameter("locale") != null) {
             String reqLocale = req.getParameter("locale");
-            logger.info("Set LANG in Filter from Request. Lang = " + reqLocale);
+            String loggerMessage = "Set language " + reqLocale + " from Request.";
+            logger.trace(loggerMessage);
             if (reqLocale.equals("ru") || reqLocale.equals("en") || reqLocale.equals("pl")) {
-                req.getSession().setAttribute("lang", req.getParameter("locale"));
+                req.getSession().setAttribute("lang", reqLocale);
                 req.getSession().setAttribute("updateLang", "TRUE");
             } else {
                 req.getSession().setAttribute("lang", "ru");
@@ -47,6 +48,7 @@ public class LocaleFilter implements Filter {
         }
         if (req.getSession().getAttribute("lang") == null || req.getSession().getAttribute("lang").equals("")) {
             req.getSession().setAttribute("lang", "ru");
+            logger.trace("Set default language RU");
         }
         chain.doFilter(request, response);
     }

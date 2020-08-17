@@ -18,10 +18,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static by.petropavlovskaja.pharmacy.dao.DatabaseColumnNameConstant.*;
+
 /**
  * Class for executing SQL queries to the database related to the medicine
  */
 public class MedicineDAO {
+
+    /**
+     * String property for logger message
+     */
+    private String loggerMessage;
+
     private static Logger logger = LoggerFactory.getLogger(MedicineDAO.class);
 
     /**
@@ -59,14 +67,15 @@ public class MedicineDAO {
                 PreparedStatement statement = conn.prepareStatement(MedicineSQL.GET_INFO_FOR_ORDER_BY_ORDER_ID.getQuery())
         ) {
             statement.setInt(1, orderId);
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                medicineSet.add(new Medicine(rs.getInt("id"), rs.getString("name"),
-                        rs.getString("dosage"), rs.getInt("price"), rs.getInt("amount")));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    medicineSet.add(new Medicine(rs.getInt(MEDICINE_ID), rs.getString(MEDICINE_NAME),
+                            rs.getString(MEDICINE_DOSAGE), rs.getInt(MEDICINE_PRICE), rs.getInt(MEDICINE_AMOUNT)));
+                }
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL Exception in method getMedicineDataForChangeAmount. ", e);
             e.printStackTrace();
         }
         return medicineSet;
@@ -102,7 +111,7 @@ public class MedicineDAO {
                 medicineList.add(createMedicineFromDB(rs));
             }
         } catch (SQLException e) {
-            logger.info("No results were found. ((");
+            logger.debug("SQL Exception in method getAll. ", e);
             e.printStackTrace();
         }
         return medicineList;
@@ -116,20 +125,6 @@ public class MedicineDAO {
     public int getNumberOfRows() {
         List<Medicine> medicineList = getAll();
         return medicineList.size();
-
-/*        try (
-                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                Statement statement = conn.createStatement();
-                ResultSet rs = statement.executeQuery(MedicineSQL.GET_COUNT_MEDICINES.getQuery())
-        ) {
-            if (rs.next()) {
-                count = rs.getInt("count");
-            }
-        } catch (SQLException e) {
-            logger.info("No results were found. ((");
-            e.printStackTrace();
-        }*/
-//        return count;
     }
 
     /**
@@ -149,12 +144,13 @@ public class MedicineDAO {
         ) {
             statement.setInt(1, start);
             statement.setInt(2, recordsPerPage);
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                medicineList.add(createMedicineFromDB(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    medicineList.add(createMedicineFromDB(rs));
+                }
             }
         } catch (SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL Exception in method findMedicine. ", e);
             e.printStackTrace();
         }
         return medicineList;
@@ -174,12 +170,12 @@ public class MedicineDAO {
                 ResultSet rs = statement.executeQuery(MedicineSQL.GET_ALL_RECIPE_MEDICINES.getQuery())
         ) {
             while (rs.next()) {
-                Medicine medicine = new Medicine(rs.getString("name"), rs.getString("dosage"));
+                Medicine medicine = new Medicine(rs.getString(MEDICINE_NAME), rs.getString(MEDICINE_DOSAGE));
                 medicineSet.add(medicine);
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL Exception in method getAllForDoctor. ", e);
             e.printStackTrace();
         }
         return medicineSet;
@@ -195,17 +191,21 @@ public class MedicineDAO {
         boolean result = false;
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = addUpdatePrepareStatement(conn, MedicineSQL.INSERT_MEDICINE.getQuery(), medicine)
+                PreparedStatement statement = conn.prepareStatement(MedicineSQL.INSERT_MEDICINE.getQuery())
+
         ) {
+            updatePrepareStatement(statement, medicine, false);
             int countInsertRowsMedicine = statement.executeUpdate();
             if (countInsertRowsMedicine != 1) {
-                logger.error("Insert into table Medicine is failed. We insert: " + countInsertRowsMedicine + " rows for medicine: " + medicine.toString());
+                loggerMessage = "Insert into table Medicine is failed. We insert: " + countInsertRowsMedicine + " rows for medicine: " + medicine.toString();
+                logger.error(loggerMessage);
             } else {
                 result = true;
-                logger.info("Insert into table Medicine complete. We insert next medicine data: " + medicine.toString());
+                loggerMessage = "Insert into table Medicine complete. We insert next medicine data: " + medicine.toString();
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in create medicine: " + e);
+            logger.trace("SQL Exception in method create. ", e);
         }
         return result;
     }
@@ -216,21 +216,24 @@ public class MedicineDAO {
      * @param medicine - a new medicine
      * @return - true if insert was successful
      */
-    public boolean update(Medicine medicine) throws IllegalArgumentException {
+    public boolean update(Medicine medicine) {
         boolean result = false;
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = addUpdatePrepareStatement(conn, MedicineSQL.UPDATE_MEDICINE.getQuery(), medicine)
+                PreparedStatement statement = conn.prepareStatement(MedicineSQL.UPDATE_MEDICINE.getQuery())
         ) {
+            updatePrepareStatement(statement, medicine, true);
             int countUpdateRowsMedicine = statement.executeUpdate();
             if (countUpdateRowsMedicine != 1) {
-                logger.error("Update into table Medicine is failed. We update: " + countUpdateRowsMedicine + " rows for medicine: " + medicine.toString());
+                loggerMessage = "Update into table Medicine is failed. We update: " + countUpdateRowsMedicine + " rows for medicine: " + medicine.toString();
+                logger.error(loggerMessage);
             } else {
                 result = true;
-                logger.info("Update into table Medicine complete. We update next medicine data: " + medicine.toString());
+                loggerMessage = "Update into table Medicine complete. We update next medicine data: " + medicine.toString();
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in create medicine: " + e);
+            logger.trace("SQL Exception in method update. ", e);
         }
         return result;
     }
@@ -252,13 +255,15 @@ public class MedicineDAO {
             int countDeleteRowsMedicine = statement.executeUpdate();
 
             if (countDeleteRowsMedicine != 1) {
-                logger.error("Delete from table Medicine: " + medicine.toString() + ". We delete: " + countDeleteRowsMedicine + " rows");
+                loggerMessage = "Delete from table Medicine: " + medicine.toString() + ". We delete: " + countDeleteRowsMedicine + " rows";
+                logger.error(loggerMessage);
             } else {
                 result = true;
-                logger.info("Pharmacist login = " + pharmacistLogin + " delete Medicine: " + medicine.toString());
+                loggerMessage = "Pharmacist login = " + pharmacistLogin + " delete Medicine: " + medicine.toString();
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in create medicine: " + e);
+            logger.trace("SQL Exception in method deleteById. ", e);
         }
         return result;
     }
@@ -272,27 +277,36 @@ public class MedicineDAO {
      */
     public boolean isMedicine(String medicineName, String dosage) {
         List<Medicine> medicineList = findBy(MedicineSQL.FIND_MEDICINES_BY_NAME_DOSAGE.getQuery(), medicineName, dosage);
-        return medicineList.size() > 0;
+        return !medicineList.isEmpty();
     }
 
     /**
      * The method finds medicines in the database
      *
-     * @param sql    - SQL query
-     * @param values - search criteria
+     * @param query    - SQL query
+     * @param criteria - search criteria
      * @return - list of medicines
      */
-    private List<Medicine> findBy(String sql, Object... values) {
+    private List<Medicine> findBy(String query, Object... criteria) {
         List<Medicine> medicine = new ArrayList<>();
+        FindBy findBy = (Connection connection, String sql, Object... values) -> {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            for (int i = 0; i < values.length; i++) {
+                statement.setObject(i + 1, values[i]);
+            }
+            return statement;
+        };
+
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = findPrepareStatement(conn, sql, values);
+                PreparedStatement statement = findBy.getPreparedStatement(conn, query, criteria);
                 ResultSet rs = statement.executeQuery()
         ) {
             while (rs.next()) {
                 medicine.add(createMedicineFromDB(rs));
             }
         } catch (SQLException e) {
+            logger.trace("SQL Exception in method findBy. ", e);
             e.printStackTrace();
         }
         return medicine;
@@ -308,61 +322,42 @@ public class MedicineDAO {
         Medicine medicine = null;
         try {
 
-            medicine = new Medicine(rs.getInt("id"), rs.getString("name"),
-                    rs.getInt("indivisible_amount"), rs.getInt("amount"),
-                    rs.getString("dosage"), rs.getDate("exp_date"),
-                    rs.getBoolean("recipe_required"), rs.getInt("price"),
-                    rs.getInt("added_by"), rs.getString("pharm_form"));
+            medicine = new Medicine(rs.getInt(MEDICINE_ID), rs.getString(MEDICINE_NAME),
+                    rs.getInt(MEDICINE_INDIVISIBLE_AMOUNT), rs.getInt(MEDICINE_AMOUNT),
+                    rs.getString(MEDICINE_DOSAGE), rs.getDate(MEDICINE_EXP_DATE),
+                    rs.getBoolean(MEDICINE_RECIPE_REQUIRED), rs.getInt(MEDICINE_PRICE),
+                    rs.getInt(MEDICINE_ADDED_BY), rs.getString(MEDICINE_PHARM_FORM));
         } catch (SQLException e) {
-            logger.error("Can't create Medicine entity from DB. " + e);
+            logger.trace("SQL Exception in method createMedicineFromDB. ", e);
         }
         return medicine;
     }
 
     /**
-     * The method creates a PreparedStatement from a variable number of parameters
-     *
-     * @param conn   - Connection
-     * @param sql    - SQL query
-     * @param values - parameters
-     * @return - PreparedStatement
-     */
-    private static PreparedStatement findPrepareStatement(Connection conn, String sql, Object... values) throws
-            SQLException {
-        PreparedStatement statement = conn.prepareStatement(sql);
-        for (int i = 0; i < values.length; i++) {
-            statement.setObject(i + 1, values[i]);
-        }
-        return statement;
-    }
-
-    /**
      * The method creates a PreparedStatement for create or update a medicine
      *
-     * @param conn     - Connection
-     * @param sql      - SQL query
-     * @param medicine - medicine
-     * @return - PreparedStatement
+     * @param statement - Prepared statement
+     * @param needId    - boolean variable. Set TRUE if need to write to prepared statement medicine ID
+     * @param medicine  - medicine
      */
-    private static PreparedStatement addUpdatePrepareStatement(Connection conn, String sql, Medicine medicine) {
-        PreparedStatement statement = null;
+    private static void updatePrepareStatement(PreparedStatement statement, Medicine medicine, boolean needId) {
+        int columnNumber = 1;
         try {
-            statement = conn.prepareStatement(sql);
-            statement.setString(1, medicine.getName());
-            statement.setInt(2, medicine.getIndivisibleAmount());
-            statement.setInt(3, medicine.getAmount());
-            statement.setString(4, medicine.getDosage());
-            statement.setString(5, medicine.getPharmForm());
-            statement.setDate(6, new java.sql.Date(medicine.getExpDate().getTime()));
-            statement.setBoolean(7, medicine.isRecipeRequired());
-            statement.setInt(8, medicine.getPrice());
-            statement.setInt(9, medicine.getAddedBy());
-            if (sql.equalsIgnoreCase(MedicineSQL.UPDATE_MEDICINE.getQuery())) {
-                statement.setInt(10, medicine.getId());
+            statement.setString(columnNumber++, medicine.getName());
+            statement.setInt(columnNumber++, medicine.getIndivisibleAmount());
+            statement.setInt(columnNumber++, medicine.getAmount());
+            statement.setString(columnNumber++, medicine.getDosage());
+            statement.setString(columnNumber++, medicine.getPharmForm());
+            statement.setDate(columnNumber++, new java.sql.Date(medicine.getExpDate().getTime()));
+            statement.setBoolean(columnNumber++, medicine.isRecipeRequired());
+            statement.setInt(columnNumber++, medicine.getPrice());
+            statement.setInt(columnNumber++, medicine.getAddedBy());
+            if (needId) {
+                statement.setInt(columnNumber, medicine.getId());
             }
         } catch (SQLException e) {
+            logger.trace("SQL Exception in method addUpdatePrepareStatement. ", e);
             e.printStackTrace();
         }
-        return statement;
     }
 }

@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static by.petropavlovskaja.pharmacy.controller.AttributeConstant.*;
+
 /**
  * Web filter for pagination. Implements {@link Filter#init(FilterConfig)}
  */
@@ -33,16 +35,16 @@ public class PageFilter implements Filter {
         String fullUri = req.getRequestURI();
         String[] arrayUri = fullUri.substring(1).split("/");
         String lastPartUri = arrayUri[arrayUri.length - 1];
-        if (req.getSession().getAttribute("successTextSet") != null) {
-            if (req.getSession().getAttribute("successTextSet").equals("yes")) {
-                req.getSession().setAttribute("successTextSet", "no");
+        if (req.getSession().getAttribute(SUCCESS_MSG_CHECK) != null) {
+            if (req.getSession().getAttribute(SUCCESS_MSG_CHECK).equals("yes")) {
+                req.getSession().setAttribute(SUCCESS_MSG_CHECK, "no");
             } else {
-                req.getSession().removeAttribute("successMessage");
+                req.getSession().removeAttribute(SUCCESS_MSG);
             }
         }
 
 
-        if (lastPartUri.matches("[1-9]{1}[0-9]*")) {
+        if (lastPartUri.matches("[1-9][0-9]*")) {
             int page = Integer.parseInt(lastPartUri);
             if (req.getSession().getAttribute("numOfPages") != null) {
                 int maxPage = Integer.parseInt(String.valueOf(req.getSession().getAttribute("numOfPages")));
@@ -54,7 +56,6 @@ public class PageFilter implements Filter {
             }
             req.getSession().setAttribute("requestPage", page);
             req.getSession().setAttribute("fullUri", getUri(arrayUri));
-//            req.setAttribute(COMMAND_ATTRIBUTE, req.getSession().getAttribute("accountRole"));
             req.getRequestDispatcher("/page").forward(req, resp);
 
         } else if (lastPartUri.equals("list") || lastPartUri.equals("medicine")) {

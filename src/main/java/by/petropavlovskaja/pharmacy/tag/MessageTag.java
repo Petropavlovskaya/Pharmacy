@@ -1,15 +1,14 @@
 package by.petropavlovskaja.pharmacy.tag;
 
-import by.petropavlovskaja.pharmacy.dao.RecipeDAO;
-import by.petropavlovskaja.pharmacy.service.CommonService;
-
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
 import java.io.IOException;
 import java.io.StringWriter;
 
-/** Class for custom tag. Extending {@link SimpleTagSupport} */
+/**
+ * Class for custom tag. Extending {@link SimpleTagSupport}
+ */
 public class MessageTag extends SimpleTagSupport {
     /**
      * Property - message
@@ -29,7 +28,9 @@ public class MessageTag extends SimpleTagSupport {
         this.msg = msg;
     }
 
-    /** The override method {@link SimpleTagSupport#doTag()} */
+    /**
+     * The override method {@link SimpleTagSupport#doTag()}
+     */
     @Override
     public void doTag() throws JspException, IOException {
         if (msg != null) {

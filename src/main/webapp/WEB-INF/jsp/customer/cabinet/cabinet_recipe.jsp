@@ -10,6 +10,7 @@
     <title>On-line pharmacy. Recipe</title>
     <style>
         <%@include file="/css/style.css" %>
+        <%@include file="/toastr/toastr.css" %>
     </style>
     <link href="${pageContext.request.contextPath}/images/pharmacy_small.gif" rel="icon" type="image/gif"/>
 </head>
@@ -25,7 +26,13 @@
 
 
 <div id="center_no_right">
-    <p class="p-red">${requestScope.get('message')} <br> </p>
+    <p class="p-error">${requestScope.get('errorMessage')}</p>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+    <c:import url="../../_toastr.jsp"/>
+    <c:if test="${not empty sessionScope.get('successMessage')}" >
+        <c:import url="../../_toastrFuncSuccess.jsp"/>
+    </c:if>
+
     <c:if test="${empty sessionScope.get('recipe')}">
         <p3> You have not recipes</p3>
     </c:if>
@@ -64,7 +71,7 @@
                                   method="post">
                                 <td align="center">
                                     <input type="submit" value=<fmt:message key="label.medicine.buttonOrderRecipe"/>>
-                                    <input type="hidden" name="customerCommand" value="requestRecipe">
+                                    <input type="hidden" name="frontCommand" value="requestRecipe">
                                     <input type="hidden" name="medicine" value="${recipeItem.medicine}">
                                     <input type="hidden" name="dosage" value="${recipeItem.dosage}">
                                 </td>
@@ -81,7 +88,7 @@
                                       method="post">
                                     <td align="center">
                                         <input type="submit" value=<fmt:message key="label.recipe.actionExtend"/>>
-                                        <input type="hidden" name="customerCommand" value="extendRecipe">
+                                        <input type="hidden" name="frontCommand" value="extendRecipe">
                                         <input type="hidden" name="recipeId" value="${recipeItem.id}">
                                     </td>
                                 </form>
@@ -98,7 +105,7 @@
                           action="${pageContext.request.contextPath}/customer/cabinet/recipe" method="post">
                         <td align="center">
                             <input type="submit" value=<fmt:message key="label.medicine.create.actionDelete"/>>
-                            <input type="hidden" name="customerCommand" value="deleteRecipe">
+                            <input type="hidden" name="frontCommand" value="deleteRecipe">
                             <input type="hidden" name="recipeId" value="${recipeItem.id}">
                         </td>
                     </form>

@@ -10,6 +10,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,11 +25,34 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static by.petropavlovskaja.pharmacy.dao.DatabaseColumnNameConstant.*;
+
 /**
  * Class for executing SQL queries to the database related to the account
  */
 public class AccountDAO {
+    /**
+     * Property logger (log4j is uses)
+     */
     private static Logger logger = LoggerFactory.getLogger(AccountDAO.class);
+
+    /**
+     * Property for getting a random integer
+     */
+    private static Random random;
+
+    static {
+        try {
+            random = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException e) {
+            logger.error("Exception in a static block of AccountDAO. ", e);
+        }
+    }
+
+    /**
+     * Property String constant password
+     */
+    private static final String PASSWORD = "password";
 
     /**
      * Constructor - create INSTANCE of class
@@ -70,14 +95,16 @@ public class AccountDAO {
      * @return - Account instance from the database if parameters are match or Account with ID = -1 if doesn't match
      */
     public Account checkLoginAndPassword(String login, String password) {
+        String loggerMessage;
         Account checkedAccount = new Account(-1);
         Map<String, String> passwordAndSalt = getUserPasswordAndSaltFromDB(login);
 
         if (!passwordAndSalt.isEmpty()) {
-            String dbPassword = passwordAndSalt.get("password");
+            String dbPassword = passwordAndSalt.get(PASSWORD);
             String dbSalt = passwordAndSalt.get("salt");
             String md5Password = getMd5Password(password, dbSalt);
-            logger.info("bdPassword = " + dbPassword + " and dbSalt = " + dbSalt + " md5Passw = " + md5Password);
+            loggerMessage = "bdPassword = " + dbPassword + " and dbSalt = " + dbSalt + " md5Password = " + md5Password;
+            logger.info(loggerMessage);
 
             if (dbPassword.equals(md5Password)) {
                 logger.info("Try to return logged account");
@@ -100,16 +127,17 @@ public class AccountDAO {
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = conn.prepareStatement(AccountSQL.FIND_LOGIN.getQuery())
+
         ) {
             statement.setString(1, login);
-            ResultSet rs = statement.executeQuery();
-            if (rs.next()) {
-                return true;
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return true;
+                }
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
-            e.printStackTrace();
+            logger.trace("SQL exception in a method isLoginBusy. ", e);
         }
         return false;
     }
@@ -132,18 +160,18 @@ public class AccountDAO {
         ) {
             while (rs.next()) {
                 Account.AccountBuilder accountBuilder = new Account.AccountBuilder(
-                        rs.getString("surname"),
-                        rs.getString("name"),
+                        rs.getString(ACCOUNT_SURNAME),
+                        rs.getString(ACCOUNT_NAME),
                         AccountRole.CUSTOMER)
-                        .withId(rs.getInt("id"))
-                        .withPatronymic(rs.getString("patronymic"))
-                        .withPhoneNumber(rs.getString("phone"));
+                        .withId(rs.getInt(ACCOUNT_ID))
+                        .withPatronymic(rs.getString(ACCOUNT_PATRONYMIC))
+                        .withPhoneNumber(rs.getString(ACCOUNT_PHONE));
                 accountSet.add(accountBuilder.build());
             }
 
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL exception in a method getActiveCustomers. ", e);
             e.printStackTrace();
         }
         return accountSet;
@@ -158,6 +186,8 @@ public class AccountDAO {
      * @return - true if write to the database was successful
      */
     public boolean create(Account account, String login, String password) {
+        String errorMessage;
+        String infoMessage;
         boolean resultAccountSet = false;
         int countInsertRowsLogin;
         int userId;
@@ -174,51 +204,57 @@ public class AccountDAO {
 
 // Create login & password
             String salt = generateRandomSalt();
-            statementLogin.setString(1, login);
-            statementLogin.setString(2, getMd5Password(password, salt));
-            statementLogin.setString(3, salt);
+            int columnNumberLogin = 1;
+            statementLogin.setString(columnNumberLogin++, login);
+            statementLogin.setString(columnNumberLogin++, getMd5Password(password, salt));
+            statementLogin.setString(columnNumberLogin, salt);
             countInsertRowsLogin = statementLogin.executeUpdate();
             if (countInsertRowsLogin != 1) {
                 conn.rollback(savepoint);
-                logger.error("Insert into table Login has failed. We insert: " + countInsertRowsLogin + " rows for login: " + login);
+                errorMessage = "Insert into table Login has failed. We insert: " + countInsertRowsLogin + " rows for login: " + login;
+                logger.error(errorMessage);
             } else {
                 ResultSet resultSet = statementLogin.getGeneratedKeys();
                 if (resultSet.next()) {
                     userId = resultSet.getInt(1);
-                    logger.info("Insert into table Login complete. Login " + login + " is added. UserId is: " + userId);
+                    infoMessage = "Insert into table Login complete. Login " + login + " is added. UserId is: " + userId;
+                    logger.info(infoMessage);
 
 // Crete account data
-                    statementAccount.setInt(1, userId);
-                    statementAccount.setString(2, account.getSurname());
-                    statementAccount.setString(3, account.getName());
-                    statementAccount.setString(4, account.getPatronymic());
-                    statementAccount.setString(5, account.getPhoneNumber());
-                    statementAccount.setBoolean(6, account.isActive());
-                    statementAccount.setInt(7, account.getAccountRole().getId());
+                    int columnNumberAccount = 1;
+                    statementAccount.setInt(columnNumberAccount++, userId);
+                    statementAccount.setString(columnNumberAccount++, account.getSurname());
+                    statementAccount.setString(columnNumberAccount++, account.getName());
+                    statementAccount.setString(columnNumberAccount++, account.getPatronymic());
+                    statementAccount.setString(columnNumberAccount++, account.getPhoneNumber());
+                    statementAccount.setBoolean(columnNumberAccount++, account.isActive());
+                    statementAccount.setInt(columnNumberAccount, account.getAccountRole().getId());
 
                     int countInsertRowsAccount = statementAccount.executeUpdate();
                     if (countInsertRowsAccount != 1) {
                         conn.rollback(savepoint);
-                        logger.error("Insert into table Account has failed. We insert: " + countInsertRowsAccount + " rows for login: " + login);
+                        errorMessage = "Insert into table Account has failed. We insert: " + countInsertRowsAccount + " rows for login: " + login;
+                        logger.error(errorMessage);
                     } else {
                         if (account.getAccountRole().equals(AccountRole.CUSTOMER)) {
                             OrderDAO.getInstance().createCart(userId);
                         }
                         conn.commit();
                         resultAccountSet = true;
-                        logger.info("Login: " + login + "CREATE COMPLETE!");
+                        infoMessage = "Login: " + login + " CREATE COMPLETE!";
+                        logger.info(infoMessage);
                     }
                 } else {
                     conn.rollback(savepoint);
                 }
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in create account: " + e);
+            logger.error("SQL Exception in create account: ", e);
             try {
                 conn.rollback(savepoint);
                 assert savepoint != null;
-                logger.error("Runtime Error when rollback to savepoint " + savepoint.getSavepointName());
-                System.out.println("Login  Exception");
+                errorMessage = "Runtime Error when rollback to savepoint " + savepoint.getSavepointName();
+                logger.error(errorMessage);
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
@@ -227,7 +263,6 @@ public class AccountDAO {
 // Восстановление по умолчанию
         try {
             conn.setAutoCommit(true);
-            System.out.println("Account autocommit true");
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -246,25 +281,28 @@ public class AccountDAO {
      * @return - true if write to the database was successful
      */
     public boolean changeAccountData(int accountId, String surname, String name, String patronymic, String phone) {
+        String errorMessage;
         boolean resultAccountSet = false;
         Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
         try (
                 PreparedStatement statement = conn.prepareStatement(AccountSQL.UPDATE_ACCOUNT.getQuery())
         ) {
-            statement.setString(1, surname);
-            statement.setString(2, name);
-            statement.setString(3, patronymic);
-            statement.setString(4, phone);
-            statement.setInt(5, accountId);
+            int columnNumber = 1;
+            statement.setString(columnNumber++, surname);
+            statement.setString(columnNumber++, name);
+            statement.setString(columnNumber++, patronymic);
+            statement.setString(columnNumber++, phone);
+            statement.setInt(columnNumber, accountId);
 
             int countUpdateRowsAccount = statement.executeUpdate();
             if (countUpdateRowsAccount != 1) {
-                logger.error("Can't update data for account id = " + accountId);
+                errorMessage = "Can't update data for account id = " + accountId;
+                logger.error(errorMessage);
             } else {
                 resultAccountSet = true;
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in create account: " + e);
+            logger.trace("SQL exception in a method changeAccountData. ", e);
         }
         return resultAccountSet;
     }
@@ -272,21 +310,29 @@ public class AccountDAO {
     /**
      * The method finds account in the database by criteria
      *
-     * @param sql    - sql query
-     * @param values - criteria
+     * @param query - sql query
+     * @param val   - criteria
      * @return - Account instance if account was found or Account with ID = -1 if wasn't
      */
-    private Account findBy(String sql, Object... values) {
+    private Account findBy(String query, Object... val) {
         Account foundAccount = new Account(-1);
+        FindBy findBy = (Connection connection, String sql, Object... values) -> {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            for (int i = 0; i < values.length; i++) {
+                statement.setObject(i + 1, values[i]);
+            }
+            return statement;
+        };
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = prepareStatement(conn, sql, values);
+                PreparedStatement statement = findBy.getPreparedStatement(conn, query, val);
                 ResultSet rs = statement.executeQuery()
         ) {
             if (rs.next()) {
                 foundAccount = createAccountFromDB(rs);
             }
         } catch (SQLException e) {
+            logger.trace("SQL exception in a method findBy. ", e);
             e.printStackTrace();
         }
         return foundAccount;
@@ -325,11 +371,13 @@ public class AccountDAO {
                 PreparedStatement statement = conn.prepareStatement(AccountSQL.GET_BALANCE_BY_ID.getQuery())
         ) {
             statement.setInt(1, accountId);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                balance = resultSet.getInt("balance");
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    balance = resultSet.getInt(ACCOUNT_BALANCE);
+                }
             }
         } catch (SQLException e) {
+            logger.trace("SQL exception in a method getCustomerBalance. ", e);
             e.printStackTrace();
         }
         return balance;
@@ -345,18 +393,24 @@ public class AccountDAO {
     private Customer findCustomerBy(String query, Object parameter) {
         Customer foundCustomer = new Customer(-1);
         Account account;
+        FindBy findBy = (Connection connection, String sql, Object... values) -> {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setObject(1, values[0]);
+            return statement;
+        };
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
-                PreparedStatement statement = prepareStatement(conn, query, parameter);
+                PreparedStatement statement = findBy.getPreparedStatement(conn, query, parameter);
                 ResultSet rs = statement.executeQuery()
         ) {
             if (rs.next()) {
                 account = createAccountFromDB(rs);
-                if (account.getAccountRole().equals(AccountRole.CUSTOMER)) {
+                if (account.getAccountRole() != null && account.getAccountRole().equals(AccountRole.CUSTOMER)) {
                     foundCustomer = (Customer) account;
                 }
             }
         } catch (SQLException e) {
+            logger.trace("SQL exception in a method findCustomerBy. ", e);
             e.printStackTrace();
         }
         return foundCustomer;
@@ -369,42 +423,26 @@ public class AccountDAO {
      * @return - Account instance if account was found or NULL if wasn't
      */
     private Account createAccountFromDB(ResultSet rs) {
-        Account result = null;
+        Account result = new Account(-1);
         try {
             Account.AccountBuilder accountBuilder = new Account.AccountBuilder(
-                    rs.getString("surname"),
-                    rs.getString("name"),
-                    AccountRole.valueOf(rs.getString("role_name").toUpperCase()))
-                    .withId(rs.getInt("id"))
-                    .withPatronymic(rs.getString("patronymic"))
-                    .withPhoneNumber(rs.getString("phone"))
-                    .withStatus(rs.getBoolean("status"));
+                    rs.getString(ACCOUNT_SURNAME),
+                    rs.getString(ACCOUNT_NAME),
+                    AccountRole.valueOf(rs.getString(ACCOUNT_ROLE_NAME).toUpperCase()))
+                    .withId(rs.getInt(ACCOUNT_ID))
+                    .withPatronymic(rs.getString(ACCOUNT_PATRONYMIC))
+                    .withPhoneNumber(rs.getString(ACCOUNT_PHONE))
+                    .withStatus(rs.getBoolean(ACCOUNT_STATUS));
             if (accountBuilder.getAccountRole().equals(AccountRole.CUSTOMER)) {
-                result = new Customer(accountBuilder, rs.getInt("balance"));
+                result = new Customer(accountBuilder, rs.getInt(ACCOUNT_BALANCE));
             } else {
                 result = accountBuilder.build();
             }
         } catch (SQLException e) {
+            logger.trace("SQL exception in a method createAccountFromDB. ", e);
             e.printStackTrace();
         }
         return result;
-    }
-
-    /**
-     * The method creates a PreparedStatement from a variable number of parameters
-     *
-     * @param conn   - Connection
-     * @param sql    - SQL query
-     * @param values - parameters
-     * @return - PreparedStatement
-     */
-    private static PreparedStatement prepareStatement(Connection conn, String sql, Object... values) throws
-            SQLException {
-        PreparedStatement statement = conn.prepareStatement(sql);
-        for (int i = 0; i < values.length; i++) {
-            statement.setObject(i + 1, values[i]);
-        }
-        return statement;
     }
 
     /**
@@ -433,11 +471,10 @@ public class AccountDAO {
      * @return - random salt
      */
     private static String generateRandomSalt() {
-        Random r = new Random();
         StringBuilder randomSalt = new StringBuilder();
-        int maxLength = r.nextInt(5) + 5;
+        int maxLength = random.nextInt(5) + 5;
         for (int i = 0; i < maxLength; i++) {
-            char c = (char) (r.nextInt(94) + 33);
+            char c = (char) (random.nextInt(94) + 33);
             randomSalt.append(c);
         }
         return randomSalt.toString();
@@ -450,6 +487,7 @@ public class AccountDAO {
      * @return -  a map of password and personal salt
      */
     private static Map<String, String> getUserPasswordAndSaltFromDB(String login) {
+        String infoMessage;
         Map<String, String> passwordAndSalt = new HashMap<>();
         String password;
         String salt;
@@ -458,17 +496,18 @@ public class AccountDAO {
                 PreparedStatement statement = conn.prepareStatement(AccountSQL.GET_PASSWORD_AND_SALT_BY_LOGIN.getQuery())
         ) {
             statement.setString(1, login);
-            ResultSet rs = statement.executeQuery();
-            if (rs.next()) {
-                password = rs.getString("password");
-                salt = rs.getString("salt");
-                passwordAndSalt.put("password", password);
-                passwordAndSalt.put("salt", salt);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    password = rs.getString(PASSWORD);
+                    salt = rs.getString("salt");
+                    passwordAndSalt.put(PASSWORD, password);
+                    passwordAndSalt.put("salt", salt);
+                }
             }
         } catch (
                 SQLException e) {
-            logger.info("Password and salt wasn't find for login: " + login);
-            e.printStackTrace();
+            infoMessage = "SQL exception in a method getUserPasswordAndSaltFromDB for login: " + login;
+            logger.trace(infoMessage, e);
         }
 
         return passwordAndSalt;
@@ -481,6 +520,7 @@ public class AccountDAO {
      * @param balance    - customer balance
      */
     public void increaseCustomerBalance(int customerId, int balance) {
+        String loggerMessage;
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement psAccount = conn.prepareStatement(AccountSQL.UPDATE_BALANCE.getQuery())
@@ -489,12 +529,14 @@ public class AccountDAO {
             psAccount.setInt(2, customerId);
             int updateRow = psAccount.executeUpdate();
             if (updateRow != 1) {
-                logger.error("Update in table Account has failed. We update: " + updateRow + " rows for accountId: " + customerId);
+                loggerMessage = "Update in table Account has failed. We update: " + updateRow + " rows for accountId: " + customerId;
+                logger.error(loggerMessage);
             } else {
-                logger.info("Update in table Account complete. For account id = " + customerId + " was set balance: " + balance);
+                loggerMessage = "Update in table Account complete. For account id = " + customerId + " was set balance: " + balance;
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Error in method increaseCustomerBalance. " + e);
+            logger.trace("SQL exception in a method increaseCustomerBalance. ", e);
         }
     }
 
@@ -511,14 +553,14 @@ public class AccountDAO {
                 PreparedStatement statement = conn.prepareStatement(AccountSQL.GET_SALT_BY_LOGIN.getQuery())
         ) {
             statement.setString(1, login);
-            ResultSet rs = statement.executeQuery();
-            if (rs.next()) {
-                salt = rs.getString("salt");
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    salt = rs.getString("salt");
+                }
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
-            e.printStackTrace();
+            logger.trace("SQL exception in a method getSaltByLogin. ", e);
         }
         return salt;
     }
@@ -531,6 +573,7 @@ public class AccountDAO {
      * @return true if update was successful
      */
     public boolean setNewAccountPassword(String login, String password) {
+        String loggerMessage;
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement ps = conn.prepareStatement(AccountSQL.UPDATE_ACCOUNT_PASSWORD.getQuery())
@@ -539,13 +582,15 @@ public class AccountDAO {
             ps.setString(2, login);
             int updateRow = ps.executeUpdate();
             if (updateRow != 1) {
-                logger.error("Update in table Login has failed. We update: " + updateRow + " rows for accountLogin: " + login);
+                loggerMessage = "Update in table Login has failed. We update: " + updateRow + " rows for accountLogin: " + login;
+                logger.error(loggerMessage);
             } else {
-                logger.info("Update in table Login complete. For account login = " + login + " was set new password.");
+                loggerMessage = "Update in table Login complete. For account login = " + login + " was set new password.";
+                logger.info(loggerMessage);
                 return true;
             }
         } catch (SQLException e) {
-            logger.error("SQL Error in method setNewAccountPassword. " + e);
+            logger.trace("SQL exception in a method setNewAccountPassword. ", e);
         }
         return false;
     }

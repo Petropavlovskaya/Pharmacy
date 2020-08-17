@@ -16,10 +16,17 @@ import java.util.Date;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static by.petropavlovskaja.pharmacy.dao.DatabaseColumnNameConstant.*;
+
 /**
  * Class for executing SQL queries to the database related to the recipe
  */
 public class RecipeDAO {
+
+    /**
+     * String property for logger message
+     */
+    private String loggerMessage;
     private static Logger logger = LoggerFactory.getLogger(RecipeDAO.class);
 
     /**
@@ -53,20 +60,20 @@ public class RecipeDAO {
     public Set<Recipe> getAllCustomerRecipe(int customerId) {
         Comparator<Recipe> comp = new Recipe.RecipeNameComparator().thenComparing(new Recipe.RecipeDosageComparator()
                 .thenComparing(new Recipe.RecipeOrderIdComparator()));
-        Set<Recipe> recipes = new TreeSet(comp);
+        Set<Recipe> recipes = new TreeSet<>(comp);
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = conn.prepareStatement(RecipeSQL.GET_ALL_RECIPE_BY_CUSTOMER_ID.getQuery())
         ) {
             statement.setInt(1, customerId);
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                recipes.add(createRecipeFromDB(rs, false));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    recipes.add(createRecipeFromDB(rs, false));
+                }
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL exception in a method getAllCustomerRecipe. ", e);
             e.printStackTrace();
         }
         return recipes;
@@ -85,13 +92,15 @@ public class RecipeDAO {
             statement.setInt(1, recipeId);
             int countUpdateRowsMedicine = statement.executeUpdate();
             if (countUpdateRowsMedicine != 1) {
-                logger.error("Update table Recipe is failed. We delete for recipeId: " + recipeId + " " + countUpdateRowsMedicine + " rows.");
+                loggerMessage = "Update table Recipe is failed. We delete for recipeId: " + recipeId + " " + countUpdateRowsMedicine + " rows.";
+                logger.trace(loggerMessage);
             } else {
-                logger.info("Update table Recipe complete. We delete next recipeId: " + recipeId);
+                loggerMessage = "Update table Recipe complete. We delete next recipeId: " + recipeId;
+                logger.info(loggerMessage);
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL exception in a method deleteRecipe. ", e);
             e.printStackTrace();
         }
     }
@@ -111,13 +120,15 @@ public class RecipeDAO {
             statement.setInt(2, recipeId);
             int countUpdateRowsMedicine = statement.executeUpdate();
             if (countUpdateRowsMedicine != 1) {
-                logger.error("Update table Recipe is failed. We set id_medicine_in_order=0 for recipeId: " + recipeId + " " + countUpdateRowsMedicine + " rows.");
+                loggerMessage = "Update table Recipe is failed. We set id_medicine_in_order=0 for recipeId: " + recipeId + " " + countUpdateRowsMedicine + " rows.";
+                logger.trace(loggerMessage);
             } else {
-                logger.info("Update table Recipe complete. We set id_medicine_in_order=0 next recipeId: " + recipeId);
+                loggerMessage = "Update table Recipe complete. We set id_medicine_in_order=0 next recipeId: " + recipeId;
+                logger.info(loggerMessage);
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL exception in a method refuseRecipe. ", e);
             e.printStackTrace();
         }
     }
@@ -131,20 +142,20 @@ public class RecipeDAO {
     public Set<Recipe> getAllValidRecipe(int customerId) {
         Comparator<Recipe> comp = new Recipe.RecipeNameComparator().thenComparing(new Recipe.RecipeDosageComparator()
                 .thenComparing(new Recipe.RecipeOrderIdComparator()));
-        Set<Recipe> recipes = new TreeSet(comp);
+        Set<Recipe> recipes = new TreeSet<>(comp);
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = conn.prepareStatement(RecipeSQL.GET_ALL_ACTIVE_RECIPE_BY_CUSTOMER_ID.getQuery())
         ) {
             statement.setInt(1, customerId);
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                recipes.add(createRecipeFromDB(rs, false));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    recipes.add(createRecipeFromDB(rs, false));
+                }
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL exception in a method getAllValidRecipe. ", e);
             e.printStackTrace();
         }
         return recipes;
@@ -158,7 +169,7 @@ public class RecipeDAO {
     public Set<Recipe> getAllOrdered() {
         Comparator<Recipe> comp = new Recipe.RecipeCustomerComparator().thenComparing(new Recipe.RecipeNameComparator())
                 .thenComparing(new Recipe.RecipeDosageComparator());
-        Set<Recipe> recipes = new TreeSet(comp);
+        Set<Recipe> recipes = new TreeSet<>(comp);
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 Statement statement = conn.createStatement();
@@ -169,7 +180,7 @@ public class RecipeDAO {
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL exception in a method getAllOrdered. ", e);
             e.printStackTrace();
         }
         return recipes;
@@ -192,13 +203,15 @@ public class RecipeDAO {
             statement.setInt(3, customerId);
             int countInsertRowsRecipe = statement.executeUpdate();
             if (countInsertRowsRecipe != 1) {
-                logger.error("Insert into table Recipe is failed. We insert: " + countInsertRowsRecipe + " rows for recipe: " + medicineName);
+                loggerMessage = "Insert into table Recipe is failed. We insert: " + countInsertRowsRecipe + " rows for recipe: " + medicineName;
+                logger.trace(loggerMessage);
             } else {
-                logger.info("Insert into table Recipe complete. We insert next medicine data: " + medicineName);
+                loggerMessage = "Insert into table Recipe complete. We insert next medicine data: " + medicineName;
+                logger.info(loggerMessage);
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL exception in a method insertRecipeCustomer. ", e);
             e.printStackTrace();
         }
     }
@@ -213,24 +226,27 @@ public class RecipeDAO {
      * @param date         - a recipe validity date
      */
     public void insertRecipeDoctor(String medicineName, String dosage, int customerId, int pharmacistId, Date date) {
+        int columnNumber = 1;
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = conn.prepareStatement(RecipeSQL.INSERT_RECIPE_DOCTOR.getQuery())
         ) {
-            statement.setString(1, medicineName);
-            statement.setString(2, dosage);
-            statement.setInt(3, pharmacistId);
-            statement.setInt(4, customerId);
-            statement.setDate(5, new java.sql.Date(date.getTime()));
+            statement.setString(columnNumber++, medicineName);
+            statement.setString(columnNumber++, dosage);
+            statement.setInt(columnNumber++, pharmacistId);
+            statement.setInt(columnNumber++, customerId);
+            statement.setDate(columnNumber, new java.sql.Date(date.getTime()));
             int countInsertRowsRecipe = statement.executeUpdate();
             if (countInsertRowsRecipe != 1) {
-                logger.error("Insert into table Recipe is failed. We insert: " + countInsertRowsRecipe + " rows for recipe: " + medicineName);
+                loggerMessage = "Insert into table Recipe is failed. We insert: " + countInsertRowsRecipe + " rows for recipe: " + medicineName;
+                logger.trace(loggerMessage);
             } else {
-                logger.info("Insert into table Recipe complete. We insert next medicine data: " + medicineName);
+                loggerMessage = "Insert into table Recipe complete. We insert next medicine data: " + medicineName;
+                logger.info(loggerMessage);
             }
         } catch (
                 SQLException e) {
-            logger.info("No results were found. ((");
+            logger.trace("SQL exception in a method insertRecipeDoctor. ", e);
             e.printStackTrace();
         }
     }
@@ -248,12 +264,14 @@ public class RecipeDAO {
             statement.setInt(1, recipeId);
             int countUpdateRowsRecipe = statement.executeUpdate();
             if (countUpdateRowsRecipe != 1) {
-                logger.error("Update into table Recipe is failed. We update: " + countUpdateRowsRecipe + " rows for recipeId: " + recipeId);
+                loggerMessage = "Update into table Recipe is failed. We update: " + countUpdateRowsRecipe + " rows for recipeId: " + recipeId;
+                logger.trace(loggerMessage);
             } else {
-                logger.info("Update into table Recipe complete. We update data for next recipeId: " + recipeId);
+                loggerMessage = "Update into table Recipe complete. We update data for next recipeId: " + recipeId;
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in create medicine: " + e);
+            logger.error("SQL Exception in a method setNeedExtensionByID. ", e);
         }
     }
 
@@ -274,12 +292,14 @@ public class RecipeDAO {
             statement.setInt(3, recipeId);
             int countUpdateRowsRecipe = statement.executeUpdate();
             if (countUpdateRowsRecipe != 1) {
-                logger.error("Update into table Recipe is failed. We update: " + countUpdateRowsRecipe + " rows for recipeId: " + recipeId);
+                loggerMessage = "Update into table Recipe is failed. We update: " + countUpdateRowsRecipe + " rows for recipeId: " + recipeId;
+                logger.trace(loggerMessage);
             } else {
-                logger.info("Update into table Recipe complete. We update data for next recipeId: " + recipeId);
+                loggerMessage = "Update into table Recipe complete. We update data for next recipeId: " + recipeId;
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in create medicine: " + e);
+            logger.trace("SQL Exception in a method validateRecipe. ", e);
         }
     }
 
@@ -292,13 +312,13 @@ public class RecipeDAO {
     private Recipe createRecipeFromDB(ResultSet rs, boolean isFioNeed) {
         Recipe recipe = new Recipe(-1);
         try {
-            recipe = new Recipe(rs.getInt("recipe_id"), rs.getString("medicine"),
-                    rs.getString("dosage"), rs.getInt("doctor_id"),
-                    rs.getInt("fk_customer"), rs.getInt("id_medicine_in_order"),
-                    rs.getTimestamp("validity"), rs.getBoolean("need_extension"));
+            recipe = new Recipe(rs.getInt(RECIPE_ID), rs.getString(RECIPE_MEDICINE),
+                    rs.getString(RECIPE_DOSAGE), rs.getInt(RECIPE_DOCTOR_ID),
+                    rs.getInt(RECIPE_CUSTOMER_ID), rs.getInt(RECIPE_MIO_ID),
+                    rs.getTimestamp(RECIPE_VALIDITY), rs.getBoolean(RECIPE_NEED_EXTENSION));
             if (isFioNeed) {
-                recipe.setCustomerFio(rs.getString("surname") + " " +
-                        rs.getString("name") + " " + rs.getString("patronymic"));
+                recipe.setCustomerFio(rs.getString(ACCOUNT_SURNAME) + " " +
+                        rs.getString(ACCOUNT_NAME) + " " + rs.getString(ACCOUNT_PATRONYMIC));
             }
         } catch (SQLException e) {
             e.printStackTrace();

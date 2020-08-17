@@ -1,5 +1,6 @@
 package by.petropavlovskaja.pharmacy.controller.command;
 
+import by.petropavlovskaja.pharmacy.controller.AttributeConstant;
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.model.Medicine;
@@ -53,20 +54,22 @@ public final class LoginCommand implements IFrontCommand {
                 break;
             }
             case "POST": {
-                logger.info("Get request params for LoginCommand: " + reqParameters.toString());
-
+                String loggerMessage;
                 String login = String.valueOf(reqParameters.get("login"));
                 String password = String.valueOf(reqParameters.get("password"));
-                logger.info("Try login with Login: " + login + " and Password: " + password);
+                loggerMessage = "Try login with Login: " + login + " and Password: " + password;
+                logger.info(loggerMessage);
                 if (login != null && password != null) {
                     logger.info("login and password are not NULL");
                     Account account = commonService.accountAuthentication(login, password);
                     // If AccountId = -1 then account doesn't exist or password isn't correct
                     if (account.getId() == -1) {
-                        logger.info("User " + login + " haven't passed authentication.");
-                        executeResult.setResponseAttributes("errorMessage", "Login or/and password are incorrect. Please, try again.");
+                        loggerMessage = "User " + login + " haven't passed authentication.";
+                        logger.info(loggerMessage);
+                        executeResult.setResponseAttributes(AttributeConstant.ERROR_MSG, "Login or/and password are incorrect. Please, try again.");
                     } else {
-                        logger.info("User " + login + " have passed authentication.");
+                        loggerMessage = "User " + login + " have passed authentication.";
+                        logger.info(loggerMessage);
                         executeResult.setJsp("/pharmacy/" + account.getAccountRole().name().toLowerCase() + "/main");
                         String sessionId = sc.getSession().getId();
                         String lang = (String) sc.getSession().getAttribute("lang");

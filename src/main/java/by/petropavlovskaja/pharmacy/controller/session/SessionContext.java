@@ -50,7 +50,7 @@ public final class SessionContext {
         try {
             request.setCharacterEncoding("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            logger.error("Can't set character encoding for request. " + e);
+            logger.error("Can't set character encoding for request. ", e);
         }
         requestParameters = new HashMap<>();
         requestMethod = request.getMethod();
@@ -72,7 +72,8 @@ public final class SessionContext {
             String key = keys.nextElement();
             requestParameters.put(key, request.getParameter(key));
         }
-        logger.info("We set next req param: " + requestParameters.toString());
+        String loggerMessage = "We set next req param: " + requestParameters.toString();
+        logger.info(loggerMessage);
     }
 
     /**

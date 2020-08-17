@@ -23,6 +23,9 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.*;
 
+import static by.petropavlovskaja.pharmacy.dao.DatabaseColumnNameConstant.*;
+
+
 /**
  * Class for executing SQL queries to the database related to the order
  */
@@ -31,6 +34,11 @@ public class OrderDAO {
     private static RecipeDAO recipeDAO = RecipeDAO.getInstance();
     private static MedicineDAO medicineDAO = MedicineDAO.getInstance();
     private static MedicineInOrderDAO medicineInOrderDAO = MedicineInOrderDAO.getInstance();
+
+    /**
+     * String property for logger message
+     */
+    private String loggerMessage;
 
     /**
      * Constructor - create INSTANCE of class
@@ -70,7 +78,8 @@ public class OrderDAO {
                 statement.setInt(1, accountId);
                 countInsertRowsLogin = statement.executeUpdate();
                 if (countInsertRowsLogin != 1) {
-                    logger.error("Can't create Cart for login id = " + accountId);
+                    loggerMessage = "Can't create Cart for login id = " + accountId;
+                    logger.error(loggerMessage);
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -93,12 +102,15 @@ public class OrderDAO {
             statement.setInt(2, cartId);
             int countUpdateRowsMedicine = statement.executeUpdate();
             if (countUpdateRowsMedicine != 1) {
-                logger.error("Update into table Order is failed. We update: " + countUpdateRowsMedicine + " rows for cartId: " + cartId);
+                loggerMessage = "Update into table Order is failed. We update: " + countUpdateRowsMedicine + " rows for cartId: " + cartId;
+                logger.error(loggerMessage);
             } else {
-                logger.info("Update into table Order complete. We update data for next cartId: " + cartId);
+                loggerMessage = "Update into table Order complete. We update data for next cartId: " + cartId;
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in method updateCart. Cart id = " + cartId + ", " + " total price = " + totalPrice + ". " + e);
+            loggerMessage = "SQL Exception in method updateCart. Cart id = " + cartId + ", " + " total price = " + totalPrice + ". ";
+            logger.error(loggerMessage, e);
         }
     }
 
@@ -141,29 +153,29 @@ public class OrderDAO {
             orderId = setOrder(savepoint, conn, psOrder, customer, order);
             if (orderId == -1) {
                 conn.rollback(savepoint);
-                System.out.println("Login rollback savepoint Exception. Order Id = -1");
+                logger.trace("Rollback to savepoint in metrod createOrder. OrderId == -1");
             } else {
 // 2
 // Move medicineInOrder from Cart to Order details
-                boolean isMedicineInOrderUpdate = moveMedicineFromCartToOrder(savepoint, conn, psMedicineInOrder, orderId, medicineForBuy);
+                boolean medicineInOrderUpdate = moveMedicineFromCartToOrder(savepoint, conn, psMedicineInOrder, orderId, medicineForBuy);
 // 3
 // Snap Recipe to Order
-                if (isMedicineInOrderUpdate) {
-                    boolean isRecipeUpdate = tieRecipe(savepoint, conn, psRecipe, orderId, medicineForBuy, availableRecipes);
+                if (medicineInOrderUpdate) {
+                    boolean recipeUpdate = tieRecipe(savepoint, conn, psRecipe, orderId, medicineForBuy, availableRecipes);
 // 4
 // Update count of medicine
-                    if (isRecipeUpdate) {
+                    if (recipeUpdate) {
                         Set<Medicine> realMedicineSet = getMedicineUpdateInfo(medicineForBuy, order.getId());
-                        boolean isMedicineUpdate = updateMedicineAfterBuy(savepoint, conn, psMedicine, realMedicineSet);
+                        boolean medicineUpdate = updateMedicineAfterBuy(savepoint, conn, psMedicine, realMedicineSet);
 // 5
 // Update account balance
-                        if (isMedicineUpdate) {
+                        if (medicineUpdate) {
                             int balance = customer.getBalance();
                             int newBalance = balance - order.getOrderPrice();
-                            boolean isBalanceUpdate = updateAccountBalance(savepoint, conn, psAccount, customer.getId(), newBalance);
-                            if (isBalanceUpdate) {
+                            boolean balanceUpdate = updateAccountBalance(savepoint, conn, psAccount, customer.getId(), newBalance);
 // 6
 // Update info in Cart
+                            if (balanceUpdate) {
                                 boolean isCartUpdate = updateCartAfterBuy(savepoint, conn, psUpdateCart, medicineForBuy);
                                 if (isCartUpdate) {
                                     conn.commit();
@@ -180,14 +192,12 @@ public class OrderDAO {
             }
 // Восстановление по умолчанию
             conn.setAutoCommit(true);
-            System.out.println("Account autocommit true");
             conn.close();
         } catch (
                 SQLException e) {
-            logger.error("SQL Exception in create account: " + e);
+            logger.trace("SQL Exception in create account: ", e);
             try {
                 conn.rollback(savepoint);
-                System.out.println("Login rollback savepoint Exception");
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
@@ -217,17 +227,16 @@ public class OrderDAO {
                 psUpdateCart.setInt(1, medicineInOrder.getId());
                 countUpdate += psUpdateCart.executeUpdate();
             }
-/*            for (int i = 0; i < orderMedicine.size(); i++) {
-                psUpdateCart.setInt(1, orderMedicine.get(i).getId());
-                countUpdate += psUpdateCart.executeUpdate();
-            }*/
+
             if (countNeedUpdate != countUpdate) {
                 conn.rollback(savepoint);
-                logger.error("Delete from table MedicineInOrder is failed. There Was deleted " + countUpdate
-                        + " rows. Was expected to delete " + countNeedUpdate + " rows.");
+                loggerMessage = "Delete from table MedicineInOrder is failed. There Was deleted " + countUpdate
+                        + " rows. But was expected " + countNeedUpdate;
+                logger.trace(loggerMessage);
             } else {
                 result = true;
-                logger.info("Delete from table MedicineInOrder complete. We delete " + countUpdate + " medicines.");
+                loggerMessage = "Delete from table MedicineInOrder complete. We delete " + countUpdate + " medicines.";
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
             try {
@@ -235,7 +244,7 @@ public class OrderDAO {
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-            logger.error("SQL Exception in delete medicine. " + e);
+            logger.trace("SQL Exception in delete medicine. ", e);
             e.printStackTrace();
         }
 
@@ -276,16 +285,18 @@ public class OrderDAO {
             psSetOrder.setInt(1, customer.getId());
             psSetOrder.setInt(2, order.getOrderPrice());
             psSetOrder.setDate(3, new java.sql.Date(new Date().getTime()));
-//                     psSetOrder.setDate(3, new java.sql.Date(new Date().getTime()));
+
             updateRow = psSetOrder.executeUpdate();
             if (updateRow != 1) {
                 conn.rollback(savepoint);
-                logger.error("Insert into table Order is failed. We insert: " + updateRow + " rows for Order: " + order.toString());
+                loggerMessage = "Insert into table Order is failed. We insert: " + updateRow + " rows for Order: " + order.toString();
+                logger.trace(loggerMessage);
             } else {
                 ResultSet resultSet = psSetOrder.getGeneratedKeys();
                 if (resultSet.next()) {
                     orderId = resultSet.getInt(1);
-                    logger.info("Insert into table Order complete. Order " + order.toString() + " is added. orderId is: " + orderId);
+                    loggerMessage = "Insert into table Order complete. Order " + order.toString() + " is added. orderId is: " + orderId;
+                    logger.info(loggerMessage);
                 }
             }
         } catch (SQLException e) {
@@ -318,21 +329,24 @@ public class OrderDAO {
         try {
             for (MedicineInOrder medicineItem : medicineForBuy) {
                 countMedicine++;
-                psMedicineInOrder.setString(1, medicineItem.getMedicine());
-                psMedicineInOrder.setString(2, medicineItem.getDosage());
-                psMedicineInOrder.setBoolean(3, medicineItem.isRecipeRequired());
-                psMedicineInOrder.setInt(4, medicineItem.getIndivisibleAmount());
-                psMedicineInOrder.setInt(5, medicineItem.getQuantity());
-                psMedicineInOrder.setInt(6, medicineItem.getPriceForOne());
-                psMedicineInOrder.setInt(7, orderId);
+                int columnNumber = 1;
+                psMedicineInOrder.setString(columnNumber++, medicineItem.getMedicine());
+                psMedicineInOrder.setString(columnNumber++, medicineItem.getDosage());
+                psMedicineInOrder.setBoolean(columnNumber++, medicineItem.isRecipeRequired());
+                psMedicineInOrder.setInt(columnNumber++, medicineItem.getIndivisibleAmount());
+                psMedicineInOrder.setInt(columnNumber++, medicineItem.getQuantity());
+                psMedicineInOrder.setInt(columnNumber++, medicineItem.getPriceForOne());
+                psMedicineInOrder.setInt(columnNumber, orderId);
                 updateRow += psMedicineInOrder.executeUpdate();
             }
             if (updateRow != countMedicine) {
                 conn.rollback(savepoint);
-                logger.error("Error move MedicineInOrder from Cart to Order . We insert: " + updateRow + " but was expected " + countMedicine);
+                loggerMessage = "Error to move MedicineInOrder from Cart to Order . We insert: " + updateRow + " but was expected " + countMedicine;
+                logger.trace(loggerMessage);
             } else {
                 resultUpdateMedicineInOrder = true;
-                logger.info("Move MedicineInOrder from Cart to Order complete. Moved MedicineInOrder: " + medicineForBuy.toString());
+                loggerMessage = "Move MedicineInOrder from Cart to Order complete. Moved MedicineInOrder: " + medicineForBuy.toString();
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -382,14 +396,17 @@ public class OrderDAO {
                 }
                 if (countUpdatedRecipe == updateRow) {
                     resultUpdateRecipe = true;
-                    logger.info("Set orderId in Recipe complete. Was updated " + updateRow + " rows for orderId=" + orderId);
+                    loggerMessage = "Set orderId in Recipe complete. Was updated " + updateRow + " rows for orderId=" + orderId;
+                    logger.info(loggerMessage);
                 } else {
-                    logger.error("Error count updated Recipes in DB = " + countUpdatedRecipe + ", but was expected " + countMedicineReqRecipe);
+                    loggerMessage = "Error count updated Recipes in DB = " + countUpdatedRecipe + ", but was expected " + countMedicineReqRecipe;
+                    logger.trace(loggerMessage);
                     conn.rollback(savepoint);
                 }
             } else {
                 conn.rollback(savepoint);
-                logger.error("Error set orderId in Recipe. We get to update " + countUpdatedRecipe + " recipes, but was expected " + countMedicineReqRecipe);
+                loggerMessage = "Error set orderId in Recipe. We get to update " + countUpdatedRecipe + " recipes, but was expected " + countMedicineReqRecipe;
+                logger.trace(loggerMessage);
             }
         } catch (SQLException e) {
             try {
@@ -459,8 +476,9 @@ public class OrderDAO {
             }
             if (countUpdateRowsMedicine != realMedicineSet.size()) {
                 conn.rollback(savepoint);
-                logger.error("Update into table Medicine is failed. It was updated " + countUpdateRowsMedicine
-                        + ". Was updated " + realMedicineSet.size() + " rows.");
+                loggerMessage = "Update into table Medicine is failed. It was updated " + countUpdateRowsMedicine
+                        + ". Was updated " + realMedicineSet.size() + " rows.";
+                logger.trace(loggerMessage);
             } else {
                 resultUpdate = true;
                 logger.info("Update into table Medicine complete.");
@@ -471,7 +489,7 @@ public class OrderDAO {
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-            logger.error("SQL Exception in update amount medicine: " + e);
+            logger.error("SQL Exception in update amount medicine: ", e);
         }
         return resultUpdate;
     }
@@ -495,10 +513,12 @@ public class OrderDAO {
             int updateRow = psAccount.executeUpdate();
             if (updateRow != 1) {
                 conn.rollback(savepoint);
-                logger.error("Update in table Account is failed. We update: " + updateRow + " rows for accountId: " + customerId);
+                loggerMessage = "Update in table Account is failed. We update: " + updateRow + " rows for accountId: " + customerId;
+                logger.trace(loggerMessage);
             } else {
                 result = true;
-                logger.info("Update in table Account complete. For account id = " + customerId + " was set balance: " + balance);
+                loggerMessage = "Update in table Account complete. For account id = " + customerId + " was set balance: " + balance;
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
             try {
@@ -547,14 +567,15 @@ public class OrderDAO {
                 PreparedStatement statement = conn.prepareStatement(OrderSQL.GET_ALL_ORDERS_WITH_DETAILS.getQuery())
         ) {
             statement.setInt(1, customerId);
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                orders.add(createOrderFromDB(rs));
-                orderDetails.add(medicineInOrderDAO.createMedicineInOrderFromDB(rs, false));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    orders.add(createOrderFromDB(rs));
+                    orderDetails.add(medicineInOrderDAO.createMedicineInOrderFromDB(rs, false));
+                }
             }
         } catch (
                 SQLException e) {
-            System.out.println("Nothing was find ((");
+            logger.trace("SQL exception in method getAllOrdersWithDetails. ", e);
             e.printStackTrace();
         }
         return createOrderWithDetails(orders, orderDetails);
@@ -573,13 +594,13 @@ public class OrderDAO {
                 PreparedStatement statement = conn.prepareStatement(OrderSQL.FIND_CART_BY_CUSTOMER_ID.getQuery())
         ) {
             statement.setInt(1, customerId);
-            ResultSet rs = statement.executeQuery();
-            if (rs.next()) {
-                order = createOrderFromDB(rs);
-            } else {
-                System.out.println("Nothing was found ((");
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    order = createOrderFromDB(rs);
+                }
             }
         } catch (SQLException e) {
+            logger.trace("SQL exception in method findCart. ", e);
             e.printStackTrace();
         }
         return order;
@@ -594,12 +615,13 @@ public class OrderDAO {
     private Order createOrderFromDB(ResultSet rs) {
         Order order = new Order(-1);
         try {
-            int order_price = rs.getInt("order_price");
-            order = new Order(rs.getInt("order_id"), rs.getInt("fk_customer"),
-                    order_price, rs.getTimestamp("order_date"), rs.getBoolean("cart"));
+            int order_price = rs.getInt(ORDER_PRICE);
+            order = new Order(rs.getInt(ORDER_ID), rs.getInt(ORDER_CUSTOMER_KEY),
+                    order_price, rs.getTimestamp(ORDER_DATE), rs.getBoolean(ORDER_CART));
             order.setRub(order_price / 100);
             order.setCoin(order_price % 100);
         } catch (SQLException e) {
+            logger.trace("SQL exception in method createOrderFromDB. ", e);
             e.printStackTrace();
         }
         return order;
@@ -645,12 +667,15 @@ public class OrderDAO {
             statement.setInt(1, orderId);
             int countUpdateRowsMedicine = statement.executeUpdate();
             if (countUpdateRowsMedicine != 1) {
-                logger.error("Update table Order is failed. We delete for orderId: " + orderId + " " + countUpdateRowsMedicine + " rows.");
+                loggerMessage = "Update table Order is failed. We delete for orderId: " + orderId + " " + countUpdateRowsMedicine + " rows.";
+                logger.trace(loggerMessage);
             } else {
                 resultDelete = true;
-                logger.info("Update table Order complete. We delete next orderId: " + orderId);
+                loggerMessage = "Update table Order complete. We delete next orderId: " + orderId;
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
+            logger.trace("SQL exception in method deleteOrder. ", e);
             e.printStackTrace();
         }
         return resultDelete;

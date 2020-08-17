@@ -34,14 +34,12 @@
             <input type="text" id="fieldUser" name="login"
                    required pattern="[A-Za-z]{1,}[0-9A-Za-z]{3,15}"
                    title=<fmt:message key="label.login.loginFieldTitle"/>
-                   value="Zoba"
             >
             <br><br>
             <label for="fieldPassword"><fmt:message key="label.login.passwordField"/>:</label><br>
             <input type="password" id="fieldPassword" name="password"
                    required pattern="[0-9A-Za-z]{5,15}"
                    title=<fmt:message key="label.login.passwordFieldTitle"/>
-                   value="eugen"
             >
             <br><br>
             <input type="submit" value=<fmt:message key="label.login.buttonLogin"/>>

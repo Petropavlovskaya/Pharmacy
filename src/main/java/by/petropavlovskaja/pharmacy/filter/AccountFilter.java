@@ -58,12 +58,7 @@ public class AccountFilter implements Filter {
         req.getSession().setAttribute("fullUri", fullUri);
         String[] arrayUri = fullUri.substring(1).split("/");
         String uriRole = arrayUri[1];
-        String accountAccess;
-        if (arrayUri.length > 2) {
-            accountAccess = arrayUri[2];
-        } else {
-            accountAccess = "";
-        }
+        String accountAccess = getAccountAccess(arrayUri);
 
         UrlFilter.getCookie(req);
         String accountRole = String.valueOf(req.getSession().getAttribute("accountRole"));
@@ -86,8 +81,11 @@ public class AccountFilter implements Filter {
         } else if (!BUSINESS_ACCOUNT_URIS.contains(accountAccess)) {
             resp.sendRedirect("/pharmacy/error");
         } else {
-            System.out.println("1 chain");
             filterChain.doFilter(servletRequest, servletResponse);
         }
+    }
+
+    private String getAccountAccess(String[] arrayUri) {
+        return arrayUri.length > 2 ? arrayUri[2] : "";
     }
 }

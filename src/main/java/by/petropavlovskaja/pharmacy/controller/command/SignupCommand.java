@@ -1,5 +1,6 @@
 package by.petropavlovskaja.pharmacy.controller.command;
 
+import by.petropavlovskaja.pharmacy.controller.AttributeConstant;
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.model.Medicine;
@@ -51,10 +52,10 @@ public final class SignupCommand implements IFrontCommand {
 
             String errorMessage = service.checkAccountDataBeforeCreate(reqParameters, login);
             if (errorMessage != null) {
-                executeResult.setResponseAttributes("errorMessage", errorMessage);
+                executeResult.setResponseAttributes(AttributeConstant.ERROR_MSG, errorMessage);
                 executeResult.setResponseAttributes("surname", reqParameters.get("accountSurname"));
                 executeResult.setResponseAttributes("name", reqParameters.get("accountName"));
-                executeResult.setResponseAttributes("login", reqParameters.get("login"));
+                executeResult.setResponseAttributes("login", login);
                 if (reqParameters.get("accountPatronymic") != null) {
                     executeResult.setResponseAttributes("patronymic", reqParameters.get("accountPatronymic"));
                 }
@@ -67,7 +68,6 @@ public final class SignupCommand implements IFrontCommand {
                     String sessionId = sc.getSession().getId();
                     String lang = (String) sc.getSession().getAttribute("lang");
                     List<Medicine> medicineList = service.getAllMedicine();
-                    System.out.println("Registered Account is: " + newAccount.toString());
                     sc.setSessionAttributesForAccount(newAccount, login, sessionId, medicineList);
                     executeResult.setCookie(sessionId, login, String.valueOf(newAccount.getId()),
                             AccountRole.CUSTOMER.toString(), lang);

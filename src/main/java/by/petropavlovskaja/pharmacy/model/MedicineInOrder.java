@@ -142,10 +142,6 @@ public class MedicineInOrder implements Serializable {
         return recipeRequired;
     }
 
-//    public void setRecipeRequired(boolean recipeRequired) {
-//        this.recipeRequired = recipeRequired;
-//    }
-
     /**
      * The method of getting the medicine in order ID value
      *
@@ -280,18 +276,6 @@ public class MedicineInOrder implements Serializable {
     public void setAmount(int amount) {
         this.amount = amount;
     }
-
-//    public void setPriceForQuantity(int priceForQuantity) {
-//        this.priceForQuantity = priceForQuantity;
-//    }
-
-//    public void setRubForQuantity(int rubForQuantity) {
-//        this.rubForQuantity = rubForQuantity;
-//    }
-
-//    public void setCoinForQuantity(int coinForQuantity) {
-//        this.coinForQuantity = coinForQuantity;
-//    }
 
     @Override
     public String toString() {

@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static by.petropavlovskaja.pharmacy.controller.AttributeConstant.*;
+
 /**
  * Class for common services. Uses {@link MedicineDAO} and {@link AccountDAO}
  */
@@ -78,12 +80,12 @@ public class CommonService {
      * @return - a created account
      */
     public Account accountRegistration(Map<String, Object> reqParameters, AccountRole accountRole) {
-        String login = String.valueOf(reqParameters.get("login"));
-        String password = String.valueOf(reqParameters.get("password"));
-        String accountSurname = (String) reqParameters.get("accountSurname");
-        String accountName = (String) reqParameters.get("accountName");
-        String accountPatronymic = (String) reqParameters.get("accountPatronymic");
-        String accountPhone = (String) reqParameters.get("accountPhone");
+        String login = String.valueOf(reqParameters.get(LOGIN));
+        String password = String.valueOf(reqParameters.get(PASSWORD));
+        String accountSurname = (String) reqParameters.get(ACCOUNT_SURNAME);
+        String accountName = (String) reqParameters.get(ACCOUNT_NAME);
+        String accountPatronymic = (String) reqParameters.get(ACCOUNT_PATRONYMIC);
+        String accountPhone = (String) reqParameters.get(ACCOUNT_PHONE);
 
         Account account = new Account.AccountBuilder(accountSurname, accountName, accountRole)
                 .withPatronymic(accountPatronymic).withPhoneNumber(accountPhone).build();
@@ -97,27 +99,36 @@ public class CommonService {
     }
 
     /**
-     * The method of changing customer information  {@link AccountDAO#changeAccountData(int, String, String, String, String)}
+     * The method of changing customer information  {@link AccountDAO#changeAccountData(int, String, String, String, String)},
+     * {@link SessionContext}
      *
      * @param account       - account instance
      * @param reqParameters - customer request parameters
      * @param accountId     - customer ID
+     * @param sc            - SessionContext instance
      * @return - true if changing was successful
      */
-    public boolean changeAccountData(Account account, Map<String, Object> reqParameters, int accountId) {
-        String accountSurname = (String) reqParameters.get("accountSurname");
-        String accountName = (String) reqParameters.get("accountName");
-        String accountPatronymic = (String) reqParameters.get("accountPatronymic");
-        String accountPhone = (String) reqParameters.get("accountPhone");
-        boolean successfulUpdate = accountDAO.changeAccountData(accountId, accountSurname, accountName, accountPatronymic, accountPhone);
-        if (successfulUpdate) {
+    public boolean changeAccountData(Account account, Map<String, Object> reqParameters, int accountId, SessionContext sc) {
+        String accountSurname = (String) reqParameters.get(ACCOUNT_SURNAME);
+        String accountName = (String) reqParameters.get(ACCOUNT_NAME);
+        String accountPatronymic = (String) reqParameters.get(ACCOUNT_PATRONYMIC);
+        String accountPhone = (String) reqParameters.get(ACCOUNT_PHONE);
+
+        boolean accountUpdate = false;
+        String fioError = checkAccountDataBeforeCreate(reqParameters);
+        if (fioError == null) {
+            sc.getSession().setAttribute(SUCCESS_MSG, "The personal info was change successfully.");
+            sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
+            accountUpdate = accountDAO.changeAccountData(accountId, accountSurname, accountName, accountPatronymic, accountPhone);
+        }
+
+        if (accountUpdate) {
             account.setSurname(accountSurname);
             account.setName(accountName);
             account.setPatronymic(accountPatronymic);
             account.setPhoneNumber(accountPhone);
-            return true;
         }
-        return false;
+        return accountUpdate;
     }
 
     /**
@@ -129,9 +140,9 @@ public class CommonService {
      */
     public String changeAccountPassword(Map<String, Object> reqParameters, String login) {
         String result = "noError";
-        String accountOldPassword = (String) reqParameters.get("oldPassword");
-        String accountNewPassword = (String) reqParameters.get("newPassword");
-        String accountNewPasswordConfirm = (String) reqParameters.get("newPasswordConfirm");
+        String accountOldPassword = (String) reqParameters.get(OLD_PASSWORD);
+        String accountNewPassword = (String) reqParameters.get(NEW_PASSWORD);
+        String accountNewPasswordConfirm = (String) reqParameters.get(NEW_PASSWORD_CONFIRM);
         Account account = accountDAO.checkLoginAndPassword(login, accountOldPassword);
         if (account.getId() != -1) {
             String s = checkPasswordEquals(accountNewPassword, accountNewPasswordConfirm);
@@ -160,8 +171,8 @@ public class CommonService {
      */
     public String checkAccountDataBeforeCreate(Map<String, Object> reqParameters, String login) {
         String result = null;
-        String password = String.valueOf(reqParameters.get("password"));
-        String passwordConfirm = String.valueOf(reqParameters.get("passwordConfirm"));
+        String password = String.valueOf(reqParameters.get(PASSWORD));
+        String passwordConfirm = String.valueOf(reqParameters.get(PASSWORD_CONFIRM));
 
         if (login == null) {
             result = "Login can't be empty. Please, enter login and try again.";
@@ -263,7 +274,7 @@ public class CommonService {
             dateFormat.parse(requestDate);
             return true;
         } catch (ParseException e) {
-            logger.error("Parse exception for date = " + requestDate + ". Error: " + e);
+            logger.trace("Parse exception for request date ", e);
             return false;
         }
     }
@@ -356,8 +367,24 @@ public class CommonService {
      * @return - true if info against regular expression
      */
     public boolean fioMatchRegex(String info) {
-        String regex = "(([A-ZА-Я][a-zа-я]{1,20})[-\\s]*)+?";
+        String regex = "(([A-ZА-Я][a-zа-я]{1,20})([-\\s][A-ZА-Я][a-zа-я]{1,20})*)+?";
         return Pattern.matches(regex, info);
+    }
+
+    /**
+     * The method check is success message set in previous command.
+     *
+     * @param sc - Session context {@link SessionContext}
+     */
+
+    public void checkSuccessMessageSet(SessionContext sc) {
+        if (sc.getSession().getAttribute(SUCCESS_MSG_CHECK) != null) {
+            if (sc.getSession().getAttribute(SUCCESS_MSG_CHECK).equals("yes")) {
+                sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "no");
+            } else {
+                sc.getSession().removeAttribute(SUCCESS_MSG);
+            }
+        }
     }
 
 }

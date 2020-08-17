@@ -1,6 +1,7 @@
 package by.petropavlovskaja.pharmacy.service;
 
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
+import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.dao.AccountDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineInOrderDAO;
@@ -17,11 +18,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static by.petropavlovskaja.pharmacy.controller.AttributeConstant.*;
+
 /**
  * Class for services of customer role. Uses {@link RecipeService}, {@link CommonService}, {@link AccountDAO},
  * {@link MedicineDAO} and {@link OrderDAO}
  */
 public class CustomerService {
+    private static final String AMOUNT_FOR_BYE = "amountForBuy";
+    private static final String MEDICINE_ID = "medicineId";
     private static Logger logger = LoggerFactory.getLogger(CustomerService.class);
     private RecipeService recipeService = RecipeService.getInstance();
     private CommonService commonService = CommonService.getInstance();
@@ -54,17 +59,21 @@ public class CustomerService {
 
     /**
      * The method for writing into database record of medicine in order. Uses {@link MedicineInOrderDAO#createMedicineInOrder(int, Medicine, int)},
-     * {@link OrderDAO#createActiveMedicineRelation(int, int)} ation}, {@link MedicineInOrderDAO#updateMedicineInCart(int, int)}
+     * {@link OrderDAO#createActiveMedicineRelation(int, int)} ation}, {@link MedicineInOrderDAO#updateMedicineInCart(int, int)},
+     * {@link SessionContext}, {@link ExecuteResult}
      *
      * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
+     * @param executeResult - ExecuteResult instance
+     * @param sc            - SessionContext instance
      * @return - true if process was successful
      */
-    public boolean addMedicineInOrder(Customer customer, Map<String, Object> reqParameters) {
-        boolean result = false;
-        String requestAmount = (String) reqParameters.get("amountForBuy");
+    public boolean addMedicineInOrder(Customer customer, Map<String, Object> reqParameters,
+                                      ExecuteResult executeResult, SessionContext sc) {
+        boolean methodExecuteResult = false;
+        String requestAmount = (String) reqParameters.get(AMOUNT_FOR_BYE);
         if (commonService.isNumber(requestAmount)) {
-            int amountForBuy = Integer.parseInt((String) reqParameters.get("amountForBuy"));
+            int amountForBuy = Integer.parseInt((String) reqParameters.get(AMOUNT_FOR_BYE));
             if (amountForBuy > 0) {
                 Order cart = findCart(customer.getId());
                 int orderId = cart.getId();
@@ -73,40 +82,62 @@ public class CustomerService {
                 if (idPresentMedicineInOrder == -1) {
                     int idInsertMedicine = medicineInOrderDAO.createMedicineInOrder(orderId, medicine, amountForBuy);        // add Medicine to DB
                     if (idInsertMedicine == -1) {
-                        logger.error("Cant't get ID for insert Medicine " + medicine.toString() + " into Cart.");
+                        String loggerMessage = "Cant't get ID for insert Medicine " + medicine.toString() + " into Cart.";
+                        logger.trace(loggerMessage);
                     } else {
                         orderDAO.createActiveMedicineRelation(medicine.getId(), idInsertMedicine);
-                        result = true;
+                        methodExecuteResult = true;
                     }
                 } else {
                     medicineInOrderDAO.updateMedicineInCart(idPresentMedicineInOrder, amountForBuy);
-                    result = true;
+                    methodExecuteResult = true;
                 }
             }
         }
-        return result;
+        if (!methodExecuteResult) {
+            executeResult.setResponseAttributes(ERROR_MSG, "Quantity of medicine for buy is incorrect. Please, try again.");
+            executeResult.setJsp("/WEB-INF/jsp/customer/medicine/medicine_list.jsp");
+        } else {
+            sc.getSession().setAttribute(SUCCESS_MSG, "The medicine has added successfully.");
+            sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
+        }
+        return methodExecuteResult;
     }
 
     /**
-     * The method for updating in database quantity of medicine in cart. Uses {@link MedicineInOrderDAO#updateMedicineInCart(int, int)}
+     * The method for updating in database quantity of medicine in cart. Uses {@link MedicineInOrderDAO#updateMedicineInCart(int, int)},
+     * {@link SessionContext}, {@link ExecuteResult}
      *
      * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
+     * @param executeResult - ExecuteResult instance
+     * @param sc            - SessionContext instance
      * @return - true if process was successful
      */
-    public boolean updateQuantityInCart(Customer customer, Map<String, Object> reqParameters) {
-        String requestAmount = (String) reqParameters.get("amountForBuy");
+    public boolean updateQuantityInCart(Customer customer, Map<String, Object> reqParameters,
+                                        ExecuteResult executeResult, SessionContext sc) {
+        boolean methodExecuteResult = false;
+        String requestAmount = (String) reqParameters.get(AMOUNT_FOR_BYE);
         if (commonService.isNumber(requestAmount)) {
-            int amountForBuy = Integer.parseInt((String) reqParameters.get("amountForBuy"));
-            int medicineId = Integer.parseInt((String) reqParameters.get("medicineId"));
+            int amountForBuy = Integer.parseInt((String) reqParameters.get(AMOUNT_FOR_BYE));
+            int medicineId = Integer.parseInt((String) reqParameters.get(MEDICINE_ID));
             if (amountForBuy > 0) {
                 medicineInOrderDAO.updateMedicineInCart(medicineId, amountForBuy);
                 updateCartWithDetails(customer);
-                return true;
+                methodExecuteResult = true;
             }
-//                return true;
         }
-        return false;
+
+        if (!methodExecuteResult) {
+            executeResult.setResponseAttributes(ERROR_MSG, "Quantity of medicine for buy is incorrect. Please, try again.");
+            executeResult.setJsp("/WEB-INF/jsp/customer/cabinet/cabinet_cart.jsp");
+        } else {
+            sc.getSession().setAttribute(SUCCESS_MSG, "The medicine quantity has changed successfully.");
+            sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
+            sc.getSession().setAttribute(MEDICINE_IN_CART, customer.getMedicineInCart());
+            sc.getSession().setAttribute(CART, customer.getCart());
+        }
+        return methodExecuteResult;
     }
 
     /**
@@ -184,9 +215,6 @@ public class CustomerService {
             if (needUpdateDb) {
                 medicineItem.setPriceForOne(0);
                 medicineItem.setRubCoin();
-/*                medicineItem.setPriceForQuantity(0);
-                medicineItem.setRubForQuantity(0);
-                medicineItem.setCoinForQuantity(0);*/
             }
         }
         medicineInOrderDAO.updateMedicinePriceInCart(cartId, medicineInCart);
@@ -245,7 +273,7 @@ public class CustomerService {
      */
     public Medicine findMedicineById(Map<String, Object> reqParameters) {
         Medicine medicine = new Medicine(-1);
-        int medicineId = Integer.parseInt((String) reqParameters.get("medicineId"));
+        int medicineId = Integer.parseInt((String) reqParameters.get(MEDICINE_ID));
         Medicine dbMedicine = medicineDAO.findById(medicineId);
         if (dbMedicine != null) {
             medicine = dbMedicine;
@@ -266,17 +294,21 @@ public class CustomerService {
 
     /**
      * The method for deleting the medicine from the cart.
-     * Uses {@link CommonService#isNumber(String)} and {@link MedicineInOrderDAO#deleteMedicineFromOrder(int)}
+     * Uses {@link CommonService#isNumber(String)} and {@link MedicineInOrderDAO#deleteMedicineFromOrder(int)},
+     * {@link SessionContext}
      *
      * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
+     * @param sc            - SessionContext instance
      */
-    public void deleteMedicineFromCart(Customer customer, Map<String, Object> reqParameters) {
-        String frontMedicineId = (String) reqParameters.get("medicineId");
+    public void deleteMedicineFromCart(Customer customer, Map<String, Object> reqParameters, SessionContext sc) {
+        String frontMedicineId = (String) reqParameters.get(MEDICINE_ID);
         if (commonService.isNumber(frontMedicineId)) {
             int medicineId = Integer.parseInt(frontMedicineId);
             medicineInOrderDAO.deleteMedicineFromOrder(medicineId);
             updateCartWithDetails(customer);
+            sc.getSession().setAttribute(SUCCESS_MSG, "The medicine has deleted successfully.");
+            sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
         }
     }
 
@@ -306,12 +338,13 @@ public class CustomerService {
     /**
      * The method for creating the order.
      * Uses {@link OrderDAO#findCart(int)}, {@link MedicineInOrderDAO#findMedicineInCartWithActualPrice(int, boolean)},
-     * {@link OrderDAO#createOrder(Customer, Order, Set)}
+     * {@link OrderDAO#createOrder(Customer, Order, Set)}, {@link SessionContext}
      *
      * @param customer - customer instance
+     * @param sc       - SessionContext instance
      * @return true if update information after purchasing has successfully changed in database
      */
-    public boolean createOrder(Customer customer) {
+    public boolean createOrder(Customer customer, SessionContext sc) {
         boolean updateResult = false;
         Order cart = orderDAO.findCart(customer.getId());
         Set<MedicineInOrder> medicineInOrderSet = medicineInOrderDAO.findMedicineInCartWithActualPrice(cart.getId(), false);
@@ -321,20 +354,24 @@ public class CustomerService {
             medicineInOrderSet = medicineInOrderDAO.findMedicineInCartWithActualPrice(cart.getId(), false);
             customer.setCartMedicine(medicineInOrderSet);
             updateResult = true;
+            sc.getSession().setAttribute(SUCCESS_MSG, "The purchase medicines has done successfully.");
+            sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
         }
         return updateResult;
     }
 
     /**
      * The method for increasing customer balance.
-     * Uses {@link CommonService#isNumber(String)}, {@link AccountDAO#increaseCustomerBalance(int, int)},
+     * Uses {@link CommonService#isNumber(String)}, {@link AccountDAO#increaseCustomerBalance(int, int)}, {@link SessionContext}
      *
      * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
      * @param executeResult - execute result instance
+     * @param sc            - SessionContext instance
      * @return true if increasing of balance was successful
      */
-    public boolean increaseBalance(Customer customer, Map<String, Object> reqParameters, ExecuteResult executeResult) {
+    public boolean increaseBalance(Customer customer, Map<String, Object> reqParameters, ExecuteResult executeResult,
+                                   SessionContext sc) {
         boolean increaseResult = false;
         String frontBalance = (String) reqParameters.get("balance");
         if (commonService.isNumber(frontBalance)) {
@@ -344,13 +381,43 @@ public class CustomerService {
                 newBalance = customer.getBalance() + countIncrease;
                 accountDAO.increaseCustomerBalance(customer.getId(), newBalance);
                 customer.setBalance(newBalance);
+                sc.getSession().setAttribute(SUCCESS_MSG, "The bill increasing has done successfully.");
+                sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
                 increaseResult = true;
             } else {
-                executeResult.setResponseAttributes("errorMessage", "The quantity of money must be more then 0 and less then 9999.");
+                executeResult.setResponseAttributes(ERROR_MSG, "The quantity of money must be more then 0 and less then 9999.");
             }
         } else {
-            executeResult.setResponseAttributes("errorMessage", "Incorrect data of the money.");
+            executeResult.setResponseAttributes(ERROR_MSG, "Incorrect data of the money.");
         }
         return increaseResult;
+    }
+
+    /**
+     * @param frontOrderId  - Order ID for delete from front page
+     * @param executeResult - execute result instance
+     * @param sc            - session context instance
+     * @return - true if method was execute successful.
+     */
+    public boolean deleteOrder(String frontOrderId, ExecuteResult executeResult, SessionContext sc) {
+        boolean executeMethodResult = false;
+        boolean isOrderIdNumber = commonService.isNumber(frontOrderId);
+        if (isOrderIdNumber) {
+            int orderId = Integer.parseInt(frontOrderId);
+            boolean resultDelete = orderDAO.deleteOrder(orderId);
+            if (resultDelete) {
+                sc.getSession().setAttribute(SUCCESS_MSG, "The order has deleted successfully.");
+                sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
+                executeMethodResult = true;
+            } else {
+                executeResult.setResponseAttributes(ERROR_MSG, "Something went wrong. Please, contact with site administrator ");
+                executeResult.setJsp("/WEB-INF/jsp/customer/cabinet/cabinet_history.jsp");
+            }
+        } else {
+            logger.trace("Incorrect data of orderId.");
+            executeResult.setResponseAttributes(ERROR_MSG, "Something went wrong. Please, contact with site administrator ");
+            executeResult.setJsp("/WEB-INF/jsp/customer/cabinet/cabinet_history.jsp");
+        }
+        return executeMethodResult;
     }
 }

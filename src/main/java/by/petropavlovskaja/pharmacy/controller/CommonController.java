@@ -1,6 +1,7 @@
 package by.petropavlovskaja.pharmacy.controller;
 
 import by.petropavlovskaja.pharmacy.controller.command.IFrontCommand;
+import by.petropavlovskaja.pharmacy.controller.command.LogoutCommand;
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.db.ConnectionPool;
@@ -61,20 +62,22 @@ public final class CommonController extends HttpServlet {
      * @return - class that implements the {@link IFrontCommand}
      */
     private IFrontCommand getFrontCommandClass(String uri) {
-        IFrontCommand iFrontCommand = null;
-        logger.info("Start looking for command. URI = " + uri);
+        IFrontCommand iFrontCommand = new LogoutCommand();
+        String loggerMessage;
+        loggerMessage = "Start looking for command. URI = " + uri;
+        logger.info(loggerMessage);
         try {
             String newUri = uri.substring(0, 1).toUpperCase() + uri.substring(1);
             Package p = IFrontCommand.class.getPackage();
             Class<IFrontCommand> commandClass = (Class<IFrontCommand>) Class.forName(p.getName() + "." + newUri + "Command");
-            logger.info("Class " + newUri + " get successful");
+            loggerMessage = "Class " + newUri + " get successful";
+            logger.info(loggerMessage);
             iFrontCommand = (commandClass.asSubclass(IFrontCommand.class).newInstance()).getInstance();
 
-
         } catch (ClassNotFoundException e) {
-            logger.error("Can't find class for URI = " + uri);
+            logger.error("Can't find class for URI. ", e);
         } catch (IllegalAccessException | InstantiationException e) {
-            e.printStackTrace();
+            logger.error("Access or instantiation exception. ", e);
         }
         return iFrontCommand;
     }

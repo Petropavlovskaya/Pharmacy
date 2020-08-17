@@ -1,6 +1,7 @@
 package by.petropavlovskaja.pharmacy.service;
 
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
+import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.dao.RecipeDAO;
 import by.petropavlovskaja.pharmacy.model.Recipe;
 import by.petropavlovskaja.pharmacy.model.account.Customer;
@@ -13,13 +14,16 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import static by.petropavlovskaja.pharmacy.controller.AttributeConstant.*;
+
 /**
  * Class for services of recipe instance. Uses {@link CommonService}, {@link RecipeDAO}
  */
 public class RecipeService {
+    private static final String RECIPE_ID = "recipeId";
+
     private static Logger logger = LoggerFactory.getLogger(RecipeService.class);
     private CommonService commonService = CommonService.getInstance();
-    //    private DoctorService doctorService = DoctorService.getInstance();
     private RecipeDAO recipeDAO = RecipeDAO.getInstance();
 
     /**
@@ -67,7 +71,7 @@ public class RecipeService {
      * @param reqParameters - request parameters from jsp
      */
     public void setNeedExtensionByID(Customer customer, Map<String, Object> reqParameters) {
-        String frontRecipeId = (String) reqParameters.get("recipeId");
+        String frontRecipeId = (String) reqParameters.get(RECIPE_ID);
         if (commonService.isNumber(frontRecipeId)) {
             int recipeId = Integer.parseInt(frontRecipeId);
             recipeDAO.setNeedExtensionByID(recipeId);
@@ -77,30 +81,27 @@ public class RecipeService {
 
     /**
      * The method for inserting a new record into database for recipe that need an extension.
-     * Uses {@link RecipeDAO#insertRecipeCustomer(String, String, int)}
+     * Uses {@link RecipeDAO#insertRecipeCustomer(String, String, int)}, {@link SessionContext}
      *
      * @param executeResult - execute result instance
      * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
-     * @param fullUri       - request URI
-     * @return true if insert recipe was successful
+     * @param sc            - SessionContext instance
      */
-    public boolean customerInsertRecipe(ExecuteResult executeResult, Customer customer, Map<String, Object> reqParameters,
-                                        String fullUri) {
-        boolean result = false;
+    public void customerInsertRecipe(ExecuteResult executeResult, Customer customer, Map<String, Object> reqParameters,
+                                     SessionContext sc) {
         String medicine = (String) reqParameters.get("medicine");
         String dosage = (String) reqParameters.get("dosage");
         boolean recipePresent = checkRecipeAlreadyPresent(customer, medicine, dosage);
         if (recipePresent) {
-            executeResult.setResponseAttributes("message", "You already have recipe for " + medicine + " or it was send to a Doctor earlier.");
+            executeResult.setResponseAttributes(ERROR_MSG, "You already have recipe for " + medicine + " or it was send to a Doctor earlier.");
             executeResult.setJsp("/WEB-INF/jsp/customer/cabinet/cabinet_recipe.jsp");
         } else {
             recipeDAO.insertRecipeCustomer(medicine, dosage, customer.getId());
-            executeResult.setJsp(fullUri);
             getRecipes(customer);
-            result = true;
+            sc.getSession().setAttribute(SUCCESS_MSG, "The request for recipe has sent to Doctor successfully.");
+            sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
         }
-        return result;
     }
 
     /**
@@ -140,17 +141,20 @@ public class RecipeService {
 
     /**
      * The method for deleting the recipe from database.
-     * Uses {@link CommonService#isNumber(String)}, {@link RecipeDAO#deleteRecipe(int)}
+     * Uses {@link CommonService#isNumber(String)}, {@link RecipeDAO#deleteRecipe(int)}, {@link SessionContext}
      *
      * @param customer      - customer instance
      * @param reqParameters - request parameters from jsp
+     * @param sc            - SessionContext instance
      */
-    public void deleteRecipe(Customer customer, Map<String, Object> reqParameters) {
-        String frontRecipeId = (String) reqParameters.get("recipeId");
+    public void deleteRecipe(Customer customer, Map<String, Object> reqParameters, SessionContext sc) {
+        String frontRecipeId = (String) reqParameters.get(RECIPE_ID);
         if (commonService.isNumber(frontRecipeId)) {
             int recipeId = Integer.parseInt(frontRecipeId);
             recipeDAO.deleteRecipe(recipeId);
             getRecipes(customer);
+            sc.getSession().setAttribute(SUCCESS_MSG, "The recipe was delete successfully.");
+            sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
         }
     }
 
@@ -165,16 +169,17 @@ public class RecipeService {
     }
 
     /**
-     * The method for extension the recipe. Uses {@link CommonService#isNumber(String)}, {@link RecipeDAO#validateRecipe(int, Date, int)}
+     * The method for extension the recipe. Uses {@link CommonService#isNumber(String)}, {@link RecipeDAO#validateRecipe(int, Date, int)},
+     * {@link SessionContext}
      *
      * @param accountId     - account ID
      * @param reqParameters - request parameters from jsp
      * @param executeResult - execute result instance
-     * @return true if validate recipe was successful
+     * @param sc            - SessionContext instance
      */
-    public boolean validateRecipe(int accountId, Map<String, Object> reqParameters, ExecuteResult executeResult) {
-        boolean result = false;
-        String frontRecipeId = (String) reqParameters.get("recipeId");
+    public void validateRecipe(int accountId, Map<String, Object> reqParameters, ExecuteResult executeResult,
+                               SessionContext sc) {
+        String frontRecipeId = (String) reqParameters.get(RECIPE_ID);
         if (commonService.isNumber(frontRecipeId)) {
             int recipeId = Integer.parseInt(frontRecipeId);
 
@@ -186,16 +191,18 @@ public class RecipeService {
                 boolean validDate = DoctorService.getInstance().isDateValid(validity);
                 if (validDate) {
                     recipeDAO.validateRecipe(recipeId, validity, accountId);
-                    result = true;
+                    sc.getSession().setAttribute(SUCCESS_MSG, "The recipe has extended successfully.");
+                    sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
                 } else {
-                    executeResult.setResponseAttributes("errorMessage", "The date is invalid. Please, enter the correct data and rty again.");
+                    executeResult.setJsp("/WEB-INF/jsp/doctor/recipe/recipe_ordered.jsp");
+                    executeResult.setResponseAttributes(ERROR_MSG, "The date is invalid. Please, enter the correct data and rty again.");
                 }
             } catch (ParseException e) {
-                executeResult.setResponseAttributes("errorMessage", "The date is invalid. Please, enter the correct data and rty again.");
-                logger.error("Can't parse request parameter ExpDate. Error: " + e);
+                executeResult.setJsp("/WEB-INF/jsp/doctor/recipe/recipe_ordered.jsp");
+                executeResult.setResponseAttributes(ERROR_MSG, "The date is invalid. Please, enter the correct data and rty again.");
+                logger.error("Can't parse request parameter ExpDate. Error: ", e);
             }
         }
-        return result;
     }
 
     /**

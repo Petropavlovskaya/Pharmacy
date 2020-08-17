@@ -44,7 +44,6 @@ public enum ApplicationConfiguration {
     /**
      * Property - global salt
      */
-//    private String globalSalt = "2";
     private String globalSalt;
 
     /**
@@ -80,8 +79,7 @@ public enum ApplicationConfiguration {
             }
             logger.info("Properties loaded successful");
         } catch (IOException e) {
-            logger.error("Properties have not been loaded. " + e);
-            throw new Error("Properties have not been loaded", e);
+            logger.error("Properties have not been loaded.", e);
         }
     }
 

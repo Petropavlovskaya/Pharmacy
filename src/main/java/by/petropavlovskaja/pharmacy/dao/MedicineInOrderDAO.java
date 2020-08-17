@@ -16,11 +16,18 @@ import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static by.petropavlovskaja.pharmacy.dao.DatabaseColumnNameConstant.*;
+
 /**
  * Class for executing SQL queries to the database related to the medicine in order
  */
 public class MedicineInOrderDAO {
-    private static Logger logger = LoggerFactory.getLogger(OrderDAO.class);
+    private static Logger logger = LoggerFactory.getLogger(MedicineInOrderDAO.class);
+
+    /**
+     * String property for logger message
+     */
+    private String loggerMessage;
 
     /**
      * Constructor - create INSTANCE of class
@@ -56,25 +63,28 @@ public class MedicineInOrderDAO {
     public int createMedicineInOrder(int orderId, Medicine medicine, int quantity) {
         int idInsertMedicine = -1;
         int countInsertRowsLogin;
+        int columnNumber = 1;
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = conn.prepareStatement(MedicineInOrderSQL.INSERT_MEDICINE_IN_ORDER.getQuery(), Statement.RETURN_GENERATED_KEYS)
         ) {
-            statement.setString(1, medicine.getName());
-            statement.setString(2, medicine.getDosage());
-            statement.setBoolean(3, medicine.isRecipeRequired());
-            statement.setInt(4, medicine.getIndivisibleAmount());
-            statement.setInt(5, quantity);
-            statement.setInt(6, medicine.getPrice());
-            statement.setInt(7, orderId);
+            statement.setString(columnNumber++, medicine.getName());
+            statement.setString(columnNumber++, medicine.getDosage());
+            statement.setBoolean(columnNumber++, medicine.isRecipeRequired());
+            statement.setInt(columnNumber++, medicine.getIndivisibleAmount());
+            statement.setInt(columnNumber++, quantity);
+            statement.setInt(columnNumber++, medicine.getPrice());
+            statement.setInt(columnNumber, orderId);
             countInsertRowsLogin = statement.executeUpdate();
             if (countInsertRowsLogin != 1) {
-                logger.error("Can't add Medicine: " + medicine.toString() + " into table Cart/Order id = " + orderId);
+                loggerMessage = "Can't add Medicine: " + medicine.toString() + " into table Cart/Order id = " + orderId;
+                logger.error(loggerMessage);
             } else {
                 ResultSet resultSet = statement.getGeneratedKeys();
                 if (resultSet.next()) {
                     idInsertMedicine = resultSet.getInt(1);
-                    logger.info("Insert into table Active_med_in_cart complete. Insert Medicine id= " + idInsertMedicine);
+                    loggerMessage = "Insert into table Active_med_in_cart complete. Insert Medicine id= " + idInsertMedicine;
+                    logger.info(loggerMessage);
                 }
             }
         } catch (SQLException e) {
@@ -99,16 +109,18 @@ public class MedicineInOrderDAO {
                 statement.setInt(1, medicineItem.getPriceForOne());
                 statement.setInt(2, medicineItem.getQuantity());
                 statement.setInt(3, medicineItem.getId());
-//                statement.setInt(3, cartId);
                 int countUpdateRowsMedicine = statement.executeUpdate();
                 if (countUpdateRowsMedicine != 1) {
-                    logger.error("Update into table MedicineInOrder is failed. We update for: " + medicineItem.toString() + " " + countUpdateRowsMedicine + " rows.");
+                    loggerMessage = "Update into table MedicineInOrder is failed. We update for: " + medicineItem.toString() + " rows = " + countUpdateRowsMedicine + ".";
+                    logger.error(loggerMessage);
                 } else {
-                    logger.info("Update into table MedicineInOrder complete. We update next medicine data: " + medicineItem.toString());
+                    loggerMessage = "Update into table MedicineInOrder complete. We update next medicine data: " + medicineItem.toString();
+                    logger.info(loggerMessage);
                 }
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in method updateMedicinePriceInCart. Cart id = " + cartId + ". " + e);
+            loggerMessage = "SQL Exception in method updateMedicinePriceInCart. Cart id = " + cartId + ". ";
+            logger.trace(loggerMessage, e);
         }
     }
 
@@ -127,12 +139,15 @@ public class MedicineInOrderDAO {
             statement.setInt(2, idMedicine);
             int countUpdateRowsMedicine = statement.executeUpdate();
             if (countUpdateRowsMedicine != 1) {
-                logger.error("Update into table MedicineInOrder is failed. Row for update id = " + idMedicine + ". Was updated " + countUpdateRowsMedicine + " rows.");
+                loggerMessage = "Update into table MedicineInOrder is failed. Row for update id = " + idMedicine + ". Was updated " + countUpdateRowsMedicine + " rows.";
+                logger.error(loggerMessage);
             } else {
-                logger.info("Update into table MedicineInOrder complete. We update next medicine id = " + idMedicine);
+                loggerMessage = "Update into table MedicineInOrder complete. We update next medicine id = " + idMedicine;
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception when update medicine in cart. Medicine id = " + idMedicine + ". " + e);
+            loggerMessage = "SQL Exception when update medicine in cart. Medicine id = " + idMedicine + ". ";
+            logger.error(loggerMessage, e);
         }
     }
 
@@ -149,12 +164,15 @@ public class MedicineInOrderDAO {
             statement.setInt(1, medicineId);
             int countUpdateRowsMedicine = statement.executeUpdate();
             if (countUpdateRowsMedicine != 1) {
-                logger.error("Delete from table MedicineInOrder is failed. There Was deleted " + countUpdateRowsMedicine + " rows.");
+                loggerMessage = "Delete from table MedicineInOrder is failed. There Was deleted " + countUpdateRowsMedicine + " rows.";
+                logger.error(loggerMessage);
             } else {
-                logger.info("Delete from table MedicineInOrder complete. We delete next medicine id = " + medicineId);
+                loggerMessage = "Delete from table MedicineInOrder complete. We delete next medicine id = " + medicineId;
+                logger.info(loggerMessage);
             }
         } catch (SQLException e) {
-            logger.error("SQL Exception in delete medicine. Medicine Id = " + medicineId + ". " + e);
+            loggerMessage = "SQL Exception in delete medicine. Medicine Id = " + medicineId + ". ";
+            logger.error(loggerMessage, e);
         }
     }
 
@@ -166,26 +184,26 @@ public class MedicineInOrderDAO {
      * @return - medicine in order instance
      */
     public MedicineInOrder findMedicineInOrderByMedicine(Medicine medicine, int orderId) {
+        int columnNumber = 1;
         MedicineInOrder resultMedicine = new MedicineInOrder(-1);
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
                 PreparedStatement statement = conn.prepareStatement(MedicineInOrderSQL.FIND_MEDICINE_IN_CART_BY_NAME_DOSAGE_AMOUNT.getQuery())
         ) {
-            statement.setString(1, medicine.getName());
-            statement.setString(2, medicine.getDosage());
-            statement.setInt(3, medicine.getIndivisibleAmount());
-            statement.setInt(4, orderId);
+            statement.setString(columnNumber++, medicine.getName());
+            statement.setString(columnNumber++, medicine.getDosage());
+            statement.setInt(columnNumber++, medicine.getIndivisibleAmount());
+            statement.setInt(columnNumber, orderId);
 
-            ResultSet rs = statement.executeQuery();
-            if (rs.next()) {
-                resultMedicine = createMedicineInOrderFromDB(rs, false);
-            } else {
-                System.out.println("Nothing was found ((");
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    resultMedicine = createMedicineInOrderFromDB(rs, false);
+                }
             }
-
         } catch (SQLException e) {
-            logger.error("SQL Exception in method findMedicineInOrderByMedicine with medicine: id = " + medicine.getId()
-                    + ", name = " + medicine.getName() + ", dosage = " + medicine.getDosage() + ". " + e);
+            loggerMessage = "SQL Exception in method findMedicineInOrderByMedicine with medicine: id = " + medicine.getId()
+                    + ", name = " + medicine.getName() + ", dosage = " + medicine.getDosage() + ". ";
+            logger.trace(loggerMessage, e);
         }
         return resultMedicine;
     }
@@ -214,13 +232,15 @@ public class MedicineInOrderDAO {
                 PreparedStatement statement = conn.prepareStatement(sql)
         ) {
             statement.setInt(1, cartId);
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                cartDetails.add(createMedicineInOrderFromDB(rs, needActualPrice));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    cartDetails.add(createMedicineInOrderFromDB(rs, needActualPrice));
+                }
             }
         } catch (
                 SQLException e) {
-            System.out.println("Nothing was find ((");
+            loggerMessage = "SQL Exception in method findMedicineInCartWithActualPrice for cart id = " + cartId;
+            logger.trace(loggerMessage, e);
             e.printStackTrace();
         }
         return cartDetails;
@@ -236,24 +256,15 @@ public class MedicineInOrderDAO {
                                                 boolean needTotalAmountFromMedicineList) {
         MedicineInOrder medicineInOrder = new MedicineInOrder(-1);
         try {
-            // Если делать - искать рецепты и исправлять название лекарства и в них
-/*            String medicineName =  rs.getString("medicine");
-            // IF - if medicine name was change
-            if (rs.getString("name") != null) {
-                String actualName = rs.getString("name");
-                if (!medicineName.equals(actualName)){
-                    medicineName = actualName;
-                }
-            }*/
-            medicineInOrder = new MedicineInOrder(rs.getInt("id"), rs.getString("medicine"),
-                    rs.getInt("indivisible_amount"), rs.getString("dosage"), rs.getBoolean("recipe_required"),
-                    rs.getInt("quantity"), rs.getInt("price"), rs.getInt("fk_order"));
+            medicineInOrder = new MedicineInOrder(rs.getInt(MIO_ID), rs.getString(MIO_MEDICINE),
+                    rs.getInt(MIO_INDIVISIBLE_AMOUNT), rs.getString(MIO_DOSAGE), rs.getBoolean(MIO_RECIPE_REQUIRED),
+                    rs.getInt(MIO_QUANTITY), rs.getInt(MIO_PRICE), rs.getInt(MIO_ORDER_KEY));
             if (needTotalAmountFromMedicineList) {
-                medicineInOrder.setAmount(rs.getInt("amount"));
+                medicineInOrder.setAmount(rs.getInt(MIO_AMOUNT));
             }
             medicineInOrder.setRubCoin();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.trace("SQL Exception in method createMedicineInOrderFromDB", e);
         }
         return medicineInOrder;
     }

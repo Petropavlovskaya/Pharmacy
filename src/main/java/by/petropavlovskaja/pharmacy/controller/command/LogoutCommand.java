@@ -1,5 +1,6 @@
 package by.petropavlovskaja.pharmacy.controller.command;
 
+import by.petropavlovskaja.pharmacy.controller.AttributeConstant;
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
 import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import org.slf4j.Logger;
@@ -39,10 +40,11 @@ public final class LogoutCommand implements IFrontCommand {
     @Override
     public ExecuteResult execute(SessionContext sc) {
         ExecuteResult executeResult = new ExecuteResult();
-        if (sc.getSession().getAttribute("accountRole") != null) {
+        if (sc.getSession().getAttribute(AttributeConstant.ACCOUNT_ROLE) != null) {
             HttpSession session = sc.getSession();
-            logger.info("Invalidate session for user " + session.getAttribute("accountLogin") + ", id = "
-                    + session.getAttribute("accountId"));
+            String loggerMessage = "Invalidate session for user " + session.getAttribute(AttributeConstant.ACCOUNT_LOGIN)
+                    + ", id = " + session.getAttribute(AttributeConstant.ACCOUNT_ID);
+            logger.info(loggerMessage);
             executeResult.setCookie("", "", "", "", "");
             executeResult.isNeedUpdateCookie(true);
             session.invalidate();

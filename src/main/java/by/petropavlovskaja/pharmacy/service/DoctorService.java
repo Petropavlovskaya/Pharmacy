@@ -1,5 +1,6 @@
 package by.petropavlovskaja.pharmacy.service;
 
+import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.dao.AccountDAO;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
 import by.petropavlovskaja.pharmacy.dao.RecipeDAO;
@@ -18,11 +19,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import static by.petropavlovskaja.pharmacy.controller.AttributeConstant.*;
+
 /**
  * Class for services of doctor role. Uses {@link RecipeService}, {@link CommonService}, {@link AccountDAO},
  * {@link MedicineDAO}, {@link RecipeDAO}
  */
 public class DoctorService {
+    private static final String NO_ERROR = "noError";
+    private static final String ERROR = "error";
+    private static final String RECIPE_ID = "recipeId";
+    private static final String MEDICINE_NAME = "medicineName";
+    private static final String MEDICINE_DOSAGE = "medicineDosage";
+    private static final String CUSTOMER_ID = "customerId";
     private static Logger logger = LoggerFactory.getLogger(DoctorService.class);
     private RecipeService recipeService = RecipeService.getInstance();
     private CommonService commonService = CommonService.getInstance();
@@ -63,16 +72,19 @@ public class DoctorService {
 
     /**
      * The method for getting a set of ordered recipes. Uses {@link CommonService#isNumber(String)},
-     * {@link RecipeService#getAllOrdered()}
+     * {@link RecipeService#getAllOrdered()}, {@link SessionContext}
      *
      * @param accountId     - doctor account ID
      * @param reqParameters - request parameters from jsp
+     * @param sc            - SessionContext instance
      */
-    public void refuseRecipe(int accountId, Map<String, Object> reqParameters) {
-        String frontRecipeId = (String) reqParameters.get("recipeId");
+    public void refuseRecipe(int accountId, Map<String, Object> reqParameters, SessionContext sc) {
+        String frontRecipeId = (String) reqParameters.get(RECIPE_ID);
         if (commonService.isNumber(frontRecipeId)) {
             int recipeId = Integer.parseInt(frontRecipeId);
             recipeService.doctorRefuseRecipe(accountId, recipeId);
+            sc.getSession().setAttribute(SUCCESS_MSG, "The recipe has refused successfully.");
+            sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
         }
     }
 
@@ -105,23 +117,24 @@ public class DoctorService {
     /**
      * The method for creating recipe for the customer. Uses {@link AccountDAO#findCustomerById(int)},
      * {@link MedicineDAO#isMedicine(String, String)}, {@link CommonService#isStringDate(String)},
-     * {@link RecipeService#doctorInsertRecipe(String, String, int, int, Date)}
+     * {@link RecipeService#doctorInsertRecipe(String, String, int, int, Date)}, {@link SessionContext}
      *
      * @param accountId     - doctor account ID
      * @param reqParameters - request parameters from jsp
+     * @param sc            - SessionContext instance
      * @return - string with error details or string "noError"
      */
-    public String createRecipe(int accountId, Map<String, Object> reqParameters) {
+    public String createRecipe(int accountId, Map<String, Object> reqParameters, SessionContext sc) {
         String errorString;
 
         //  check customer exist in database
         Map<String, String> customerExistResult = beforeCreateRecipeCheckCustomer(reqParameters);
-        errorString = customerExistResult.get("error");
-        if (errorString.equals("noError")) {
+        errorString = customerExistResult.get(ERROR);
+        if (errorString.equals(NO_ERROR)) {
             //  check medicine exist in database
             Map<String, String> medicineExistResult = beforeCreateRecipeCheckMedicine(reqParameters);
-            errorString = customerExistResult.get("error");
-            if (errorString.equals("noError")) {
+            errorString = customerExistResult.get(ERROR);
+            if (errorString.equals(NO_ERROR)) {
                 //  check date is valid
                 String requestDate = (String) reqParameters.get("expDate");
                 Date expDate = convertStringToDate(requestDate);
@@ -130,9 +143,9 @@ public class DoctorService {
                 } else {
                     boolean validDate = isDateValid(expDate);
                     if (validDate) {
-                        String medicineName = medicineExistResult.get("medicineName");
-                        String medicineDosage = medicineExistResult.get("medicineDosage");
-                        int customerId = Integer.parseInt(customerExistResult.get("customerId"));
+                        String medicineName = medicineExistResult.get(MEDICINE_NAME);
+                        String medicineDosage = medicineExistResult.get(MEDICINE_DOSAGE);
+                        int customerId = Integer.parseInt(customerExistResult.get(CUSTOMER_ID));
                         int recipeId = checkRecipeOrdered(medicineName, medicineDosage, customerId);
                         if (recipeId != -1) {
                             // if customer has invalidate recipe for current medicine - set recipe valid
@@ -141,6 +154,8 @@ public class DoctorService {
                             // if customer hasn't invalidate recipe for current medicine - create new valid recipe
                             recipeService.doctorInsertRecipe(medicineName, medicineDosage, accountId, customerId, expDate);
                         }
+                        sc.getSession().setAttribute(SUCCESS_MSG, "The recipe has added successfully.");
+                        sc.getSession().setAttribute(SUCCESS_MSG_CHECK, "yes");
                     } else {
                         return "Next date for recipe is invalid:" + requestDate + ". Please enter the correct info and try again.";
                     }
@@ -160,24 +175,24 @@ public class DoctorService {
      */
     public Map<String, String> beforeCreateRecipeCheckCustomer(Map<String, Object> reqParameters) {
         Map<String, String> result = new HashMap<>();
-        result.put("error", "noError");
-        result.put("customerId", "-1");
+        result.put(ERROR, NO_ERROR);
+        result.put(CUSTOMER_ID, "-1");
         String customer = (String) reqParameters.get("customer");
         String[] request = customer.split(";");
         String error;
         int customerId;
         if (request.length != 2) {
             error = "Customer " + customer + " is not present in database. Please enter the correct account and try again.";
-            result.replace("error", "noError", error);
+            result.replace(ERROR, NO_ERROR, error);
         } else {
             String frontCustomerId = request[1].trim();
             if (commonService.isNumber(frontCustomerId)) {
                 customerId = Integer.parseInt(frontCustomerId);
-                result.replace("customerId", "-1", frontCustomerId);
+                result.replace(CUSTOMER_ID, "-1", frontCustomerId);
                 Customer requestCustomer = accountDAO.findCustomerById(customerId);
                 if (requestCustomer.getId() == -1) {
                     error = "Customer " + customer + " is not present in database. Please enter the correct account and try again.";
-                    result.replace("error", "noError", error);
+                    result.replace(ERROR, NO_ERROR, error);
                 } else {
                     String frontFio = request[0].trim();
                     boolean surnameValid = frontFio.contains(requestCustomer.getSurname());
@@ -185,12 +200,12 @@ public class DoctorService {
                     boolean patronymicValid = frontFio.contains(requestCustomer.getPatronymic());
                     if (!(surnameValid && nameValid && patronymicValid)) {
                         error = "Customer ID doesn't match customer personal info.";
-                        result.replace("error", "noError", error);
+                        result.replace(ERROR, NO_ERROR, error);
                     }
                 }
             } else {
                 error = "Customer ID = " + frontCustomerId + " is invalid data. Please enter the correct account and try again.";
-                result.replace("error", "noError", error);
+                result.replace(ERROR, NO_ERROR, error);
             }
         }
         return result;
@@ -207,9 +222,9 @@ public class DoctorService {
      */
     public Map<String, String> beforeCreateRecipeCheckMedicine(Map<String, Object> reqParameters) {
         Map<String, String> result = new HashMap<>();
-        result.put("error", "noError");
-        result.put("medicineName", null);
-        result.put("medicineDosage", null);
+        result.put(ERROR, NO_ERROR);
+        result.put(MEDICINE_NAME, null);
+        result.put(MEDICINE_DOSAGE, null);
         String medicine = (String) reqParameters.get("medicine");
         String[] request = medicine.split(";");
         String medicineName;
@@ -217,17 +232,17 @@ public class DoctorService {
         String error;
         if (request.length != 2) {
             error = "Medicine name " + medicine + " is invalid. Please enter the correct info and try again.";
-            result.replace("error", "noError", error);
+            result.replace(ERROR, NO_ERROR, error);
         } else {
             medicineName = request[0].trim();
             medicineDosage = request[1].trim();
             boolean validMedicine = medicineDAO.isMedicine(medicineName, medicineDosage);
             if (!validMedicine) {
                 error = "Medicine name " + medicine + " is invalid. Please enter the correct info and try again.";
-                result.replace("error", "noError", error);
+                result.replace(ERROR, NO_ERROR, error);
             } else {
-                result.replace("medicineName", null, medicineName);
-                result.replace("medicineDosage", null, medicineDosage);
+                result.replace(MEDICINE_NAME, null, medicineName);
+                result.replace(MEDICINE_DOSAGE, null, medicineDosage);
             }
         }
         return result;
@@ -240,7 +255,7 @@ public class DoctorService {
             try {
                 expDate = format.parse(date);
             } catch (ParseException e) {
-                logger.error("Can't parse request parameter ExpDate: " + date + ". Error: " + e);
+                logger.trace("Parse exception in a method convertStringToDate. ", e);
                 return expDate;
             }
         }
@@ -279,6 +294,4 @@ public class DoctorService {
         Date maxValidDate = commonService.getFutureDate(60);
         return requestDate.compareTo(minValidDate) > 0 && requestDate.compareTo(maxValidDate) < 0;
     }
-
-
 }

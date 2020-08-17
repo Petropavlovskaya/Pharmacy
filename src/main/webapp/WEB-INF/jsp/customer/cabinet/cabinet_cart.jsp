@@ -53,7 +53,7 @@
                       method="post">
                     <td align="center">                                                 <%-- Quantity --%>
                         <c:if test="${price == 0}">
-                            <input class="table_field_high" type="text" size="5" value="0" disabled
+                            <input class="table_field_high" type="text" size="5" value="${medicine.quantity}" disabled
                                    title=<fmt:message key="label.account.cabinet.medInvalidForBuy"/>>
                         </c:if>
                         <c:if test="${price >0}">
@@ -95,7 +95,7 @@
         </c:forEach>
         <tr class="total_row">
             <form id="buy" action="${pageContext.request.contextPath}/customer/cabinet/cart" method="post">
-                <td colspan="3" align="right">
+                <td colspan="3" align="left">
                     <c:choose>
                         <c:when test="${customer.balance >= 0}">
                             <p2><fmt:message key="label.account.balanceMessage"/>: ${customer.balanceRub} <fmt:message key="label.rub"/>

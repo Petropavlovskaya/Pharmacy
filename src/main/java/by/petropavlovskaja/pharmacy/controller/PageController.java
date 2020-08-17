@@ -40,52 +40,82 @@ public final class PageController extends HttpServlet {
         List<Medicine> medicineList;
 
         // requestPage was set in Filter
-        int requestPage = Integer.parseInt(String.valueOf(req.getSession().getAttribute("requestPage")));
-        int recordsPerPage;
-
-        // check if recordsPerPage is available
-        if (req.getSession().getAttribute("recordsPerPage") != null) {
-            recordsPerPage = Integer.parseInt(String.valueOf(req.getSession().getAttribute("recordsPerPage")));
-        } else {
-            recordsPerPage = 5;
-            req.getSession().setAttribute("recordsPerPage", 5);
+        int requestPage = 1;
+        String requestPageAttribute = String.valueOf(req.getSession().getAttribute("requestPage"));
+        if (commonService.isNumber(requestPageAttribute)) {
+            requestPage = Integer.parseInt(requestPageAttribute);
         }
 
+        int recordsPerPage = setRecordsPerPage(req);
+
         int maxPage = countNumOfPages(recordsPerPage);
-        req.getSession().setAttribute("numOfPages", maxPage);
+        req.getSession().setAttribute(AttributeConstant.NUMBER_OF_PAGES, maxPage);
 
         if (maxPage != 0 && requestPage > maxPage) {
             dispatcher = req.getRequestDispatcher("/WEB-INF/jsp/404.jsp");
         } else {
             medicineList = medicineDAO.findMedicine(requestPage, recordsPerPage);
-            req.getSession().setAttribute("currentPage", requestPage);
-            req.getSession().setAttribute("recordsPerPage", recordsPerPage);
-            req.getSession().setAttribute("medicineList", medicineList);
-            if (req.getSession().getAttribute("accountRole") != null && req.getSession().getAttribute("accountRole") != "") {
-                String accountRole = String.valueOf(req.getSession().getAttribute("accountRole"));
-                if (accountRole.equals("customer")) {
-                    int accountId = Integer.parseInt(String.valueOf(req.getSession().getAttribute("accountId")));
-                    Customer customer = commonService.getCustomer(accountId);
-                    customerService.checkAvailableRecipe(customer, medicineList);
-                    customerService.updateCartWithDetails(customer);
-                    Set<MedicineInOrder> medicineInOrderSet = customer.getMedicineInCart();
-                    req.getSession().setAttribute("medicineInCart", medicineInOrderSet);
-                    for (Medicine medicine : medicineList) {
-                        for (MedicineInOrder medicineInOrder : medicineInOrderSet) {
-                            if (medicine.getName().equals(medicineInOrder.getMedicine()) &&
-                                    medicine.getDosage().equals(medicineInOrder.getDosage()) &&
-                                    medicine.getIndivisibleAmount() == medicineInOrder.getIndivisibleAmount()) {
-                                medicine.setCountInCustomerCart(medicineInOrder.getQuantity());
-                            }
-                        }
-                    }
-                }
-                dispatcher = req.getRequestDispatcher("/WEB-INF/jsp/" + accountRole + "/medicine/medicine_list.jsp");
+            req.getSession().setAttribute(AttributeConstant.CURRENT_PAGE, requestPage);
+            req.getSession().setAttribute(AttributeConstant.RECORDS_PER_PAGE, recordsPerPage);
+            req.getSession().setAttribute(AttributeConstant.MEDICINE_LIST, medicineList);
+            if (req.getSession().getAttribute(AttributeConstant.ACCOUNT_ROLE) != null
+                    && req.getSession().getAttribute(AttributeConstant.ACCOUNT_ROLE) != "") {
+                dispatcher = getAccountRequestDispatcher(req, medicineList);
             } else {
                 dispatcher = req.getRequestDispatcher("/WEB-INF/jsp/medicine.jsp");
             }
         }
         dispatcher.forward(req, resp);
+    }
+
+    /**
+     * The method set recipe and cart details if an account belong to a customer
+     *
+     * @param req          - HttpServletRequest req
+     * @param medicineList - total list of medicines
+     * @return - request dispatcher that defines by account role
+     */
+    public RequestDispatcher getAccountRequestDispatcher(HttpServletRequest req, List<Medicine> medicineList) {
+
+        String accountRole = String.valueOf(req.getSession().getAttribute(AttributeConstant.ACCOUNT_ROLE));
+        if (accountRole.equals("customer")) {
+            int accountId = Integer.parseInt(String.valueOf(req.getSession().getAttribute(AttributeConstant.ACCOUNT_ID)));
+            Customer customer = commonService.getCustomer(accountId);
+            customerService.checkAvailableRecipe(customer, medicineList);
+            customerService.updateCartWithDetails(customer);
+            Set<MedicineInOrder> medicineInOrderSet = customer.getMedicineInCart();
+            req.getSession().setAttribute(AttributeConstant.MEDICINE_IN_CART, medicineInOrderSet);
+            for (Medicine medicine : medicineList) {
+                for (MedicineInOrder medicineInOrder : medicineInOrderSet) {
+                    if (medicine.getName().equals(medicineInOrder.getMedicine()) &&
+                            medicine.getDosage().equals(medicineInOrder.getDosage()) &&
+                            medicine.getIndivisibleAmount() == medicineInOrder.getIndivisibleAmount()) {
+                        medicine.setCountInCustomerCart(medicineInOrder.getQuantity());
+                    }
+                }
+            }
+        }
+        return req.getRequestDispatcher("/WEB-INF/jsp/" + accountRole + "/medicine/medicine_list.jsp");
+    }
+
+    /**
+     * The method for set count of records on a page
+     *
+     * @param req - HttpServletRequest request
+     * @return default value of records per or value that user was set
+     */
+    public int setRecordsPerPage(HttpServletRequest req) {
+        int methodResult = 5;   // default value of records per page
+        // check if recordsPerPage is available
+        if (req.getSession().getAttribute(AttributeConstant.RECORDS_PER_PAGE) != null) {
+            String recordsCount = String.valueOf(req.getSession().getAttribute(AttributeConstant.RECORDS_PER_PAGE));
+            if (commonService.isNumber(recordsCount)) {
+                methodResult = Integer.parseInt(recordsCount);
+            }
+        } else {
+            req.getSession().setAttribute(AttributeConstant.RECORDS_PER_PAGE, 5);
+        }
+        return methodResult;
     }
 
     /**
@@ -98,19 +128,23 @@ public final class PageController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String fullUri = (String) req.getSession().getAttribute("fullUri");
-        int currentPage = Integer.parseInt(String.valueOf(req.getSession().getAttribute("requestPage")));
-        int recordsPerPage = 5;
-        if (req.getParameter("recordsPerPage") != null) {
-            recordsPerPage = Integer.parseInt(req.getParameter("recordsPerPage"));
+        String currentPageAttribute = String.valueOf(req.getSession().getAttribute(AttributeConstant.REQUEST_PAGE));
+        int currentPage = 1;
+        if (commonService.isNumber(currentPageAttribute)) {
+            currentPage = Integer.parseInt(currentPageAttribute);
         }
-        req.getSession().setAttribute("recordsPerPage", recordsPerPage);
+        int recordsPerPage = 5;
+        String recordsPerPageAttribute = req.getParameter("recordsPerPage");
+        if (req.getParameter(AttributeConstant.RECORDS_PER_PAGE) != null && commonService.isNumber(recordsPerPageAttribute)) {
+            recordsPerPage = Integer.parseInt(recordsPerPageAttribute);
+        }
+        req.getSession().setAttribute(AttributeConstant.RECORDS_PER_PAGE, recordsPerPage);
         int numOfPages = countNumOfPages(recordsPerPage);
         req.getSession().setAttribute("numOfPages", numOfPages);
         List<Medicine> medicineList = medicineDAO.findMedicine(currentPage, recordsPerPage);
         req.getSession().setAttribute("medicineList", medicineList);
 
         resp.sendRedirect(fullUri);
-//        resp.sendRedirect((String) req.getSession().getAttribute("fullUri"));
     }
 
     /**

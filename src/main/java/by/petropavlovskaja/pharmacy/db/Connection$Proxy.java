@@ -5,14 +5,19 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-/** Wrapper class for connection to the database. Has property <b>connection</b> */
+/**
+ * Wrapper class for connection to the database. Has property <b>connection</b>
+ */
 public class Connection$Proxy implements Connection {
 
-    /** Property - connection */
+    /**
+     * Property - connection
+     */
     private Connection connection;
 
     /**
      * Constructor with property
+     *
      * @param connection- connection
      */
     public Connection$Proxy(Connection connection) {
@@ -21,6 +26,7 @@ public class Connection$Proxy implements Connection {
 
     /**
      * The method closes real connection to database
+     *
      * @throws SQLException if can't closes the connection
      */
     public void realClose() throws SQLException {
@@ -67,7 +73,9 @@ public class Connection$Proxy implements Connection {
         connection.rollback();
     }
 
-    /** The method return real connection into connection pool */
+    /**
+     * The method return real connection into connection pool
+     */
     @Override
     public void close() {
         ConnectionPool.ConnectionPool.releaseConnection(this);
@@ -125,7 +133,7 @@ public class Connection$Proxy implements Connection {
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-        return connection.createStatement(resultSetType,resultSetConcurrency);
+        return connection.createStatement(resultSetType, resultSetConcurrency);
     }
 
     @Override

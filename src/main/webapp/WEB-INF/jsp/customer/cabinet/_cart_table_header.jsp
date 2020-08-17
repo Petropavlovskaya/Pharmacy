@@ -14,4 +14,3 @@
 <th><fmt:message key="label.account.cabinet.medTotalPrice"/></th>
 <th colspan="2"><fmt:message key="label.tableHeader.action"/></th>
 </thead>
-<%--</html>--%>

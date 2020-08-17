@@ -1,5 +1,6 @@
 package by.petropavlovskaja.pharmacy.controller.result;
 
+import by.petropavlovskaja.pharmacy.controller.AttributeConstant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ public final class ExecuteResult {
     /**
      * Property - jsp
      */
-    private static String jsp;
+    private String jsp;
 
     /**
      * The method finishes processing the entire front request
@@ -45,46 +46,64 @@ public final class ExecuteResult {
      * @param response - http servlet response
      */
     public void complete(HttpServletRequest request, HttpServletResponse response) {
+        setCurrentResponseAttribute(request);
+        setCurrentCookie(response);
+
+        try {
+            String loggerMessage;
+            if (request.getMethod().equals("GET") || !responseAttributes.isEmpty()) {
+                checkJSP(request);
+                if (request.getAttribute(AttributeConstant.UPDATE_LANG) != "null") {
+                    boolean updateLang = Boolean.parseBoolean((String) request.getSession().getAttribute(AttributeConstant.UPDATE_LANG));
+                    if (updateLang) {
+                        loggerMessage = "Need to update LANG. New Lang for cookie = " + request.getSession().getAttribute("lang");
+                        logger.info(loggerMessage);
+                        Cookie cookie = new Cookie("lang", (String) request.getSession().getAttribute("lang"));
+                        response.addCookie(cookie);
+                        cookie.setMaxAge(259200);
+                        request.getSession().setAttribute(AttributeConstant.UPDATE_LANG, "false");
+                    }
+                }
+                RequestDispatcher dispatcher = request.getRequestDispatcher(jsp);
+                dispatcher.forward(request, response);
+                loggerMessage = "Execute result is successful for method GET. Jsp = " + jsp;
+            } else {
+                response.sendRedirect(jsp);
+                loggerMessage = "Execute result is successful for method POST. Jsp = " + jsp;
+            }
+            logger.info(loggerMessage);
+        } catch (ServletException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * The method sets response attributes if they are.
+     *
+     * @param request - HttpServletRequest
+     */
+    public void setCurrentResponseAttribute(HttpServletRequest request) {
         if (!responseAttributes.isEmpty()) {
             Set<String> set = responseAttributes.keySet();
             for (String s : set) {
                 request.setAttribute(s, responseAttributes.get(s));
             }
         }
+    }
 
-        if (needUpdateCookie) {
-            if (!cookieSet.isEmpty()) {
-                Set<String> set = cookieSet.keySet();
-                for (String s : set) {
-                    Cookie cookie = new Cookie(s, cookieSet.get(s));
-                    cookie.setMaxAge(259200);
-                    response.addCookie(cookie);
-                }
+    /**
+     * The method set Cookies for response
+     *
+     * @param response - HttpServletResponse
+     */
+    public void setCurrentCookie(HttpServletResponse response) {
+        if (needUpdateCookie && (!cookieSet.isEmpty())) {
+            Set<String> set = cookieSet.keySet();
+            for (String s : set) {
+                Cookie cookie = new Cookie(s, cookieSet.get(s));
+                cookie.setMaxAge(259200);
+                response.addCookie(cookie);
             }
-        }
-
-        try {
-            if (request.getMethod().equals("GET") || !responseAttributes.isEmpty()) {
-                checkJSP(request);
-                if (request.getAttribute("updateLang") != "null") {
-                    boolean updateLang = Boolean.parseBoolean((String) request.getSession().getAttribute("updateLang"));
-                    if (updateLang) {
-                        logger.info("Need to update LANG. New Lang for cookie = " + request.getSession().getAttribute("lang"));
-                        Cookie cookie = new Cookie("lang", (String) request.getSession().getAttribute("lang"));
-                        response.addCookie(cookie);
-                        cookie.setMaxAge(259200);
-                        request.getSession().setAttribute("updateLang", "false");
-                    }
-                }
-                RequestDispatcher dispatcher = request.getRequestDispatcher(jsp);
-                dispatcher.forward(request, response);
-                logger.info("Execute result is successful for method GET. Jsp = " + jsp);
-            } else {
-                response.sendRedirect(jsp);
-                logger.info("Execute result is successful for method POST. Jsp = " + jsp);
-            }
-        } catch (ServletException | IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -98,7 +117,8 @@ public final class ExecuteResult {
         File file = new File(realPath);
         if (!file.exists()) {
             jsp = "/WEB-INF/jsp/404.jsp";
-            logger.error("File " + realPath + " wasn't found!");
+            String loggerMessage = "File " + realPath + " wasn't found!";
+            logger.error(loggerMessage);
         }
     }
 
@@ -109,7 +129,7 @@ public final class ExecuteResult {
      * @see ExecuteResult#setJsp(String[])
      */
     public void setJsp(String jsp) {
-        ExecuteResult.jsp = jsp;
+        this.jsp = jsp;
     }
 
     /**
@@ -119,13 +139,13 @@ public final class ExecuteResult {
      * @see ExecuteResult#setJsp(String)
      */
     public void setJsp(String[] arrayUri) {
-        String jsp = "/WEB-INF/jsp/";
+        StringBuilder stringBuilder = new StringBuilder("/WEB-INF/jsp/");
         for (int i = 1; i < arrayUri.length - 1; i++) {
-            jsp = jsp + arrayUri[i] + "/";
+            stringBuilder.append(arrayUri[i]).append("/");
         }
-        jsp = jsp + arrayUri[arrayUri.length - 2] + "_" + arrayUri[arrayUri.length - 1] + ".jsp";
+        stringBuilder.append(arrayUri[arrayUri.length - 2]).append("_").append(arrayUri[arrayUri.length - 1]).append(".jsp");
 
-        ExecuteResult.jsp = jsp;
+        jsp = stringBuilder.toString();
     }
 
     /**
@@ -154,7 +174,8 @@ public final class ExecuteResult {
         cookieSet.put("accountId", accountId);
 
         cookieSet.put("lang", lang);
-        logger.info("Ex result, set cookie locale = " + lang);
+        String loggerMessage = "Ex result, set cookie locale = " + lang;
+        logger.info(loggerMessage);
     }
 
     /**

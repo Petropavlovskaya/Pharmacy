@@ -1,6 +1,8 @@
 package by.petropavlovskaja.pharmacy.service;
 
+import by.petropavlovskaja.pharmacy.controller.AttributeConstant;
 import by.petropavlovskaja.pharmacy.controller.result.ExecuteResult;
+import by.petropavlovskaja.pharmacy.controller.session.SessionContext;
 import by.petropavlovskaja.pharmacy.dao.MedicineDAO;
 import by.petropavlovskaja.pharmacy.model.Medicine;
 import org.slf4j.Logger;
@@ -12,10 +14,21 @@ import java.util.Date;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static by.petropavlovskaja.pharmacy.controller.AttributeConstant.*;
+
 /**
  * Class for services of pharmacist role. Uses {@link CommonService}, {@link MedicineDAO}
  */
 public class PharmacistService {
+    private static final String PRICE_RUB = "priceRub";
+    private static final String PRICE_KOP = "priceKop";
+    private static final String MEDICINE_NAME = "medicineName";
+    private static final String INDIVISIBLE_AMOUNT = "indivisibleAmount";
+    private static final String AMOUNT = "amount";
+    private static final String DOSAGE = "dosage";
+    private static final String EXP_DATE = "expDate";
+    private static final String RECIPE_REQUIRED = "recipeRequired";
+    private static final String PHARM_FORM = "pharmForm";
     private static Logger logger = LoggerFactory.getLogger(PharmacistService.class);
     private CommonService commonService = CommonService.getInstance();
     private MedicineDAO medicineDAO = MedicineDAO.getInstance();
@@ -52,8 +65,8 @@ public class PharmacistService {
      */
     public boolean changeMedicineInDB(Map<String, Object> reqParameters, ExecuteResult executeResult) {
         boolean insertResult = false;
-        String frontRub = (String) reqParameters.get("priceRub");
-        String frontKop = (String) reqParameters.get("priceKop");
+        String frontRub = (String) reqParameters.get(PRICE_RUB);
+        String frontKop = (String) reqParameters.get(PRICE_KOP);
         if (commonService.isPriceNumber(frontRub, frontKop)) {
             int rub = Integer.parseInt(frontRub);
             int kop = Integer.parseInt(frontKop);
@@ -61,13 +74,14 @@ public class PharmacistService {
             if (tempMedicine.getId() != -1) {
                 String errorMessage = checkMedicineDataBeforeCreate(tempMedicine, rub, kop);
                 if (errorMessage != null) {
-                    executeResult.setResponseAttributes("errorMessage", "The changes have not saved. " + errorMessage);
+                    executeResult.setResponseAttributes(ERROR_MSG, "The changes of medicine have not saved. " + errorMessage);
                 } else {
-                    logger.info(" Create Medicine with param: " + tempMedicine.toString());
+                    String msg = " Create Medicine with param: " + tempMedicine.toString();
+                    logger.info(msg);
                     insertResult = medicineDAO.update(tempMedicine);
                 }
             } else {
-                executeResult.setResponseAttributes("errorMessage", "Medicine hasn't created. One or more parameters are incorrect.");
+                executeResult.setResponseAttributes(ERROR_MSG, "Medicine hasn't created. One or more parameters are incorrect.");
             }
         }
         return insertResult;
@@ -88,7 +102,7 @@ public class PharmacistService {
         if (medicineId > 0) {
             medicine = medicineDAO.findById(medicineId);
         } else {
-            executeResult.setResponseAttributes("errorMessage", "Medicine ID can't be less than 1.");
+            executeResult.setResponseAttributes(ERROR_MSG, "Medicine ID can't be less than 1.");
         }
         return medicine;
     }
@@ -106,25 +120,27 @@ public class PharmacistService {
 
         boolean result = medicineDAO.deleteById(medicine, pharmacistLogin);
         if (!result) {
-            executeResult.setResponseAttributes("errorMessage", "The changes have not saved. " + medicine.getName());
+            executeResult.setResponseAttributes(ERROR_MSG, "The changes have not saved. " + medicine.getName());
         }
         return result;
     }
 
     /**
      * The method for writing medicine into database. Uses {@link CommonService#isPriceNumber(String, String)},
-     * {@link MedicineDAO#create(Medicine)}
+     * {@link MedicineDAO#create(Medicine)}, {@link SessionContext}
      *
      * @param reqParameters - request parameters from jsp
      * @param executeResult - execute result instance
-     * @return - true if process was successful
+     * @param sc            - SessionContext instance
+     * @param fullUri       - request URI
      */
-    public boolean addMedicineIntoDB(Map<String, Object> reqParameters, ExecuteResult executeResult) {
+    public void addMedicineIntoDB(Map<String, Object> reqParameters, ExecuteResult executeResult, SessionContext sc,
+                                  String fullUri) {
 // in future check if this medicine already exist
         boolean insertResult = false;
 
-        String frontRub = (String) reqParameters.get("priceRub");
-        String frontKop = (String) reqParameters.get("priceKop");
+        String frontRub = (String) reqParameters.get(PRICE_RUB);
+        String frontKop = (String) reqParameters.get(PRICE_KOP);
 
         if (commonService.isPriceNumber(frontRub, frontKop)) {
             int rub = Integer.parseInt(frontRub);
@@ -133,21 +149,29 @@ public class PharmacistService {
             if (tempMedicine.getId() != -1) {
                 String errorMessage = checkMedicineDataBeforeCreate(tempMedicine, rub, kop);
                 if (errorMessage != null) {
-                    executeResult.setResponseAttributes("errorMessage", "The changes have not saved. " + errorMessage);
+                    executeResult.setResponseAttributes(ERROR_MSG, "The medicine have not saved. " + errorMessage);
                 } else {
-                    logger.info(" Create Medicine with param: " + tempMedicine.toString());
+                    String msg = "Create Medicine with param: " + tempMedicine.toString();
+                    logger.info(msg);
                     insertResult = medicineDAO.create(tempMedicine);
+                    if (insertResult) {
+                        sc.getSession().setAttribute(AttributeConstant.SUCCESS_MSG, "The medicine has created successfully.");
+                        sc.getSession().setAttribute(AttributeConstant.SUCCESS_MSG_CHECK, "yes");
+                        executeResult.setJsp(fullUri);
+                        logger.info(" Create in DAO was successful");
+                    }
                 }
             } else {
-                executeResult.setResponseAttributes("errorMessage", "Invalid insert data. " +
+                executeResult.setResponseAttributes(ERROR_MSG, "Invalid insert data. " +
                         "Please, insert correct data and try again.");
             }
         } else {
-            executeResult.setResponseAttributes("errorMessage", "Invalid insert data. " +
+            executeResult.setResponseAttributes(ERROR_MSG, "Invalid insert data. " +
                     "Please, insert correct data and try again.");
         }
-        setRequestData(reqParameters, executeResult);
-        return insertResult;
+        if (!insertResult) {
+            setRequestData(reqParameters, executeResult);
+        }
     }
 
     /**
@@ -158,19 +182,19 @@ public class PharmacistService {
      * @param executeResult - execute result instance
      */
     private void setRequestData(Map<String, Object> reqParameters, ExecuteResult executeResult) {
-        executeResult.setResponseAttributes("medicineName", reqParameters.get("medicineName"));
-        executeResult.setResponseAttributes("indivisibleAmount", reqParameters.get("indivisibleAmount"));
-        executeResult.setResponseAttributes("amount", reqParameters.get("amount"));
-        executeResult.setResponseAttributes("dosage", reqParameters.get("dosage"));
-        executeResult.setResponseAttributes("expDate", reqParameters.get("expDate"));
-        boolean recipRequired = false;
-        if (reqParameters.get("recipeRequired") != null) {
-            recipRequired = true;
+        executeResult.setResponseAttributes(MEDICINE_NAME, reqParameters.get(MEDICINE_NAME));
+        executeResult.setResponseAttributes(INDIVISIBLE_AMOUNT, reqParameters.get(INDIVISIBLE_AMOUNT));
+        executeResult.setResponseAttributes(AMOUNT, reqParameters.get(AMOUNT));
+        executeResult.setResponseAttributes(DOSAGE, reqParameters.get(DOSAGE));
+        executeResult.setResponseAttributes(EXP_DATE, reqParameters.get(EXP_DATE));
+        boolean recipeRequired = false;
+        if (reqParameters.get(RECIPE_REQUIRED) != null) {
+            recipeRequired = true;
         }
-        executeResult.setResponseAttributes("recipeRequired", recipRequired);
-        executeResult.setResponseAttributes("priceRub", reqParameters.get("priceRub"));
-        executeResult.setResponseAttributes("priceKop", reqParameters.get("priceKop"));
-        executeResult.setResponseAttributes("pharmForm", reqParameters.get("pharmForm"));
+        executeResult.setResponseAttributes(RECIPE_REQUIRED, recipeRequired);
+        executeResult.setResponseAttributes(PRICE_RUB, reqParameters.get(PRICE_RUB));
+        executeResult.setResponseAttributes(PRICE_KOP, reqParameters.get(PRICE_KOP));
+        executeResult.setResponseAttributes(PHARM_FORM, reqParameters.get(PHARM_FORM));
     }
 
     /**
@@ -186,32 +210,32 @@ public class PharmacistService {
     public Medicine createTempMedicine(Map<String, Object> reqParameters, boolean newMedicine, int rub, int kop) {
         Medicine tempMedicine = new Medicine(-1);
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        String requestDate = (String) reqParameters.get("expDate");
+        String requestDate = (String) reqParameters.get(EXP_DATE);
         int id;
 
-        String medicineName = String.valueOf(reqParameters.get("medicineName")).trim();
+        String medicineName = String.valueOf(reqParameters.get(MEDICINE_NAME)).trim();
 
-        String frontIndivisibleAmount = (String) reqParameters.get("indivisibleAmount");
-        String frontAmount = (String) reqParameters.get("amount");
+        String frontIndivisibleAmount = (String) reqParameters.get(INDIVISIBLE_AMOUNT);
+        String frontAmount = (String) reqParameters.get(AMOUNT);
         if (commonService.isNumber(frontAmount) && commonService.isNumber(frontIndivisibleAmount)) {
             int indivisibleAmount = Integer.parseInt(frontIndivisibleAmount);
             int amount = Integer.parseInt(frontAmount);
-            String dosage = String.valueOf(reqParameters.get("dosage")).trim();
+            String dosage = String.valueOf(reqParameters.get(DOSAGE)).trim();
 
             if (commonService.isStringDate(requestDate)) {
                 Date expDate = null;
                 try {
                     expDate = format.parse(requestDate);
                 } catch (ParseException e) {
-                    logger.error("Can't parse request parameter ExpDate. Error: " + e);
+                    logger.error("Can't parse request parameter ExpDate. Error: ", e);
                 }
                 boolean recipeRequired = false;
-                if (reqParameters.get("recipeRequired") != null) {
+                if (reqParameters.get(RECIPE_REQUIRED) != null) {
                     recipeRequired = true;
                 }
                 int price = rub * 100 + kop;
                 int addedBy = Integer.parseInt((String) reqParameters.get("accountId"));
-                String pharmForm = (String) reqParameters.get("pharmForm");
+                String pharmForm = (String) reqParameters.get(PHARM_FORM);
                 id = 0;
                 if (!newMedicine) {
                     id = Integer.parseInt((String) reqParameters.get("medicineId"));
@@ -243,20 +267,17 @@ public class PharmacistService {
             result = "Coins can't be more than 99!.";
         } else if (medicine.getDosage().length() < 1) {
             result = "Field Medicine dosage can't by empty.";
-        } else if (medicine.getExpDate() != null) {
-            if (currentDate.after(medicine.getExpDate())) {
-                result = "Expiry date can not be earlier than today.";
-            }
         } else if (medicine.getPrice() < 5) {
             result = "Minimum price is 5 coins. If you need less contact with your administrator.";
         } else if (medicine.getPharmForm().length() < 1) {
             result = "Field Pharmaceutical form can't by empty.";
         } else if (!medicineNameMatchRegex(medicine.getName())) {
             result = "Field Medicine Name has invalid data.";
+        } else if (medicine.getExpDate() != null && currentDate.after(medicine.getExpDate())) {
+            result = "Expiry date can not be earlier than today.";
         }
         return result;
     }
-
 
     /**
      * The method for checking medicine name against regular expression
@@ -264,8 +285,8 @@ public class PharmacistService {
      * @param medName - medicine name
      * @return - true if medicine name against regular expression
      */
-    private boolean medicineNameMatchRegex(String medName) {
-        String regex = "(([A-ZА-Я][a-zа-я]{1,10})[-'\\\\s]*)+?(([a-zа-я]{1,10})[-'\\\\s]*)+?";
+    protected boolean medicineNameMatchRegex(String medName) {
+        String regex = "(([A-ZА-Я][a-zа-я]{0,10})[-\\s]?)+?(([A-ZА-Яa-zа-я]{1,10})[-\\s]?)+?";
         return Pattern.matches(regex, medName);
     }
 }
