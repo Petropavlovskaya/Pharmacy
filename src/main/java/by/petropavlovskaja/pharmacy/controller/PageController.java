@@ -25,6 +25,7 @@ public final class PageController extends HttpServlet {
     private static CommonService commonService = CommonService.getInstance();
     private static CustomerService customerService = CustomerService.getInstance();
     private static MedicineDAO medicineDAO = MedicineDAO.getInstance();
+    private String lastUri = "";
 
     /**
      * The override method doGet
@@ -39,16 +40,17 @@ public final class PageController extends HttpServlet {
         RequestDispatcher dispatcher;
         List<Medicine> medicineList;
 
+        lastUri = getLastPartUri(req);
+
         // requestPage was set in Filter
         int requestPage = 1;
         String requestPageAttribute = String.valueOf(req.getSession().getAttribute("requestPage"));
         if (commonService.isNumber(requestPageAttribute)) {
             requestPage = Integer.parseInt(requestPageAttribute);
         }
-
         int recordsPerPage = setRecordsPerPage(req);
 
-        int maxPage = countNumOfPages(recordsPerPage);
+        int maxPage = countNumOfPages(recordsPerPage, lastUri);
         req.getSession().setAttribute(AttributeConstant.NUMBER_OF_PAGES, maxPage);
 
         if (maxPage != 0 && requestPage > maxPage) {
@@ -60,7 +62,7 @@ public final class PageController extends HttpServlet {
             req.getSession().setAttribute(AttributeConstant.MEDICINE_LIST, medicineList);
             if (req.getSession().getAttribute(AttributeConstant.ACCOUNT_ROLE) != null
                     && req.getSession().getAttribute(AttributeConstant.ACCOUNT_ROLE) != "") {
-                dispatcher = getAccountRequestDispatcher(req, medicineList);
+                dispatcher = getAccountRequestDispatcher(req, medicineList, requestPage, recordsPerPage);
             } else {
                 dispatcher = req.getRequestDispatcher("/WEB-INF/jsp/medicine.jsp");
             }
@@ -71,13 +73,17 @@ public final class PageController extends HttpServlet {
     /**
      * The method set recipe and cart details if an account belong to a customer
      *
-     * @param req          - HttpServletRequest req
-     * @param medicineList - total list of medicines
+     * @param req            - HttpServletRequest req
+     * @param medicineList   - total list of medicines
+     * @param requestPage    - number of request page
+     * @param recordsPerPage - number of records per page
      * @return - request dispatcher that defines by account role
      */
-    public RequestDispatcher getAccountRequestDispatcher(HttpServletRequest req, List<Medicine> medicineList) {
-
+    public RequestDispatcher getAccountRequestDispatcher(HttpServletRequest req, List<Medicine> medicineList,
+                                                         int requestPage, int recordsPerPage) {
         String accountRole = String.valueOf(req.getSession().getAttribute(AttributeConstant.ACCOUNT_ROLE));
+        RequestDispatcher dispatcher = req.getRequestDispatcher("/WEB-INF/jsp/" + accountRole + "/medicine/medicine_list.jsp");
+
         if (accountRole.equals("customer")) {
             int accountId = Integer.parseInt(String.valueOf(req.getSession().getAttribute(AttributeConstant.ACCOUNT_ID)));
             Customer customer = commonService.getCustomer(accountId);
@@ -95,7 +101,14 @@ public final class PageController extends HttpServlet {
                 }
             }
         }
-        return req.getRequestDispatcher("/WEB-INF/jsp/" + accountRole + "/medicine/medicine_list.jsp");
+
+        if (accountRole.equals("pharmacist") && lastUri.equals("expired")) {
+            List<Medicine> expiredMedicineList = medicineDAO.findExpiredMedicine(requestPage, recordsPerPage);
+            req.getSession().setAttribute(AttributeConstant.EXPIRED_MEDICINE_LIST, expiredMedicineList);
+            dispatcher = req.getRequestDispatcher("/WEB-INF/jsp/pharmacist/medicine/medicine_expired.jsp");
+        }
+
+        return dispatcher;
     }
 
     /**
@@ -128,6 +141,8 @@ public final class PageController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String fullUri = (String) req.getSession().getAttribute("fullUri");
+        lastUri = getLastPartUri(req);
+
         String currentPageAttribute = String.valueOf(req.getSession().getAttribute(AttributeConstant.REQUEST_PAGE));
         int currentPage = 1;
         if (commonService.isNumber(currentPageAttribute)) {
@@ -139,7 +154,7 @@ public final class PageController extends HttpServlet {
             recordsPerPage = Integer.parseInt(recordsPerPageAttribute);
         }
         req.getSession().setAttribute(AttributeConstant.RECORDS_PER_PAGE, recordsPerPage);
-        int numOfPages = countNumOfPages(recordsPerPage);
+        int numOfPages = countNumOfPages(recordsPerPage, lastUri);
         req.getSession().setAttribute("numOfPages", numOfPages);
         List<Medicine> medicineList = medicineDAO.findMedicine(currentPage, recordsPerPage);
         req.getSession().setAttribute("medicineList", medicineList);
@@ -153,12 +168,29 @@ public final class PageController extends HttpServlet {
      * @param recordsPerPage - records per page
      * @return - count of pages
      */
-    private int countNumOfPages(int recordsPerPage) {
-        int rows = medicineDAO.getNumberOfRows();
+    private int countNumOfPages(int recordsPerPage, String lastUri) {
+        int rows;
+        if (lastUri.equals("expired")) {
+            rows = medicineDAO.getNumberOfRows(true);
+        } else {
+            rows = medicineDAO.getNumberOfRows(false);
+        }
         int numOfPages = rows / recordsPerPage;
         if (rows % recordsPerPage > 0) {
             numOfPages++;
         }
         return numOfPages;
+    }
+
+    /**
+     * The method split full URI and return last part of it
+     *
+     * @param req - HttpServletRequest
+     * @return - last part of request URI
+     */
+    private String getLastPartUri(HttpServletRequest req) {
+        String fullUri = (String) req.getSession().getAttribute("fullUri");
+        String[] arrayUri = fullUri.substring(1).split("/");
+        return arrayUri[arrayUri.length - 1];
     }
 }

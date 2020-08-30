@@ -14,6 +14,7 @@ import by.petropavlovskaja.pharmacy.model.account.Customer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -170,7 +171,9 @@ public class CustomerService {
     public void updateCartWithDetails(Customer customer) {
         Order cart = findCart(customer.getId());
         Set<MedicineInOrder> medicineInCart = findActualPriceAndSetToCartInDB(cart.getId());
-        blockMedicineWithoutRecipe(customer, medicineInCart, cart.getId());
+        blockMedicineWithoutRecipe(customer, medicineInCart);
+        blockMedicineAfterExpirationDate(medicineInCart);
+        medicineInOrderDAO.updateMedicinePriceInCart(cart.getId(), medicineInCart);
         customer.setCartMedicine(medicineInCart);
         updateTotalPriceInDB(cart.getId(), medicineInCart);
         cart = findCart(customer.getId());
@@ -194,9 +197,8 @@ public class CustomerService {
      *
      * @param customer       - customer instance
      * @param medicineInCart - a medicines in cart set
-     * @param cartId         - a cart ID
      */
-    private void blockMedicineWithoutRecipe(Customer customer, Set<MedicineInOrder> medicineInCart, int cartId) {
+    private void blockMedicineWithoutRecipe(Customer customer, Set<MedicineInOrder> medicineInCart) {
         Set<Recipe> recipes = recipeService.getValidRecipes(customer);
 
         for (MedicineInOrder medicineItem : medicineInCart) {
@@ -217,7 +219,22 @@ public class CustomerService {
                 medicineItem.setRubCoin();
             }
         }
-        medicineInOrderDAO.updateMedicinePriceInCart(cartId, medicineInCart);
+    }
+
+    /**
+     * The method blocks the medicine from the purchase if the medicine has passed its expiration date.
+     * Uses {@link RecipeService#getValidRecipes(Customer)}, {@link MedicineInOrderDAO#updateMedicinePriceInCart(int, Set)}
+     *
+     * @param medicineInCart - a medicines in cart set
+     */
+    private void blockMedicineAfterExpirationDate(Set<MedicineInOrder> medicineInCart) {
+        Date currentDate = new Date();
+        for (MedicineInOrder medicineItem : medicineInCart) {
+            if (currentDate.after(medicineItem.getExpDate())) {
+                medicineItem.setPriceForOne(0);
+                medicineItem.setRubCoin();
+            }
+        }
     }
 
     /**
@@ -323,13 +340,17 @@ public class CustomerService {
         Set<Recipe> recipes = recipeService.getValidRecipes(customer);
         for (Medicine medItem : medicineList) {
             if (medItem.isRecipeRequired()) {
-                for (Recipe recipeItem : recipes) {
-                    if (medItem.getName().equals(recipeItem.getMedicine()) && medItem.getDosage().equals(recipeItem.getDosage())) {
-                        medItem.setCustomerNeedRecipe(false);
-                        break;
-                    } else {
-                        medItem.setCustomerNeedRecipe(true);
+                if (!recipes.isEmpty()) {
+                    for (Recipe recipeItem : recipes) {
+                        if (medItem.getName().equals(recipeItem.getMedicine()) && medItem.getDosage().equals(recipeItem.getDosage())) {
+                            medItem.setCustomerNeedRecipe(false);
+                            break;
+                        } else {
+                            medItem.setCustomerNeedRecipe(true);
+                        }
                     }
+                } else {
+                    medItem.setCustomerNeedRecipe(true);
                 }
             }
         }

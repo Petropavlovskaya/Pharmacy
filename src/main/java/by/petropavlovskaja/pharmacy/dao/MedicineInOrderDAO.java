@@ -70,6 +70,7 @@ public class MedicineInOrderDAO {
         ) {
             statement.setString(columnNumber++, medicine.getName());
             statement.setString(columnNumber++, medicine.getDosage());
+            statement.setDate(columnNumber++, new java.sql.Date(medicine.getExpDate().getTime()));
             statement.setBoolean(columnNumber++, medicine.isRecipeRequired());
             statement.setInt(columnNumber++, medicine.getIndivisibleAmount());
             statement.setInt(columnNumber++, quantity);
@@ -257,8 +258,8 @@ public class MedicineInOrderDAO {
         MedicineInOrder medicineInOrder = new MedicineInOrder(-1);
         try {
             medicineInOrder = new MedicineInOrder(rs.getInt(MIO_ID), rs.getString(MIO_MEDICINE),
-                    rs.getInt(MIO_INDIVISIBLE_AMOUNT), rs.getString(MIO_DOSAGE), rs.getBoolean(MIO_RECIPE_REQUIRED),
-                    rs.getInt(MIO_QUANTITY), rs.getInt(MIO_PRICE), rs.getInt(MIO_ORDER_KEY));
+                    rs.getInt(MIO_INDIVISIBLE_AMOUNT), rs.getString(MIO_DOSAGE), rs.getDate(MIO_EXP_DATE),
+                    rs.getBoolean(MIO_RECIPE_REQUIRED), rs.getInt(MIO_QUANTITY), rs.getInt(MIO_PRICE), rs.getInt(MIO_ORDER_KEY));
             if (needTotalAmountFromMedicineList) {
                 medicineInOrder.setAmount(rs.getInt(MIO_AMOUNT));
             }

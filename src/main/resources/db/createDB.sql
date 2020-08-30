@@ -1,101 +1,113 @@
 create database pharmacy;
 
 
-CREATE TABLE public.account (
-	id int NOT NULL,
-	surname varchar NOT NULL,
-	name varchar NOT NULL,
-	patronymic varchar NULL,
-	phone_number varchar NULL,
-	status boolean NULL DEFAULT true, -- added default
-	balance int NULL DEFAULT 0,
-	fk_role int NOT NULL,
-	CONSTRAINT account_pk PRIMARY KEY (id)
+CREATE TABLE public.account
+(
+    id         int4    NOT NULL,
+    surname    varchar NOT NULL,
+    "name"     varchar NOT NULL,
+    patronymic varchar NULL,
+    phone      varchar NULL,
+    status     bool    NULL,
+    balance    int4    NULL     DEFAULT 0,
+    fk_role    int4    NOT NULL,
+    credit     int4    NOT NULL DEFAULT 0,
+    CONSTRAINT account_pk PRIMARY KEY (id),
+    CONSTRAINT account_fk FOREIGN KEY (id) REFERENCES login (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT account_fk_1 FOREIGN KEY (fk_role) REFERENCES role (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
--- Column comments
-COMMENT ON COLUMN public.account.status IS 'true - active, false - blocked';
-
-CREATE TABLE public.login (
-	id int NOT NULL GENERATED ALWAYS AS IDENTITY,
-	login varchar NOT NULL,
-	"password" varchar NOT NULL,
-	CONSTRAINT login_pk PRIMARY KEY (login),
-	CONSTRAINT login_fk FOREIGN KEY (id) REFERENCES public.account(id) ON DELETE CASCADE
-);
-ALTER TABLE public.account ADD CONSTRAINT account_fk FOREIGN KEY (login_id) REFERENCES login(id) ON UPDATE CASCADE ON DELETE cascade DEFERRABLE INITIALLY deferred;
-ALTER TABLE public.login ADD CONSTRAINT login_fk
-    FOREIGN KEY (id) REFERENCES public.account(id)
-        ON UPDATE CASCADE ON DELETE cascade DEFERRABLE INITIALLY deferred;
-CREATE TABLE public."role" (
-	id int NOT NULL GENERATED ALWAYS AS IDENTITY,
-	role_name varchar NOT NULL,
-	CONSTRAINT role_pk PRIMARY KEY (id)
-);
-COMMENT ON TABLE public."role" IS 'limited number of roles. On the program field is Enum.';
-
-CREATE TABLE public.medicine (
-	id int NOT NULL GENERATED ALWAYS AS IDENTITY,
-	"name" varchar NOT NULL,
-	indivisible_amount int NOT NULL,
-	amount int NOT NULL,
-	dosage varchar NULL,
-	pharm_form varchar NOT NULL,
-	exp_date date NOT NULL,
-	recipe_required boolean NOT NULL DEFAULT false,
-	price int NOT NULL,
-	added_by varchar NOT NULL,
-	CONSTRAINT medicine_pk PRIMARY KEY ("name",dosage,exp_date,price)
-);
--- Column comments
-COMMENT ON COLUMN public.medicine.indivisible_amount IS 'Indivisible amount of medicine for sell';
-COMMENT ON COLUMN public.medicine.exp_date IS 'Medicine expiration date';
-
-CREATE TABLE public."order" (
-	id int NOT NULL GENERATED ALWAYS AS IDENTITY,
-	fk_customer int NOT NULL,
-	payment_state boolean NOT NULL DEFAULT false,
-	order_price int NOT NULL DEFAULT 0,
-	order_date timestamp NOT NULL,
-	status boolean NOT NULL DEFAULT false,
-	CONSTRAINT order_pk PRIMARY KEY (id)
-);
--- Column comments
-COMMENT ON COLUMN public."order".cart IS 'false - order isn''t completed/delivered';
-
-CREATE TABLE public.recipe (
-    id int NOT NULL GENERATED ALWAYS AS IDENTITY,
-	medicine varchar NOT NULL,
-	fk_doctor int NOT NULL,
-	fk_customer int NOT NULL,
-	id_medicine_in_order int NULL,
-	validity date NOT NULL,
-	need_extension boolean NOT NULL DEFAULT false,
-	CONSTRAINT recipe_pk PRIMARY KEY (medicine,fk_doctor,fk_customer)
-);
--- Column comments
-COMMENT ON COLUMN public.recipe.need_extension IS 'true - recipe needs extension';
-
-CREATE TABLE public.medicine_in_order (
-	id int NOT NULL GENERATED ALWAYS AS IDENTITY,
-	medicine varchar NOT NULL,
-	dosage varchar NOT NULL,
-	quantity int NOT NULL,
-	price int NOT NULL,
-	fk_order int NOT NULL,
-	CONSTRAINT medicine_in_order_pk PRIMARY KEY (medicine,fk_order)
+CREATE TABLE public.login
+(
+    id         int4    NOT NULL GENERATED ALWAYS AS IDENTITY,
+    login      varchar NOT NULL,
+    "password" varchar NOT NULL,
+    salt       varchar NOT NULL,
+    CONSTRAINT login_pk PRIMARY KEY (id),
+    CONSTRAINT login_un UNIQUE (login)
 );
 
-ALTER TABLE public.account ADD CONSTRAINT account_fk FOREIGN KEY (fk_role) REFERENCES public."role"(id) ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE public.recipe ADD CONSTRAINT recipe_fk FOREIGN KEY (fk_customer) REFERENCES public.account(id) ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE TABLE public."role"
+(
+    id int4 NOT NULL GENERATED ALWAYS AS IDENTITY,
+    role_name varchar NOT NULL,
+    CONSTRAINT role_pk PRIMARY KEY (id),
+    CONSTRAINT role_un UNIQUE (role_name)
+);
 
-ALTER TABLE public."order" ADD CONSTRAINT order_fk FOREIGN KEY (fk_customer) REFERENCES public.account(id) ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE TABLE public.medicine
+(
+    id int4 NOT NULL GENERATED ALWAYS AS IDENTITY,
+    "name" varchar NOT NULL,
+    indivisible_amount int4 NOT NULL, -- Indivisible amount of medicine for sell
+    amount int4 NOT NULL,
+    dosage varchar NOT NULL,
+    exp_date date NOT NULL, -- Medicine expiration date
+    recipe_required bool NOT NULL DEFAULT false,
+    price int4 NOT NULL,
+    added_by int4 NOT NULL,
+    pharm_form varchar NOT NULL,
+    CONSTRAINT medicine_pk PRIMARY KEY (id),
+    CONSTRAINT medicine_un UNIQUE (name, dosage, exp_date, price)
+);
 
-ALTER TABLE public.medicine_in_order ADD CONSTRAINT medicine_in_order_fk FOREIGN KEY (fk_order) REFERENCES public."order"(id) ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE TABLE public."order"
+(
+    order_id int4 NOT NULL GENERATED ALWAYS AS IDENTITY,
+    fk_customer int4 NOT NULL,
+    order_price int4 NOT NULL DEFAULT 0,
+    order_date timestamp NULL,
+    cart bool NOT NULL DEFAULT false,
+    CONSTRAINT order_pk PRIMARY KEY (order_id),
+    CONSTRAINT order_fk FOREIGN KEY (fk_customer) REFERENCES account(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE public.recipe
+(
+    recipe_id int4 NOT NULL GENERATED ALWAYS AS IDENTITY,
+    medicine varchar NOT NULL,
+    doctor_id int4 NULL,
+    fk_customer int4 NOT NULL,
+    id_medicine_in_order int4 NULL,
+    validity date NULL,
+    need_extension bool NOT NULL DEFAULT false,
+    dosage varchar NULL,
+    CONSTRAINT recipe_pk PRIMARY KEY (recipe_id),
+    CONSTRAINT recipe_un UNIQUE (medicine, doctor_id, fk_customer, id_medicine_in_order, validity, dosage),
+    CONSTRAINT recipe_fk FOREIGN KEY (fk_customer) REFERENCES account(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
 
 
+CREATE TABLE public.medicine_in_order
+(
+    id int4 NOT NULL GENERATED ALWAYS AS IDENTITY,
+    medicine varchar NOT NULL,
+    dosage varchar NOT NULL,
+    quantity int4 NOT NULL,
+    price int4 NOT NULL,
+    fk_order int4 NOT NULL,
+    indivisible_amount int4 NOT NULL,
+    recipe_required bool NOT NULL DEFAULT false,
+    exp_date date NULL,
+    CONSTRAINT medicine_in_order_pk PRIMARY KEY (id),
+    CONSTRAINT medicine_in_order_fk FOREIGN KEY (fk_order) REFERENCES "order"(order_id) ON UPDATE CASCADE ON DELETE CASCADE
+);
 
+CREATE TABLE public.active_med_in_cart (
+    id_medicine int4 NOT NULL,
+    id_medicine_in_order int4 NOT NULL,
+    CONSTRAINT cart_un UNIQUE (id_medicine, id_medicine_in_order),
+    CONSTRAINT active_med_in_cart_fk FOREIGN KEY (id_medicine_in_order) REFERENCES medicine_in_order(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT cart_fk FOREIGN KEY (id_medicine) REFERENCES medicine(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+COMMENT ON TABLE public.active_med_in_cart IS 'Table for check available medicine in cart';
 
-
+CREATE TABLE public.favorite (
+    customerid int4 NOT NULL,
+    medicineid int4 NOT NULL,
+    CONSTRAINT favorite_un UNIQUE (customerid, medicineid),
+    CONSTRAINT favorite_fk FOREIGN KEY (customerid) REFERENCES account(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT favorite_fk_1 FOREIGN KEY (medicineid) REFERENCES medicine(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
 

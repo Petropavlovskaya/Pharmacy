@@ -2,15 +2,27 @@ package by.petropavlovskaja.pharmacy.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class MedicineInOrderTest {
 
-    MedicineInOrder test1 = new MedicineInOrder(78, "Лордес", 10, "5 мг", false, 5, 789, 8);
-    MedicineInOrder test2 = new MedicineInOrder(79, "Синупрет", 10, "-", true, 2, 1002, 8);
-    MedicineInOrder test3 = new MedicineInOrder(104, "АмброГексал", 1, "7,5 мг/мл", true, 1, 544, 12);
-    MedicineInOrder test4 = new MedicineInOrder(1, "Test", 50, "7,5 мг/мл", true, 11, 544, 12);
-    MedicineInOrder test5 = new MedicineInOrder(1, "Test", 50, "7,5 мг/мл", true, 11, 544, 12);
+    MedicineInOrder test1 = new MedicineInOrder(78, "Лордес", 10, "5 мг", getDate("2021-06-07"), false, 5, 789, 8);
+    MedicineInOrder test2 = new MedicineInOrder(79, "Синупрет", 10, "-", getDate("2021-06-07"), true, 2, 1002, 8);
+    MedicineInOrder test3 = new MedicineInOrder(104, "АмброГексал", 1, "7,5 мг/мл", getDate("2021-06-07"), true, 1, 544, 12);
+    MedicineInOrder test4 = new MedicineInOrder(1, "Test", 50, "7,5 мг/мл", getDate("2021-06-07"), true, 11, 544, 12);
+    MedicineInOrder test5 = new MedicineInOrder(1, "Test", 50, "7,5 мг/мл", getDate("2021-06-07"), true, 11, 544, 12);
+
+    MedicineInOrderTest() throws ParseException {
+    }
+
+    private Date getDate(String date) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        return format.parse(date);
+    }
 
     @Test
     void setRubCoin() {

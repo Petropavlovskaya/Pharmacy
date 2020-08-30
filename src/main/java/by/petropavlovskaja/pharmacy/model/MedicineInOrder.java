@@ -2,6 +2,7 @@ package by.petropavlovskaja.pharmacy.model;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -31,6 +32,10 @@ public class MedicineInOrder implements Serializable {
      * Property - medicine dosage
      */
     private String dosage;
+    /**
+     * Property - medicine expiration date
+     */
+    private Date expDate;
     /**
      * Property - is medicine recipe required
      */
@@ -75,7 +80,7 @@ public class MedicineInOrder implements Serializable {
     private int coinForQuantity;   // currency unit
 
     /**
-     * Create entity of class {@link MedicineInOrder#MedicineInOrder(int, String, int, String, boolean, int, int, int)}
+     * Create entity of class {@link MedicineInOrder#MedicineInOrder(int, String, int, String, Date, boolean, int, int, int)}
      *
      * @param id - medicine in order ID
      */
@@ -90,16 +95,19 @@ public class MedicineInOrder implements Serializable {
      * @param medicine          - medicine name
      * @param indivisibleAmount - medicine indivisible amount
      * @param dosage            - medicine dosage
+     * @param expDate           - medicine expiration date
      * @param recipeRequired    - is medicine recipe required
      * @param quantity          - medicine quantity in order
      * @param priceForOne       - price for one indivisible amount of medicine
      * @param fkOrder           - foreign key order by medicine
      */
-    public MedicineInOrder(int id, String medicine, int indivisibleAmount, String dosage, boolean recipeRequired, int quantity, int priceForOne, int fkOrder) {
+    public MedicineInOrder(int id, String medicine, int indivisibleAmount, String dosage, Date expDate,
+                           boolean recipeRequired, int quantity, int priceForOne, int fkOrder) {
         this.id = id;
         this.medicine = medicine;
         this.indivisibleAmount = indivisibleAmount;
         this.dosage = dosage;
+        this.expDate = expDate;
         this.recipeRequired = recipeRequired;
         this.quantity = quantity;
         this.priceForOne = priceForOne;
@@ -260,6 +268,15 @@ public class MedicineInOrder implements Serializable {
     }
 
     /**
+     * The method of getting the medicine expiration date
+     *
+     * @return - an expiration date ofn the medicine
+     */
+    public Date getExpDate() {
+        return expDate;
+    }
+
+    /**
      * The method for setting the medicine quantity
      *
      * @param quantity - the medicine quantity
@@ -283,6 +300,7 @@ public class MedicineInOrder implements Serializable {
                 "id=" + id +
                 ", medicine='" + medicine + '\'' +
                 ", dosage='" + dosage + '\'' +
+                ", exp date='" + expDate + '\'' +
                 ", quantity=" + quantity +
                 ", price=" + priceForOne +
                 ", fk_order=" + fkOrder +
@@ -353,6 +371,23 @@ public class MedicineInOrder implements Serializable {
          */
         public int compare(MedicineInOrder a, MedicineInOrder b) {
             return a.getPriceForOne() - b.getPriceForOne();
+        }
+    }
+
+    /**
+     * The nested class for compare medicine in order entity by ID
+     */
+    public static class IdComparator implements Comparator<MedicineInOrder> {
+
+        /**
+         * The method compare medicine in order by ID
+         *
+         * @param a - one medicine in order
+         * @param b - another medicine in order
+         * @return - difference between two medicines in order
+         */
+        public int compare(MedicineInOrder a, MedicineInOrder b) {
+            return a.getId() - b.getId();
         }
     }
 }

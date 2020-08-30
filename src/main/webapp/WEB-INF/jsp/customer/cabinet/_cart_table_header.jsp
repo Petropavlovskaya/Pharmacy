@@ -8,6 +8,7 @@
 <thead>
 <th><fmt:message key="label.tableHeader.medicineName"/></th>
 <th><fmt:message key="label.tableHeader.dosage"/></th>
+<th><fmt:message key="label.tableHeader.exp"/></th>
 <th><fmt:message key="label.tableHeader.indivisibleQuantity"/></th>
 <th><fmt:message key="label.tableHeader.amount"/></th>
 <th><fmt:message key="label.tableHeader.price"/></th>

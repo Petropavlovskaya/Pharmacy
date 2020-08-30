@@ -18,7 +18,7 @@ import static by.petropavlovskaja.pharmacy.controller.AttributeConstant.*;
  * Web filter for pagination. Implements {@link Filter#init(FilterConfig)}
  */
 @WebFilter(urlPatterns = {"/medicine/*", "/customer/medicine/list/*", "/medicine/list/*",
-        "/pharmacist/medicine/list/*", "/doctor/medicine/list/*"})
+        "/pharmacist/medicine/list/*",  "/pharmacist/medicine/expired/*","/doctor/medicine/list/*"})
 public class PageFilter implements Filter {
 
     /**
@@ -58,7 +58,7 @@ public class PageFilter implements Filter {
             req.getSession().setAttribute("fullUri", getUri(arrayUri));
             req.getRequestDispatcher("/page").forward(req, resp);
 
-        } else if (lastPartUri.equals("list") || lastPartUri.equals("medicine")) {
+        } else if (lastPartUri.equals("list") || lastPartUri.equals("medicine") || lastPartUri.equals("expired")) {
             req.getSession().setAttribute("requestPage", 1);
             req.getSession().setAttribute("fullUri", fullUri);
             req.getRequestDispatcher("/page").forward(req, resp);

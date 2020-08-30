@@ -25,6 +25,7 @@ public final class AttributeConstant {
     public static final String AVAILABLE_MEDICINE = "availableMedicine";
     public static final String EDIT_MEDICINE = "editMedicine";
     public static final String MEDICINE_LIST = "medicineList";
+    public static final String EXPIRED_MEDICINE_LIST = "expiredMedicineList";
 
     public static final String RECIPE = "recipe";
 

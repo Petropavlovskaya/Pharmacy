@@ -13,6 +13,8 @@
                 <fmt:message key="label.menu.medicine"/><br><br></a></li>
             <li><a href="${pageContext.request.contextPath}/pharmacist/medicine/create"><br>
                 <fmt:message key="label.menu.addMedicine"/><br><br></a></li>
+            <li><a href="${pageContext.request.contextPath}/pharmacist/medicine/expired"><br>
+                <fmt:message key="label.menu.expiredMedicine"/><br><br></a></li>
         </ul>
     </li>
     <li><span><br><fmt:message key="label.menu.account"/><br><br></span>

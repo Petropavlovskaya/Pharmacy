@@ -4,8 +4,10 @@ package by.petropavlovskaja.pharmacy.dao.sql;
  * Enumeration for medicine SQL query
  */
 public enum MedicineSQL {
-    GET_ALL_MEDICINES("SELECT * FROM medicine ORDER BY \"name\", dosage, date(exp_date) ASC;"),
-    GET_ALL_FOR_PAGE("SELECT * FROM medicine ORDER BY \"name\", dosage, date(exp_date) ASC  OFFSET ? ROWS FETCH FIRST ? ROWS ONLY;"),
+    GET_ALL_MEDICINES("SELECT * FROM medicine WHERE exp_date > CURRENT_DATE ORDER BY \"name\", dosage, date(exp_date) ASC;"),
+    GET_ALL_EXPIRED_MEDICINES("SELECT * FROM medicine  WHERE exp_date < CURRENT_DATE OR exp_date = CURRENT_DATE ORDER BY \"name\", dosage, date(exp_date) ASC;"),
+    GET_ALL_FOR_PAGE("SELECT * FROM medicine WHERE exp_date > CURRENT_DATE ORDER BY \"name\", dosage, date(exp_date) ASC  OFFSET ? ROWS FETCH FIRST ? ROWS ONLY;"),
+    GET_ALL_EXPIRED_FOR_PAGE("SELECT * FROM medicine WHERE exp_date < CURRENT_DATE OR exp_date = CURRENT_DATE ORDER BY \"name\", dosage, date(exp_date) ASC  OFFSET ? ROWS FETCH FIRST ? ROWS ONLY;"),
     GET_ALL_RECIPE_MEDICINES("SELECT * FROM medicine WHERE recipe_required=true;"),
     GET_COUNT_MEDICINES("SELECT COUNT(*) FROM medicine;"),
     FIND_MEDICINES_BY_NAME_DOSAGE("SELECT * FROM medicine WHERE \"name\" = ? AND dosage = ?;"),

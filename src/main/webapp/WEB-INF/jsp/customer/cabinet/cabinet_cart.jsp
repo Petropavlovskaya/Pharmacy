@@ -43,12 +43,14 @@
 
             <tr>
 
-                <td><c:out value="${medicine.medicine}"/></td>
                     <%-- Name --%>
-                <td><c:out value="${medicine.dosage}"/></td>
+                <td><c:out value="${medicine.medicine}"/></td>
                     <%-- Dosage --%>
-                <td><c:out value="${medicine.indivisibleAmount}"/></td>
+                <td><c:out value="${medicine.dosage}"/></td>
+                    <%-- Expiration date --%>
+                <td><c:out value="${medicine.expDate}"/></td>
                     <%-- Indivisible_amount --%>
+                <td><c:out value="${medicine.indivisibleAmount}"/></td>
                 <form id="changeInCart" action="${pageContext.request.contextPath}/customer/cabinet/cart"
                       method="post">
                     <td align="center">                                                 <%-- Quantity --%>
@@ -108,7 +110,7 @@
                         </c:otherwise>
                     </c:choose>
                 </td>
-                <td colspan="3" align="right">
+                <td colspan="4" align="right">
                     <p2><fmt:message key="label.account.cabinet.orderPrice"/>: ${cart.rub} <fmt:message key="label.rub"/>
                         ${cart.coin} <fmt:message key="label.kop"/></p2>
                 </td>

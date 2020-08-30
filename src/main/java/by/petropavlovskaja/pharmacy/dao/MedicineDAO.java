@@ -118,12 +118,40 @@ public class MedicineDAO {
     }
 
     /**
+     * The method finds all expired medicines in the database
+     *
+     * @return - a list of medicines
+     */
+    public List<Medicine> getAllExpired() {
+        List<Medicine> medicineList = new ArrayList<>();
+        try (
+                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
+                Statement statement = conn.createStatement();
+                ResultSet rs = statement.executeQuery(MedicineSQL.GET_ALL_EXPIRED_MEDICINES.getQuery())
+        ) {
+            while (rs.next()) {
+                medicineList.add(createMedicineFromDB(rs));
+            }
+        } catch (SQLException e) {
+            logger.debug("SQL Exception in method getAll. ", e);
+            e.printStackTrace();
+        }
+        return medicineList;
+    }
+
+    /**
      * The method of getting a number of medicines in the database
      *
+     * @param needExpired - true if the method uses for expired medicine list
      * @return - a count of medicines
      */
-    public int getNumberOfRows() {
-        List<Medicine> medicineList = getAll();
+    public int getNumberOfRows(boolean needExpired) {
+        List<Medicine> medicineList;
+        if (needExpired) {
+            medicineList = getAllExpired();
+        } else {
+            medicineList = getAll();
+        }
         return medicineList.size();
     }
 
@@ -151,6 +179,35 @@ public class MedicineDAO {
             }
         } catch (SQLException e) {
             logger.trace("SQL Exception in method findMedicine. ", e);
+            e.printStackTrace();
+        }
+        return medicineList;
+    }
+
+    /**
+     * The method finds some expired medicines in the database for certain page
+     *
+     * @param currentPage    - a number of view page
+     * @param recordsPerPage - a number of records per page
+     * @return - a list of medicines
+     */
+    public List<Medicine> findExpiredMedicine(int currentPage, int recordsPerPage) {
+        List<Medicine> medicineList = new ArrayList<>();
+        int start = currentPage * recordsPerPage - recordsPerPage;
+
+        try (
+                Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();
+                PreparedStatement statement = conn.prepareStatement(MedicineSQL.GET_ALL_EXPIRED_FOR_PAGE.getQuery())
+        ) {
+            statement.setInt(1, start);
+            statement.setInt(2, recordsPerPage);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    medicineList.add(createMedicineFromDB(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.trace("SQL Exception in method findExpiredMedicine. ", e);
             e.printStackTrace();
         }
         return medicineList;

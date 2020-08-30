@@ -70,7 +70,7 @@ public class AccountFilter implements Filter {
         } else if ((accountRole.equals("") && sessionId.equals("null")) || (accountRole.equals("") && sessionId.equals(""))) {
             resp.sendRedirect("/pharmacy/login");
         } else if (BUSINESS_ACCOUNT_URIS.contains(accountAccess) && uriRole.equals(accountRole)) {
-            if (fullUri.contains("medicine/list") && req.getParameter("frontCommand") == null) {
+            if ((fullUri.contains("medicine/list") || fullUri.contains("medicine/expired")) && req.getParameter("frontCommand") == null) {
                 filterChain.doFilter(servletRequest, servletResponse);
             } else {
                 req.setAttribute(COMMAND_ATTRIBUTE, accountRole);

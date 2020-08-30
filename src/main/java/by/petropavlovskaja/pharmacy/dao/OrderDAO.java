@@ -332,6 +332,7 @@ public class OrderDAO {
                 int columnNumber = 1;
                 psMedicineInOrder.setString(columnNumber++, medicineItem.getMedicine());
                 psMedicineInOrder.setString(columnNumber++, medicineItem.getDosage());
+                psMedicineInOrder.setDate(columnNumber++, new java.sql.Date(medicineItem.getExpDate().getTime()));
                 psMedicineInOrder.setBoolean(columnNumber++, medicineItem.isRecipeRequired());
                 psMedicineInOrder.setInt(columnNumber++, medicineItem.getIndivisibleAmount());
                 psMedicineInOrder.setInt(columnNumber++, medicineItem.getQuantity());
@@ -559,8 +560,7 @@ public class OrderDAO {
     public Map<Order, Set<MedicineInOrder>> getAllOrdersWithDetails(int customerId) {
         Comparator<Order> orderComparator = new Order.OrderIdComparator();
         Set<Order> orders = new TreeSet<>(orderComparator);
-        Comparator<MedicineInOrder> medicineInOrderComparator = new MedicineInOrder.NameComparator()
-                .thenComparing(new MedicineInOrder.NameComparator()).thenComparing(new MedicineInOrder.DosageComparator());
+        Comparator<MedicineInOrder> medicineInOrderComparator = new MedicineInOrder.IdComparator();
         Set<MedicineInOrder> orderDetails = new TreeSet<>(medicineInOrderComparator);
         try (
                 Connection conn = ConnectionPool.ConnectionPool.retrieveConnection();

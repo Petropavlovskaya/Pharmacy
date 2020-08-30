@@ -12,9 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public abstract class EntityRepository {
-    public static final MedicineInOrder MEDICINE_IN_ORDER1 = new MedicineInOrder(78, "Лордес", 10, "5 мг", false, 5, 789, 8);
-    public static final MedicineInOrder MEDICINE_IN_ORDER2 = new MedicineInOrder(79, "Синупрет", 10, "-", true, 2, 1002, 8);
-    public static final MedicineInOrder MEDICINE_IN_ORDER3 = new MedicineInOrder(104, "АмброГексал", 1, "7,5 мг/мл", true, 1, 544, 12);
+    public static final MedicineInOrder MEDICINE_IN_ORDER1 = new MedicineInOrder(78, "Лордес", 10, "5 мг", null, false, 5, 789, 8);
+    public static final MedicineInOrder MEDICINE_IN_ORDER2 = new MedicineInOrder(79, "Синупрет", 10, "-", null, true, 2, 1002, 8);
+    public static final MedicineInOrder MEDICINE_IN_ORDER3 = new MedicineInOrder(104, "АмброГексал", 1, "7,5 мг/мл", null, true, 1, 544, 12);
     //    public static final MedicineInOrder MEDICINE_IN_ORDER4 = new MedicineInOrder(1, "Test", 50, "7,5 мг/мл", true, 11, 544, 12);
     public static final Recipe RECIPE1 = new Recipe(1, "New", "15/26", 44, 1, 184, null, true);
     public static final Recipe RECIPE2 = new Recipe(7, "Гроприносин", "500 мг", 73, 16, 12, null, false);

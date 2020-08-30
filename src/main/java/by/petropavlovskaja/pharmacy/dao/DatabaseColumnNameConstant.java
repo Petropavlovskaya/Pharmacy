@@ -27,6 +27,7 @@ public class DatabaseColumnNameConstant {
     protected static final String MIO_INDIVISIBLE_AMOUNT = "indivisible_amount";
     protected static final String MIO_AMOUNT = "amount";
     protected static final String MIO_DOSAGE = "dosage";
+    protected static final String MIO_EXP_DATE = "exp_date";
     protected static final String MIO_RECIPE_REQUIRED = "recipe_required";
     protected static final String MIO_QUANTITY = "quantity";
     protected static final String MIO_PRICE = "price";

@@ -275,8 +275,9 @@ class CommonServiceTest {
 
     @Test
     void getStringDate() {
-        String testDate = CommonService.getInstance().getStringDate(10);
-        assertEquals("2020-08-06", testDate);
+        String testDate1 = CommonService.getInstance().getStringDate(10);
+        String testDate2 = CommonService.getInstance().getStringDate(8);
+        assertTrue(testDate2.compareTo(testDate1) < 0);
     }
 
     @Test
@@ -313,7 +314,7 @@ class CommonServiceTest {
     }
 
     @Test
-    void isLoginBusy(){
+    void isLoginBusy() {
         boolean b = CommonService.getInstance().isLoginBusy("Df");
         assertFalse(b);
 

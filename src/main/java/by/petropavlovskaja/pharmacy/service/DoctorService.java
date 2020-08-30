@@ -283,11 +283,11 @@ public class DoctorService {
     }
 
     /**
-     * The method for checking is the date from request valid. The minimum date mast be Today+2,
+     * The method for checking is the recipe date from request valid. The minimum date mast be Today+2,
      * the maximum date mast by Today+60. Uses {@link CommonService#getFutureDate(int)}
      *
-     * @param requestDate - request date from jsp
-     * @return - true if the date is correct
+     * @param requestDate - request recipe date from jsp
+     * @return - true if the recipe date is correct
      */
     public boolean isDateValid(Date requestDate) {
         Date minValidDate = commonService.getFutureDate(2);
