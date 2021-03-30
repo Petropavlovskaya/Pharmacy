@@ -152,7 +152,7 @@ public class OrderDAO {
 // Create Order
             orderId = setOrder(savepoint, conn, psOrder, customer, order);
             if (orderId == -1) {
-                conn.rollback(savepoint);
+                conn.rollback();
                 logger.trace("Rollback to savepoint in metrod createOrder. OrderId == -1");
             } else {
 // 2

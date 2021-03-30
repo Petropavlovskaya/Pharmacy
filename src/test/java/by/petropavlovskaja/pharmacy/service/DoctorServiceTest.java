@@ -76,11 +76,11 @@ class DoctorServiceTest extends EntityRepository {
 
     @Test
     void isDateValid() {
-        Date expDate = getDate("2020-09-01");
+        Date expDate = getDate("2020-10-15");
         assertTrue(DoctorService.getInstance().isDateValid(expDate));
-        expDate = getDate("2020-09-15");
+        expDate = getDate("2020-09-22");
         assertTrue(DoctorService.getInstance().isDateValid(expDate));
-        expDate = getDate("2020-09-01");
+        expDate = getDate("2020-10-01");
         assertTrue(DoctorService.getInstance().isDateValid(expDate));
         expDate = getDate("2029-08-15");
         assertFalse(DoctorService.getInstance().isDateValid(expDate));

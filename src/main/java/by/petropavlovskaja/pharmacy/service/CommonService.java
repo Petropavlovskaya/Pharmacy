@@ -145,7 +145,7 @@ public class CommonService {
         String accountNewPasswordConfirm = (String) reqParameters.get(NEW_PASSWORD_CONFIRM);
         Account account = accountDAO.checkLoginAndPassword(login, accountOldPassword);
         if (account.getId() != -1) {
-            String s = checkPasswordEquals(accountNewPassword, accountNewPasswordConfirm);
+            String s = checkPasswordsEquals(accountNewPassword, accountNewPasswordConfirm);
             if (s != null) {
                 result = s;
             } else {
@@ -181,7 +181,7 @@ public class CommonService {
         } else if (!loginMatchRegex(login)) {
             result = "Account login insert data is incorrect. Please, enter valid data and try again.";
         }
-        String s = checkPasswordEquals(password, passwordConfirm);
+        String s = checkPasswordsEquals(password, passwordConfirm);
         if (s != null) {
             result = s;
         }
@@ -205,7 +205,7 @@ public class CommonService {
         String name = (String) reqParameters.get("accountName");
         if (!fioMatchRegex(surname) || !fioMatchRegex(name)) {
             result = "Account surname and/or name insert data are incorrect. Please, enter valid data and try again.";
-        } else if (reqParameters.get("accountPatronymic") != null) {
+        } else if (!reqParameters.get("accountPatronymic").toString().isEmpty()) {
             String patronymic = (String) reqParameters.get("accountPatronymic");
             if (!fioMatchRegex(patronymic)) {
                 result = "Account patronymic insert data is incorrect. Please, enter valid data and try again.";
@@ -222,7 +222,7 @@ public class CommonService {
      * @param passwordConfirm - confirm of new account password
      * @return - string of error message or NULL
      */
-    public String checkPasswordEquals(String password, String passwordConfirm) {
+    public String checkPasswordsEquals(String password, String passwordConfirm) {
         String result = null;
 
         if (password == null || passwordConfirm == null) {

@@ -170,6 +170,10 @@ public class CustomerService {
      */
     public void updateCartWithDetails(Customer customer) {
         Order cart = findCart(customer.getId());
+        if (cart.getId() == -1){
+            orderDAO.createCart(customer.getId());
+            cart = findCart(customer.getId());
+        }
         Set<MedicineInOrder> medicineInCart = findActualPriceAndSetToCartInDB(cart.getId());
         blockMedicineWithoutRecipe(customer, medicineInCart);
         blockMedicineAfterExpirationDate(medicineInCart);

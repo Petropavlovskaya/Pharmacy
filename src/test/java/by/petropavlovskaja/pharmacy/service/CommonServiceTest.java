@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -119,11 +118,11 @@ class CommonServiceTest {
         when(accMoc.checkLoginAndPassword(Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(accountTestChangeData).thenReturn(new Account(-1));
         CommonService commonMock = Mockito.mock(CommonService.class);
-        when(commonMock.checkPasswordEquals(Mockito.anyString(), Mockito.anyString())).thenReturn(null);
+        when(commonMock.checkPasswordsEquals(Mockito.anyString(), Mockito.anyString())).thenReturn(null);
 
         Account account = accMoc.checkLoginAndPassword("login", "accountOldPassword");
         if (account.getId() != -1) {
-            String s = commonMock.checkPasswordEquals("accountNewPassword", "accountNewPasswordConfirm");
+            String s = commonMock.checkPasswordsEquals("accountNewPassword", "accountNewPasswordConfirm");
             if (s != null) {
                 result = s;
             }
@@ -134,7 +133,7 @@ class CommonServiceTest {
 
         account = accMoc.checkLoginAndPassword("login", "accountOldPassword");
         if (account.getId() != -1) {
-            String s = commonMock.checkPasswordEquals("accountNewPassword", "accountNewPasswordConfirm");
+            String s = commonMock.checkPasswordsEquals("accountNewPassword", "accountNewPasswordConfirm");
             if (s != null) {
                 result = s;
             }
@@ -171,16 +170,16 @@ class CommonServiceTest {
         String passwordEmptyError = "Password or/and password confirm can't be empty. Please, enter password or/and password confirm and try again.";
         String passwordEqualsError = "Password and password confirm are not equals. Please, try again.";
 
-        String s = CommonService.getInstance().checkPasswordEquals("123456", "123456");
+        String s = CommonService.getInstance().checkPasswordsEquals("123456", "123456");
         assertNull(s);
 
-        s = CommonService.getInstance().checkPasswordEquals("123456", null);
+        s = CommonService.getInstance().checkPasswordsEquals("123456", null);
         assertEquals(passwordEmptyError, s);
 
-        s = CommonService.getInstance().checkPasswordEquals(null, "123456");
+        s = CommonService.getInstance().checkPasswordsEquals(null, "123456");
         assertEquals(passwordEmptyError, s);
 
-        s = CommonService.getInstance().checkPasswordEquals("123456", "123487");
+        s = CommonService.getInstance().checkPasswordsEquals("123456", "123487");
         assertEquals(passwordEqualsError, s);
     }
 

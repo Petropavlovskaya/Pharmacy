@@ -56,10 +56,10 @@ public final class SignupCommand implements IFrontCommand {
                 executeResult.setResponseAttributes("surname", reqParameters.get("accountSurname"));
                 executeResult.setResponseAttributes("name", reqParameters.get("accountName"));
                 executeResult.setResponseAttributes("login", login);
-                if (reqParameters.get("accountPatronymic") != null) {
+                if (!reqParameters.get("accountPatronymic").toString().isEmpty()) {
                     executeResult.setResponseAttributes("patronymic", reqParameters.get("accountPatronymic"));
                 }
-                if (reqParameters.get("accountPhone") != null) {
+                if (!reqParameters.get("accountPhone").toString().isEmpty()) {
                     executeResult.setResponseAttributes("phone", reqParameters.get("accountPhone"));
                 }
             } else {
