@@ -23,7 +23,7 @@
         <servletJspApiVersoin>2.3.3</servletJspApiVersoin>
         <jstlVersoin>1.2</jstlVersoin>
         <commonsCodecVersion>1.14</commonsCodecVersion> <!--for password MD5-->
-        <h2Version>1.4.200</h2Version>
+        <h2Version>2.1.210</h2Version>
     </properties>
 
     <dependencies>
